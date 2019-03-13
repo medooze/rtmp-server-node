@@ -63,6 +63,7 @@
 							"media-server/src/video.cpp",
 							"media-server/src/utf8.cpp",
 							"media-server/src/avcdescriptor.cpp",
+							"media-server/src/MediaFrameListenerBridge.cpp",
 							"media-server/src/rtp/RTPPacket.cpp",
 							"media-server/src/rtp/RTPHeader.cpp",
 							"media-server/src/rtp/RTPHeaderExtension.cpp",

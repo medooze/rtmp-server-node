@@ -13,7 +13,8 @@
 #include "rtmp/rtmphandshake.h"
 #include "rtmp/rtmpnetconnection.h"
 #include "rtmp/rtmppacketizer.h"
-
+#include "MediaFrameListenerBridge.h"
+	
 #include <string>
 #include <list>
 #include <functional>
@@ -254,167 +255,13 @@ class IncomingStreamBridge :
 	public RTMPMediaStream::Listener,
 	public RTPReceiver
 {
-private:
-	class IncomingMediaStreamBridge : public RTPIncomingMediaStream
-	{
-	public:
-		IncomingMediaStreamBridge(DWORD ssrc) : ssrc(ssrc) {}
-		virtual ~IncomingMediaStreamBridge() = default;
-		virtual void AddListener(RTPIncomingMediaStream::Listener* listener)
-		{
-			Debug("-IncomingMediaStreamBridge::AddListener() [listener:%p]\n",listener);
-			ScopedLock scope(mutex);
-			listeners.insert(listener);
-		}
-		virtual void RemoveListener(RTPIncomingMediaStream::Listener* listener)
-		{
-			Debug("-IncomingMediaStreamBridge::RemoveListener() [listener:%p]\n",listener);
-			ScopedLock scope(mutex);
-			listeners.erase(listener);
-		}
-		void Dispatch(MediaFrame* frame)
-		{
-			//Check
-			if (!frame || !frame->HasRtpPacketizationInfo())
-				//Error
-				return;
-			
-			//If we need to reset
-			if (reset)
-			{
-				//Reset first paquet seq num and timestamp
-				firstTimestamp = 0;
-				//Store the last send ones
-				baseTimestamp = lastTimestamp;
-				//Reseted
-				reset = false;
-			}
-			
-			//Get info
-			const MediaFrame::RtpPacketizationInfo& info = frame->GetRtpPacketizationInfo();
-
-			DWORD codec = 0;
-			BYTE *frameData = NULL;
-			DWORD frameSize = 0;
-			WORD  rate = 1;
-
-			//Depending on the type
-			switch(frame->GetType())
-			{
-				case MediaFrame::Audio:
-				{
-					//get audio frame
-					AudioFrame * audio = (AudioFrame*)frame;
-					//Get codec
-					codec = audio->GetCodec();
-					//Get data
-					frameData = audio->GetData();
-					//Get size
-					frameSize = audio->GetLength();
-					//Set default rate
-					rate = 48;
-					break;
-				}
-				case MediaFrame::Video:
-				{
-					//get Video frame
-					VideoFrame * video = (VideoFrame*)frame;
-					//Get codec
-					codec = video->GetCodec();
-					//Get data
-					frameData = video->GetData();
-					//Get size
-					frameSize = video->GetLength();
-					//Set default rate
-					rate = 90;
-					break;
-				}
-				
-			}
-
-			//Check if it the first received packet
-			if (!firstTimestamp)
-			{
-				//If we have a time offest from last sent packet
-				if (lastTime)
-					//Calculate time difd and add to the last sent timestamp
-					baseTimestamp = lastTimestamp + getTimeDiff(lastTime)/1000 + 1;
-				//Get first timestamp
-				firstTimestamp = frame->GetTimeStamp();
-			}
-			
-			DWORD frameLength = 0;
-			//Calculate total length
-			for (int i=0;i<info.size();i++)
-				//Get total length
-				frameLength += info[i]->GetTotalLength();
-
-			DWORD current = 0;
-			
-			//For each one
-			for (int i=0;i<info.size();i++)
-			{
-				//Get packet
-				MediaFrame::RtpPacketization* rtp = info[i];
-
-				//Create rtp packet
-				 auto packet = std::make_shared<RTPPacket>(frame->GetType(),codec);
-
-				//Make sure it is enought length
-				if (rtp->GetTotalLength()>packet->GetMaxMediaLength())
-					//Error
-					continue;
-				//Set src
-				packet->SetSSRC(ssrc);
-				packet->SetExtSeqNum(extSeqNum++);
-				//Set data
-				packet->SetPayload(frameData+rtp->GetPos(),rtp->GetSize());
-				//Add prefix
-				packet->PrefixPayload(rtp->GetPrefixData(),rtp->GetPrefixLen());
-				//Calculate timestamp
-				lastTimestamp = baseTimestamp + (frame->GetTimeStamp()-firstTimestamp);
-				//Set other values
-				packet->SetTimestamp(lastTimestamp*rate);
-				//Check
-				if (i+1==info.size())
-					//last
-					packet->SetMark(true);
-				else
-					//No last
-					packet->SetMark(false);
-				//Calculate partial lenght
-				current += rtp->GetPrefixLen()+rtp->GetSize();
-
-				ScopedLock scope(mutex);
-				for (auto listener : listeners)
-					listener->onRTP(this,packet);
-			}
-
-			
-		}
-		virtual DWORD GetMediaSSRC() { return ssrc; }
-		
-		void Reset()
-		{
-			reset = true;
-		}
-	public:
-		DWORD ssrc = 0;
-		DWORD extSeqNum = 0;
-		Mutex mutex;
-		std::set<RTPIncomingMediaStream::Listener*> listeners;
-		volatile bool reset	= false;
-		DWORD firstTimestamp	= 0;
-		QWORD baseTimestamp	= 0;
-		QWORD lastTimestamp	= 0;
-		QWORD lastTime		= 0;
-	};
 public:
-	IncomingStreamBridge() :
+	IncomingStreamBridge(v8::Handle<v8::Object> object) :
 		audio(1),
 		video(2)
 	{
-		
+		//Store event callback object
+		persistent.Reset(object);
 	}
 	virtual ~IncomingStreamBridge() = default;
 	
@@ -438,18 +285,51 @@ public:
 				auto videoFrame = avcPacketizer.AddFrame((RTMPVideoFrame*)frame);
 				//IF got one
 				if (videoFrame)
-						//Send it
-					video.Dispatch(videoFrame.release());
+					//Send it
+					video.onMediaFrame(*videoFrame);
 				break;
 			}
 			case RTMPMediaFrame::Audio:
 			{
+				//Check if it is the aac config
+				if (((RTMPAudioFrame*)frame)->GetAudioCodec()==RTMPAudioFrame::AAC && ((RTMPAudioFrame*)frame)->GetAACPacketType()==RTMPAudioFrame::AACSequenceHeader)
+				{
+					//Create condig
+					char aux[3];
+					std::string config;
+					
+					//Encode condig
+					for (size_t i=0; i<frame->GetMediaSize();++i)
+					{
+						//Convert to hex
+						snprintf(aux, 3, "%.2x", frame->GetMediaData()[i]);
+						//Append
+						config += aux;
+					}
+					Dump(frame->GetMediaData(),frame->GetMediaSize());
+					//Run function on main node thread
+					RTMPServerModule::Async([=](){
+						Nan::HandleScope scope;
+						//Get a local reference
+						v8::Local<v8::Object> local = Nan::New(persistent);
+						//Create arguments
+						v8::Local<v8::Value> argvs[1];
+						uint32_t len = 0;
+
+						argvs[len++] = Nan::New<v8::String>(config).ToLocalChecked();
+						//Create callback function from object
+						v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(Nan::New("onaacconfig").ToLocalChecked()));
+						//Call object method with arguments
+						Nan::MakeCallback(local, callback, len, argvs);
+					});
+				}
+
 				//Create rtp packets
 				auto audioFrame = aacPacketizer.AddFrame((RTMPAudioFrame*)frame);
 				//IF got one
 				if (audioFrame)
-						//Send it
-					audio.Dispatch(audioFrame.release());
+					//Send it
+					audio.onMediaFrame(*audioFrame);
 				break;
 			}
 		}
@@ -475,10 +355,11 @@ private:
 	
 	RTMPAVCPacketizer avcPacketizer;
 	RTMPAACPacketizer aacPacketizer;
-	IncomingMediaStreamBridge audio;
-	IncomingMediaStreamBridge video;
+	MediaFrameListenerBridge audio;
+	MediaFrameListenerBridge video;
 	Mutex mutex;
 	RTMPMediaStream *stream = nullptr;
+	Nan::Persistent<v8::Object> persistent;	
 };
 
 class RTMPNetStreamImpl : 
@@ -672,6 +553,10 @@ class RTMPServerFacade :
 	public RTMPServer
 {
 public:	
+	RTMPServerFacade(v8::Handle<v8::Object> object) :
+		persistent(object)
+	{
+	}
 	void Start(int port)
 	{
 		Init(port);
@@ -688,7 +573,10 @@ public:
 	{
 		End();
 	}
+private:
+	Nan::Persistent<v8::Object> persistent;	
 };
+
 
 %}
 
@@ -713,7 +601,7 @@ struct RTMPMediaStreamListener
 class IncomingStreamBridge : public RTMPMediaStreamListener
 {
 public:
-	IncomingStreamBridge();
+	IncomingStreamBridge(v8::Handle<v8::Object> object);
 	RTPIncomingMediaStream* GetAudio();
 	RTPIncomingMediaStream* GetVideo();
 	RTPReceiver*		GetReceiver();
@@ -741,6 +629,7 @@ public:
 class RTMPServerFacade
 {
 public:	
+	RTMPServerFacade(v8::Handle<v8::Object> object);
 	void Start(int port);
 	void AddApplication(v8::Handle<v8::Object> name,RTMPApplicationImpl *app);
 	void Stop();
