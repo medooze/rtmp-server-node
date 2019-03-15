@@ -258,7 +258,8 @@ class IncomingStreamBridge :
 public:
 	IncomingStreamBridge(v8::Handle<v8::Object> object) :
 		audio(1),
-		video(2)
+		video(2),
+		mutex(true)
 	{
 		//Store event callback object
 		persistent.Reset(object);
@@ -268,12 +269,48 @@ public:
 	//Interface
 	virtual void onAttached(RTMPMediaStream *stream)
 	{
+		Log("-IncomingStreamBridge::onAttached() [streamId:%d]\n",stream->GetStreamId());
+		
 		ScopedLock scope(mutex);
-		this->stream = stream;
+		
 		//Reset audio and video streasm
 		audio.Reset();
 		video.Reset();
+		
+		//Check if attached to another stream
+		if (attached)
+			//Remove ourself as listeners
+			attached->RemoveMediaListener(this);
+		//Store new one
+		attached = stream;
 	};
+	
+	virtual void onDetached(RTMPMediaStream *stream)
+	{
+		ScopedLock scope(mutex);
+		
+		Log("-IncomingStreamBridge::onDetached() [streamId:%d]\n",stream->GetStreamId());
+		
+		//Detach if joined
+		if (attached && attached!=stream)
+			//Remove ourself as listeners
+			attached->RemoveMediaListener(this);
+		//Detach
+		attached = nullptr;
+	}
+
+	void Stop()
+	{
+		ScopedLock scope(mutex);
+		
+		//Detach if joined
+		if (attached)
+			//Remove ourself as listeners
+			attached->RemoveMediaListener(this);
+		//Detach it anyway
+		attached = nullptr;
+	}
+
 	virtual void onMediaFrame(DWORD id,RTMPMediaFrame *frame)
 	{
 		//Depending on the type
@@ -336,10 +373,18 @@ public:
 	}
 	virtual void onMetaData(DWORD id,RTMPMetaData *meta) {};
 	virtual void onCommand(DWORD id,const wchar_t *name,AMFData* obj) {};
-	virtual void onStreamBegin(DWORD id) {};
-	virtual void onStreamEnd(DWORD id) {};
-	virtual void onStreamReset(DWORD id) {};
-	virtual void onDetached(RTMPMediaStream *stream)  {};
+	virtual void onStreamBegin(DWORD id)
+	{
+		Log("-IncomingStreamBridge::onStreamBegin() [streamId:%d]\n",id);
+	};
+	virtual void onStreamEnd(DWORD id)
+	{
+		Log("-IncomingStreamBridge::onStreamEnd() [streamId:%d]\n",id);
+	};
+	virtual void onStreamReset(DWORD id)
+	{
+		Log("-IncomingStreamBridge::onStreamReset() [streamId:%d]\n",id);
+	};
 	
 	virtual int SendPLI(DWORD ssrc)
 	{
@@ -358,7 +403,7 @@ private:
 	MediaFrameListenerBridge audio;
 	MediaFrameListenerBridge video;
 	Mutex mutex;
-	RTMPMediaStream *stream = nullptr;
+	RTMPMediaStream *attached = nullptr;
 	Nan::Persistent<v8::Object> persistent;	
 };
 
@@ -425,6 +470,8 @@ public:
 	
 	void Stop()
 	{
+		Log("-RTMPNetStreamImpl::Stop() [streamId:%d]\n",id);
+		
 		//Run function on main node thread
 		RTMPServerModule::Async([=](){
 			Nan::HandleScope scope;
@@ -437,6 +484,9 @@ public:
 			//Call object method with arguments
 			Nan::MakeCallback(local, callback, 0, argv0);
 		});
+		
+		RTMPMediaStream::RemoveAllMediaListeners();
+		listener = nullptr;
 	}
 private:
 	Nan::Persistent<v8::Object> persistent;	
@@ -468,6 +518,8 @@ public:
 
 	virtual RTMPNetStream* CreateStream(DWORD streamId,DWORD audioCaps,DWORD videoCaps,RTMPNetStream::Listener *listener) override
 	{
+		Log("-RTMPNetConnectionImpl::CreateStream() [streamId:%d]\n",streamId);
+		
 		//Create connection
 		auto stream = new RTMPNetStreamImpl(streamId,listener);
 		
@@ -494,6 +546,8 @@ public:
 
 	virtual void DeleteStream(RTMPNetStream *stream) override
 	{
+		Log("-RTMPNetConnectionImpl::CreateStream() [streamId:%d]\n",stream->GetStreamId());
+		
 		//Cast
 		auto impl = static_cast<RTMPNetStreamImpl*>(stream);
 		//Signael stop event
@@ -502,6 +556,21 @@ public:
 		UnRegisterStream(stream);
 	}
 	
+	void Disconnected() 
+	{
+		//Run function on main node thread
+		RTMPServerModule::Async([=](){
+			Nan::HandleScope scope;
+			//Create arguments
+			v8::Local<v8::Value> argv0[0] = {};
+			//Get a local reference
+			v8::Local<v8::Object> local = Nan::New(persistent);
+			//Create callback function from object
+			v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(Nan::New("ondisconnect").ToLocalChecked()));
+			//Call object method with arguments
+			Nan::MakeCallback(local, callback, 0, argv0);
+		});
+	}
 private:
 	std::function<void(bool)> accept;
 	Nan::Persistent<v8::Object> persistent;	
@@ -605,6 +674,7 @@ public:
 	RTPIncomingMediaStream* GetAudio();
 	RTPIncomingMediaStream* GetVideo();
 	RTPReceiver*		GetReceiver();
+	void Stop();
 };
 
 %nodefaultctor RTMPNetStreamImpl;

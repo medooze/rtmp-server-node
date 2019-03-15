@@ -1828,7 +1828,8 @@ class IncomingStreamBridge :
 public:
 	IncomingStreamBridge(v8::Handle<v8::Object> object) :
 		audio(1),
-		video(2)
+		video(2),
+		mutex(true)
 	{
 		//Store event callback object
 		persistent.Reset(object);
@@ -1838,12 +1839,48 @@ public:
 	//Interface
 	virtual void onAttached(RTMPMediaStream *stream)
 	{
+		Log("-IncomingStreamBridge::onAttached() [streamId:%d]\n",stream->GetStreamId());
+		
 		ScopedLock scope(mutex);
-		this->stream = stream;
+		
 		//Reset audio and video streasm
 		audio.Reset();
 		video.Reset();
+		
+		//Check if attached to another stream
+		if (attached)
+			//Remove ourself as listeners
+			attached->RemoveMediaListener(this);
+		//Store new one
+		attached = stream;
 	};
+	
+	virtual void onDetached(RTMPMediaStream *stream)
+	{
+		ScopedLock scope(mutex);
+		
+		Log("-IncomingStreamBridge::onDetached() [streamId:%d]\n",stream->GetStreamId());
+		
+		//Detach if joined
+		if (attached && attached!=stream)
+			//Remove ourself as listeners
+			attached->RemoveMediaListener(this);
+		//Detach
+		attached = nullptr;
+	}
+
+	void Stop()
+	{
+		ScopedLock scope(mutex);
+		
+		//Detach if joined
+		if (attached)
+			//Remove ourself as listeners
+			attached->RemoveMediaListener(this);
+		//Detach it anyway
+		attached = nullptr;
+	}
+
 	virtual void onMediaFrame(DWORD id,RTMPMediaFrame *frame)
 	{
 		//Depending on the type
@@ -1906,10 +1943,18 @@ public:
 	}
 	virtual void onMetaData(DWORD id,RTMPMetaData *meta) {};
 	virtual void onCommand(DWORD id,const wchar_t *name,AMFData* obj) {};
-	virtual void onStreamBegin(DWORD id) {};
-	virtual void onStreamEnd(DWORD id) {};
-	virtual void onStreamReset(DWORD id) {};
-	virtual void onDetached(RTMPMediaStream *stream)  {};
+	virtual void onStreamBegin(DWORD id)
+	{
+		Log("-IncomingStreamBridge::onStreamBegin() [streamId:%d]\n",id);
+	};
+	virtual void onStreamEnd(DWORD id)
+	{
+		Log("-IncomingStreamBridge::onStreamEnd() [streamId:%d]\n",id);
+	};
+	virtual void onStreamReset(DWORD id)
+	{
+		Log("-IncomingStreamBridge::onStreamReset() [streamId:%d]\n",id);
+	};
 	
 	virtual int SendPLI(DWORD ssrc)
 	{
@@ -1928,7 +1973,7 @@ private:
 	MediaFrameListenerBridge audio;
 	MediaFrameListenerBridge video;
 	Mutex mutex;
-	RTMPMediaStream *stream = nullptr;
+	RTMPMediaStream *attached = nullptr;
 	Nan::Persistent<v8::Object> persistent;	
 };
 
@@ -1995,6 +2040,8 @@ public:
 	
 	void Stop()
 	{
+		Log("-RTMPNetStreamImpl::Stop() [streamId:%d]\n",id);
+		
 		//Run function on main node thread
 		RTMPServerModule::Async([=](){
 			Nan::HandleScope scope;
@@ -2007,6 +2054,9 @@ public:
 			//Call object method with arguments
 			Nan::MakeCallback(local, callback, 0, argv0);
 		});
+		
+		RTMPMediaStream::RemoveAllMediaListeners();
+		listener = nullptr;
 	}
 private:
 	Nan::Persistent<v8::Object> persistent;	
@@ -2038,6 +2088,8 @@ public:
 
 	virtual RTMPNetStream* CreateStream(DWORD streamId,DWORD audioCaps,DWORD videoCaps,RTMPNetStream::Listener *listener) override
 	{
+		Log("-RTMPNetConnectionImpl::CreateStream() [streamId:%d]\n",streamId);
+		
 		//Create connection
 		auto stream = new RTMPNetStreamImpl(streamId,listener);
 		
@@ -2064,6 +2116,8 @@ public:
 
 	virtual void DeleteStream(RTMPNetStream *stream) override
 	{
+		Log("-RTMPNetConnectionImpl::CreateStream() [streamId:%d]\n",stream->GetStreamId());
+		
 		//Cast
 		auto impl = static_cast<RTMPNetStreamImpl*>(stream);
 		//Signael stop event
@@ -2072,6 +2126,21 @@ public:
 		UnRegisterStream(stream);
 	}
 	
+	void Disconnected() 
+	{
+		//Run function on main node thread
+		RTMPServerModule::Async([=](){
+			Nan::HandleScope scope;
+			//Create arguments
+			v8::Local<v8::Value> argv0[0] = {};
+			//Get a local reference
+			v8::Local<v8::Object> local = Nan::New(persistent);
+			//Create callback function from object
+			v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(Nan::New("ondisconnect").ToLocalChecked()));
+			//Call object method with arguments
+			Nan::MakeCallback(local, callback, 0, argv0);
+		});
+	}
 private:
 	std::function<void(bool)> accept;
 	Nan::Persistent<v8::Object> persistent;	
@@ -2452,6 +2521,33 @@ static SwigV8ReturnValue _wrap_IncomingStreamBridge_GetReceiver(const SwigV8Argu
   arg1 = reinterpret_cast< IncomingStreamBridge * >(argp1);
   result = (RTPReceiver *)(arg1)->GetReceiver();
   jsresult = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_RTPReceiver, 0 |  0 );
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_IncomingStreamBridge_Stop(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  IncomingStreamBridge *arg1 = (IncomingStreamBridge *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_IncomingStreamBridge_Stop.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_IncomingStreamBridge, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IncomingStreamBridge_Stop" "', argument " "1"" of type '" "IncomingStreamBridge *""'"); 
+  }
+  arg1 = reinterpret_cast< IncomingStreamBridge * >(argp1);
+  (arg1)->Stop();
+  jsresult = SWIGV8_UNDEFINED();
   
   
   SWIGV8_RETURN(jsresult);
@@ -3577,6 +3673,7 @@ if (SWIGTYPE_p_RTMPServerModule->clientdata == 0) {
   SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetAudio", _wrap_IncomingStreamBridge_GetAudio);
 SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetVideo", _wrap_IncomingStreamBridge_GetVideo);
 SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetReceiver", _wrap_IncomingStreamBridge_GetReceiver);
+SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "Stop", _wrap_IncomingStreamBridge_Stop);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "SetListener", _wrap_RTMPNetStreamImpl_SetListener);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "SendStatus", _wrap_RTMPNetStreamImpl_SendStatus);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "AddMediaListener", _wrap_RTMPNetStreamImpl_AddMediaListener);
