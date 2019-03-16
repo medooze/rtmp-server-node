@@ -84,7 +84,8 @@
 									"xcode_settings": {
 										"CLANG_CXX_LIBRARY": "libc++",
 										"CLANG_CXX_LANGUAGE_STANDARD": "c++17",
-										"OTHER_CFLAGS": [ "-Wno-aligned-allocation-unavailable","-march=native"]
+										"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+										"OTHER_CFLAGS": [ "-Wno-c++11-narrowing","-Wno-aligned-allocation-unavailable","-march=native"]
 									},
 								}]
 						]
