@@ -59,8 +59,6 @@
 						],
 						"sources": 
 						[
-							"media-server/src/audio.cpp",
-							"media-server/src/video.cpp",
 							"media-server/src/utf8.cpp",
 							"media-server/src/avcdescriptor.cpp",
 							"media-server/src/MediaFrameListenerBridge.cpp",
