@@ -62,6 +62,7 @@
 							"media-server/src/utf8.cpp",
 							"media-server/src/avcdescriptor.cpp",
 							"media-server/src/MediaFrameListenerBridge.cpp",
+							"media-server/src/rtp/LayerInfo.cpp",
 							"media-server/src/rtp/RTPPacket.cpp",
 							"media-server/src/rtp/RTPPayload.cpp",
 							"media-server/src/rtp/RTPHeader.cpp",
@@ -77,6 +78,10 @@
 							"media-server/src/rtmp/rtmpnetconnection.cpp",
 							"media-server/src/rtmp/rtmpchunk.cpp",
 							"media-server/src/rtmp/rtmppacketizer.cpp",
+							"media-server/src/VideoLayerSelector.cpp",
+							"media-server/src/h264/H264LayerSelector.cpp",
+							"media-server/src/vp8/VP8LayerSelector.cpp",
+							"media-server/src/vp9/VP9LayerSelector.cpp",	
 						],
   					        "conditions" : [
 								['OS=="mac"', {

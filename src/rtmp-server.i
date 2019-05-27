@@ -392,8 +392,8 @@ public:
 		return 1;
 	}
 	
-	RTPIncomingMediaStream* GetAudio()	{ return &audio; }
-	RTPIncomingMediaStream* GetVideo()	{ return &video; }
+	MediaFrameListenerBridge* GetAudio()	{ return &audio; }
+	MediaFrameListenerBridge* GetVideo()	{ return &video; }
 	RTPReceiver*		GetReceiver()	{ return this; }
 	
 private:
@@ -648,6 +648,9 @@ private:
 
 
 %}
+%include "stdint.i"
+%include "std_vector.i"
+%include "../media-server/include/config.h"
 
 %typemap(in) v8::Handle<v8::Object> {
 	$1 = v8::Handle<v8::Object>::Cast($input);
@@ -667,12 +670,29 @@ struct RTMPMediaStreamListener
 {
 };
 
+
+%nodefaultctor RTPIncomingMediaStream;
+%nodefaultdtor RTPIncomingMediaStream;
+struct RTPIncomingMediaStream
+{
+};
+	
+%nodefaultctor MediaFrameListenerBridge;
+struct MediaFrameListenerBridge : public RTPIncomingMediaStream
+{
+	DWORD numFrames;
+	DWORD numPackets;
+	DWORD totalBytes;
+	DWORD bitrate;
+	void Update();
+};
+
 class IncomingStreamBridge : public RTMPMediaStreamListener
 {
 public:
 	IncomingStreamBridge(v8::Handle<v8::Object> object);
-	RTPIncomingMediaStream* GetAudio();
-	RTPIncomingMediaStream* GetVideo();
+	MediaFrameListenerBridge* GetAudio();
+	MediaFrameListenerBridge* GetVideo();
 	RTPReceiver*		GetReceiver();
 	void Stop();
 };

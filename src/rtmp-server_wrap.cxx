@@ -1536,19 +1536,33 @@ fail: ;
 
 /* -------- TYPES TABLE (BEGIN) -------- */
 
-#define SWIGTYPE_p_IncomingStreamBridge swig_types[0]
-#define SWIGTYPE_p_RTMPApplicationImpl swig_types[1]
-#define SWIGTYPE_p_RTMPMediaStreamListener swig_types[2]
-#define SWIGTYPE_p_RTMPNetConnectionImpl swig_types[3]
-#define SWIGTYPE_p_RTMPNetStreamImpl swig_types[4]
-#define SWIGTYPE_p_RTMPServerFacade swig_types[5]
-#define SWIGTYPE_p_RTMPServerModule swig_types[6]
-#define SWIGTYPE_p_RTPIncomingMediaStream swig_types[7]
-#define SWIGTYPE_p_RTPReceiver swig_types[8]
-#define SWIGTYPE_p_char swig_types[9]
-#define SWIGTYPE_p_v8__HandleT_v8__Object_t swig_types[10]
-static swig_type_info *swig_types[12];
-static swig_module_info swig_module = {swig_types, 11, 0, 0, 0, 0};
+#define SWIGTYPE_p_ByteBuffer swig_types[0]
+#define SWIGTYPE_p_IncomingStreamBridge swig_types[1]
+#define SWIGTYPE_p_MediaFrameListenerBridge swig_types[2]
+#define SWIGTYPE_p_Properties swig_types[3]
+#define SWIGTYPE_p_RTMPApplicationImpl swig_types[4]
+#define SWIGTYPE_p_RTMPMediaStreamListener swig_types[5]
+#define SWIGTYPE_p_RTMPNetConnectionImpl swig_types[6]
+#define SWIGTYPE_p_RTMPNetStreamImpl swig_types[7]
+#define SWIGTYPE_p_RTMPServerFacade swig_types[8]
+#define SWIGTYPE_p_RTMPServerModule swig_types[9]
+#define SWIGTYPE_p_RTPIncomingMediaStream swig_types[10]
+#define SWIGTYPE_p_RTPReceiver swig_types[11]
+#define SWIGTYPE_p_char swig_types[12]
+#define SWIGTYPE_p_int swig_types[13]
+#define SWIGTYPE_p_long_long swig_types[14]
+#define SWIGTYPE_p_short swig_types[15]
+#define SWIGTYPE_p_signed_char swig_types[16]
+#define SWIGTYPE_p_std__string swig_types[17]
+#define SWIGTYPE_p_std__vectorT_Properties_t swig_types[18]
+#define SWIGTYPE_p_unsigned_char swig_types[19]
+#define SWIGTYPE_p_unsigned_int swig_types[20]
+#define SWIGTYPE_p_unsigned_long_long swig_types[21]
+#define SWIGTYPE_p_unsigned_short swig_types[22]
+#define SWIGTYPE_p_v8__HandleT_v8__Object_t swig_types[23]
+#define SWIGTYPE_p_void swig_types[24]
+static swig_type_info *swig_types[26];
+static swig_module_info swig_module = {swig_types, 25, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -1962,8 +1976,8 @@ public:
 		return 1;
 	}
 	
-	RTPIncomingMediaStream* GetAudio()	{ return &audio; }
-	RTPIncomingMediaStream* GetVideo()	{ return &video; }
+	MediaFrameListenerBridge* GetAudio()	{ return &audio; }
+	MediaFrameListenerBridge* GetVideo()	{ return &video; }
 	RTPReceiver*		GetReceiver()	{ return this; }
 	
 private:
@@ -2219,19 +2233,53 @@ private:
 
 
 
-using RTMPMediaStreamListener =  RTMPMediaStream::Listener;
+#include <stdint.h>		// Use the C99 official header
 
 
-SWIGINTERN
-int SWIG_AsVal_int (v8::Handle<v8::Value> valRef, int* val)
+#include <typeinfo>
+#include <stdexcept>
+
+
+#include <vector>
+#include <stdexcept>
+
+
+SWIGINTERNINLINE
+v8::Handle<v8::Value> SWIG_From_int  (int value)
 {
-  if (!valRef->IsNumber()) {
-    return SWIG_TypeError;
-  }
-  if(val) *val = valRef->IntegerValue();
-
-  return SWIG_OK;
+  return SWIGV8_INT32_NEW(value);
 }
+
+
+SWIGINTERNINLINE
+v8::Handle<v8::Value> SWIG_From_long  (long value)
+{
+  return SWIGV8_NUMBER_NEW(value);
+}
+
+
+SWIGINTERNINLINE
+v8::Handle<v8::Value> SWIG_From_unsigned_SS_long  (unsigned long value)
+{
+  return SWIGV8_INTEGER_NEW_UNS(value);
+}
+
+
+SWIGINTERNINLINE v8::Handle<v8::Value>
+SWIG_From_unsigned_SS_int  (unsigned int value)
+{    
+  return SWIG_From_unsigned_SS_long  (value);
+}
+
+
+#include <limits.h>
+#if !defined(SWIG_NO_LLONG_MAX)
+# if !defined(LLONG_MAX) && defined(__GNUC__) && defined (__LONG_LONG_MAX__)
+#   define LLONG_MAX __LONG_LONG_MAX__
+#   define LLONG_MIN (-LLONG_MAX - 1LL)
+#   define ULLONG_MAX (LLONG_MAX * 2ULL + 1ULL)
+# endif
+#endif
 
 
 SWIGINTERN
@@ -2283,6 +2331,182 @@ SWIG_CanCastAsInteger(double *d, double min, double max) {
 
 
 SWIGINTERN
+int SWIG_AsVal_unsigned_SS_long (v8::Handle<v8::Value> obj, unsigned long *val)
+{
+  if(!obj->IsNumber()) {
+    return SWIG_TypeError;
+  }
+
+  long longVal = (long) obj->NumberValue();
+
+  if(longVal < 0) {
+      return SWIG_OverflowError;
+  }
+
+  if(val) *val = longVal;
+
+  return SWIG_OK;
+}
+
+
+SWIGINTERN int
+SWIG_AsVal_unsigned_SS_int (v8::Handle<v8::Value> obj, unsigned int *val)
+{
+  unsigned long v;
+  int res = SWIG_AsVal_unsigned_SS_long (obj, &v);
+  if (SWIG_IsOK(res)) {
+    if ((v > UINT_MAX)) {
+      return SWIG_OverflowError;
+    } else {
+      if (val) *val = static_cast< unsigned int >(v);
+    }
+  }  
+  return res;
+}
+
+
+SWIGINTERNINLINE
+v8::Handle<v8::Value>
+SWIG_From_bool  (bool value)
+{
+  return SWIGV8_BOOLEAN_NEW(value);
+}
+
+
+SWIGINTERN swig_type_info*
+SWIG_pchar_descriptor(void)
+{
+  static int init = 0;
+  static swig_type_info* info = 0;
+  if (!init) {
+    info = SWIG_TypeQuery("_p_char");
+    init = 1;
+  }
+  return info;
+}
+
+
+SWIGINTERN int
+SWIG_AsCharPtrAndSize(v8::Handle<v8::Value> valRef, char** cptr, size_t* psize, int *alloc)
+{
+  if(valRef->IsString()) {
+    v8::Handle<v8::String> js_str = valRef->ToString();
+
+    size_t len = js_str->Utf8Length() + 1;
+    char* cstr = new char[len];
+    js_str->WriteUtf8(cstr, len);
+    
+    if(alloc) *alloc = SWIG_NEWOBJ;
+    if(psize) *psize = len;
+    if(cptr) *cptr = cstr;
+    
+    return SWIG_OK;
+  } else {
+    if(valRef->IsObject()) {
+      v8::Handle<v8::Object> obj = valRef->ToObject();
+      // try if the object is a wrapped char[]
+      swig_type_info* pchar_descriptor = SWIG_pchar_descriptor();
+      if (pchar_descriptor) {
+        void* vptr = 0;
+        if (SWIG_ConvertPtr(obj, &vptr, pchar_descriptor, 0) == SWIG_OK) {
+          if (cptr) *cptr = (char *) vptr;
+          if (psize) *psize = vptr ? (strlen((char *)vptr) + 1) : 0;
+          if (alloc) *alloc = SWIG_OLDOBJ;
+          return SWIG_OK;
+        }
+      }
+      return SWIG_TypeError;
+    } else {
+      return SWIG_TypeError;
+    }
+  }
+}
+
+
+
+
+
+SWIGINTERN
+int SWIG_AsVal_int (v8::Handle<v8::Value> valRef, int* val)
+{
+  if (!valRef->IsNumber()) {
+    return SWIG_TypeError;
+  }
+  if(val) *val = valRef->IntegerValue();
+
+  return SWIG_OK;
+}
+
+
+SWIGINTERNINLINE v8::Handle<v8::Value>
+SWIG_FromCharPtrAndSize(const char* carray, size_t size)
+{
+  if (carray) {
+    if (size > INT_MAX) {
+      // TODO: handle extra long strings
+      return SWIGV8_UNDEFINED();
+    } else {
+      v8::Handle<v8::String> js_str = SWIGV8_STRING_NEW2(carray, size);
+      return js_str;
+    }
+  } else {
+    return SWIGV8_UNDEFINED();
+  }
+}
+
+
+SWIGINTERNINLINE v8::Handle<v8::Value> 
+SWIG_FromCharPtr(const char *cptr)
+{ 
+  return SWIG_FromCharPtrAndSize(cptr, (cptr ? strlen(cptr) : 0));
+}
+
+
+#if defined(LLONG_MAX) && !defined(SWIG_LONG_LONG_AVAILABLE)
+#  define SWIG_LONG_LONG_AVAILABLE
+#endif
+
+
+#ifdef SWIG_LONG_LONG_AVAILABLE
+SWIGINTERN
+int SWIG_AsVal_unsigned_SS_long_SS_long (v8::Handle<v8::Value> obj, unsigned long long *val)
+{
+  if(!obj->IsNumber()) {
+    return SWIG_TypeError;
+  }
+
+  long long longVal = (long long) obj->NumberValue();
+
+  if(longVal < 0) {
+      return SWIG_OverflowError;
+  }
+
+  if(val) *val = longVal;
+
+  return SWIG_OK;
+}
+#endif
+
+
+#ifdef SWIG_LONG_LONG_AVAILABLE
+SWIGINTERNINLINE
+v8::Handle<v8::Value> SWIG_From_long_SS_long  (long long value)
+{
+  return SWIGV8_NUMBER_NEW(value);
+}
+#endif
+
+
+#ifdef SWIG_LONG_LONG_AVAILABLE
+SWIGINTERNINLINE
+v8::Handle<v8::Value> SWIG_From_unsigned_SS_long_SS_long  (unsigned long long value)
+{
+    return SWIGV8_INTEGER_NEW_UNS(value);
+}
+#endif
+
+
+SWIGINTERN
 int SWIG_AsVal_long (v8::Handle<v8::Value> obj, long* val)
 {
   if (!obj->IsNumber()) {
@@ -2306,16 +2530,2445 @@ int SWIG_AsVal_bool (v8::Handle<v8::Value> obj, bool *val)
 }
 
 
+SWIGINTERNINLINE int
+SWIG_AsVal_size_t (v8::Handle<v8::Value> obj, size_t *val)
+{
+  int res = SWIG_TypeError;
+#ifdef SWIG_LONG_LONG_AVAILABLE
+  if (sizeof(size_t) <= sizeof(unsigned long)) {
+#endif
+    unsigned long v;
+    res = SWIG_AsVal_unsigned_SS_long (obj, val ? &v : 0);
+    if (SWIG_IsOK(res) && val) *val = static_cast< size_t >(v);
+#ifdef SWIG_LONG_LONG_AVAILABLE
+  } else if (sizeof(size_t) <= sizeof(unsigned long long)) {
+    unsigned long long v;
+    res = SWIG_AsVal_unsigned_SS_long_SS_long (obj, val ? &v : 0);
+    if (SWIG_IsOK(res) && val) *val = static_cast< size_t >(v);
+  }
+#endif
+  return res;
+}
+
+
+using RTMPMediaStreamListener =  RTMPMediaStream::Listener;
+
+
 #define SWIGV8_INIT medooze_initialize
 
 
+SWIGV8_ClientData _exports_Properties_clientData;
+SWIGV8_ClientData _exports_ByteBuffer_clientData;
 SWIGV8_ClientData _exports_RTMPApplicationImpl_clientData;
 SWIGV8_ClientData _exports_RTMPMediaStreamListener_clientData;
+SWIGV8_ClientData _exports_RTPIncomingMediaStream_clientData;
+SWIGV8_ClientData _exports_MediaFrameListenerBridge_clientData;
 SWIGV8_ClientData _exports_IncomingStreamBridge_clientData;
 SWIGV8_ClientData _exports_RTMPNetStreamImpl_clientData;
 SWIGV8_ClientData _exports_RTMPNetConnectionImpl_clientData;
 SWIGV8_ClientData _exports_RTMPServerFacade_clientData;
 SWIGV8_ClientData _exports_RTMPServerModule_clientData;
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_QCIF(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_QCIF(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(0));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_CIF(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_CIF(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(1));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_VGA(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_VGA(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(2));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_PAL(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_PAL(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(3));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_HVGA(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_HVGA(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(4));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_QVGA(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_QVGA(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(5));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_HD720P(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_HD720P(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(6));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_WQVGA(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_WQVGA(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(7));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_W448P(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_W448P(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(8));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_SD448P(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_SD448P(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(9));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_W288P(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_W288P(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(10));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_W576(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_W576(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(11));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_FOURCIF(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_FOURCIF(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(12));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_FOURSIF(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_FOURSIF(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(13));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_XGA(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_XGA(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(14));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_WVGA(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_WVGA(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(15));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_DCIF(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_DCIF(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(16));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_SIF(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_SIF(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(17));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_QSIF(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_QSIF(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(18));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_SD480P(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_SD480P(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(19));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_SQCIF(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_SQCIF(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(20));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_SCIF(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_SCIF(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(21));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_HD1080P(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_HD1080P(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(22));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_MTU(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_MTU(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(1500u));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_RTPPAYLOADSIZE(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_RTPPAYLOADSIZE(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(1350u));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_MAXKBITS(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_MAXKBITS(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(300));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+static SwigV8ReturnValue _wrap_GetWidth(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  uint32_t arg1 ;
+  unsigned int val1 ;
+  int ecode1 = 0 ;
+  uint32_t result;
+  
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_GetWidth.");
+  
+  ecode1 = SWIG_AsVal_unsigned_SS_int(args[0], &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "GetWidth" "', argument " "1"" of type '" "uint32_t""'");
+  } 
+  arg1 = static_cast< uint32_t >(val1);
+  result = (uint32_t)GetWidth(arg1);
+  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_GetHeight(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  uint32_t arg1 ;
+  unsigned int val1 ;
+  int ecode1 = 0 ;
+  uint32_t result;
+  
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_GetHeight.");
+  
+  ecode1 = SWIG_AsVal_unsigned_SS_int(args[0], &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "GetHeight" "', argument " "1"" of type '" "uint32_t""'");
+  } 
+  arg1 = static_cast< uint32_t >(val1);
+  result = (uint32_t)GetHeight(arg1);
+  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_HasProperty(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  std::string *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  bool result;
+  
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_Properties_HasProperty.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_HasProperty" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_ConvertPtr(args[0], &argp2, SWIGTYPE_p_std__string,  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_HasProperty" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_HasProperty" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  arg2 = reinterpret_cast< std::string * >(argp2);
+  result = (bool)((Properties const *)arg1)->HasProperty((std::string const &)*arg2);
+  jsresult = SWIG_From_bool(static_cast< bool >(result));
+  
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_SetProperty__SWIG_0(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  char *arg2 = (char *) 0 ;
+  int arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_SetProperty" "', argument " "1"" of type '" "Properties *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(args[0], &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_SetProperty" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  ecode3 = SWIG_AsVal_int(args[1], &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "Properties_SetProperty" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  (arg1)->SetProperty((char const *)arg2,arg3);
+  jsresult = SWIGV8_UNDEFINED();
+  
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_SetProperty__SWIG_1(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char *arg3 = (char *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  int res3 ;
+  char *buf3 = 0 ;
+  int alloc3 = 0 ;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_SetProperty" "', argument " "1"" of type '" "Properties *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(args[0], &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_SetProperty" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  res3 = SWIG_AsCharPtrAndSize(args[1], &buf3, NULL, &alloc3);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "Properties_SetProperty" "', argument " "3"" of type '" "char const *""'");
+  }
+  arg3 = reinterpret_cast< char * >(buf3);
+  (arg1)->SetProperty((char const *)arg2,(char const *)arg3);
+  jsresult = SWIGV8_UNDEFINED();
+  
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  if (alloc3 == SWIG_NEWOBJ) delete[] buf3;
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_SetProperty__SWIG_2(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  std::string *arg2 = 0 ;
+  std::string *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  void *argp3 ;
+  int res3 = 0 ;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_SetProperty" "', argument " "1"" of type '" "Properties *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_ConvertPtr(args[0], &argp2, SWIGTYPE_p_std__string,  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_SetProperty" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_SetProperty" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  arg2 = reinterpret_cast< std::string * >(argp2);
+  res3 = SWIG_ConvertPtr(args[1], &argp3, SWIGTYPE_p_std__string,  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "Properties_SetProperty" "', argument " "3"" of type '" "std::string const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_SetProperty" "', argument " "3"" of type '" "std::string const &""'"); 
+  }
+  arg3 = reinterpret_cast< std::string * >(argp3);
+  (arg1)->SetProperty((std::string const &)*arg2,(std::string const &)*arg3);
+  jsresult = SWIGV8_UNDEFINED();
+  
+  
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties__wrap_Properties_SetProperty(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  OverloadErrorHandler errorHandler;
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_SetProperty__SWIG_0(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_SetProperty__SWIG_0(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_SetProperty__SWIG_1(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_SetProperty__SWIG_1(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_SetProperty__SWIG_2(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_SetProperty__SWIG_2(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  SWIG_exception_fail(SWIG_ERROR, "Illegal arguments for function SetProperty.");
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetChildren__SWIG_0(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  std::string *arg2 = 0 ;
+  Properties *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetChildren" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_ConvertPtr(args[0], &argp2, SWIGTYPE_p_std__string,  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetChildren" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_GetChildren" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  arg2 = reinterpret_cast< std::string * >(argp2);
+  res3 = SWIG_ConvertPtr(args[1], &argp3, SWIGTYPE_p_Properties,  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "Properties_GetChildren" "', argument " "3"" of type '" "Properties &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_GetChildren" "', argument " "3"" of type '" "Properties &""'"); 
+  }
+  arg3 = reinterpret_cast< Properties * >(argp3);
+  ((Properties const *)arg1)->GetChildren((std::string const &)*arg2,*arg3);
+  jsresult = SWIGV8_UNDEFINED();
+  
+  
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetChildren__SWIG_1(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  char *arg2 = (char *) 0 ;
+  Properties *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetChildren" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(args[0], &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetChildren" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  res3 = SWIG_ConvertPtr(args[1], &argp3, SWIGTYPE_p_Properties,  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "Properties_GetChildren" "', argument " "3"" of type '" "Properties &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_GetChildren" "', argument " "3"" of type '" "Properties &""'"); 
+  }
+  arg3 = reinterpret_cast< Properties * >(argp3);
+  ((Properties const *)arg1)->GetChildren((char const *)arg2,*arg3);
+  jsresult = SWIGV8_UNDEFINED();
+  
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetChildren__SWIG_2(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  std::string *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  Properties result;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetChildren" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_ConvertPtr(args[0], &argp2, SWIGTYPE_p_std__string,  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetChildren" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_GetChildren" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  arg2 = reinterpret_cast< std::string * >(argp2);
+  result = ((Properties const *)arg1)->GetChildren((std::string const &)*arg2);
+  jsresult = SWIG_NewPointerObj((new Properties(static_cast< const Properties& >(result))), SWIGTYPE_p_Properties, SWIG_POINTER_OWN |  0 );
+  
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetChildren__SWIG_3(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  char *arg2 = (char *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  Properties result;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetChildren" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(args[0], &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetChildren" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  result = ((Properties const *)arg1)->GetChildren((char const *)arg2);
+  jsresult = SWIG_NewPointerObj((new Properties(static_cast< const Properties& >(result))), SWIGTYPE_p_Properties, SWIG_POINTER_OWN |  0 );
+  
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties__wrap_Properties_GetChildren(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  OverloadErrorHandler errorHandler;
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetChildren__SWIG_0(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetChildren__SWIG_0(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetChildren__SWIG_1(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetChildren__SWIG_1(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 1) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetChildren__SWIG_2(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetChildren__SWIG_2(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 1) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetChildren__SWIG_3(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetChildren__SWIG_3(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  SWIG_exception_fail(SWIG_ERROR, "Illegal arguments for function GetChildren.");
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetChildrenArray(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  char *arg2 = (char *) 0 ;
+  std::vector< Properties > *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  
+  if(args.Length() != 2) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_Properties_GetChildrenArray.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetChildrenArray" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(args[0], &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetChildrenArray" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  res3 = SWIG_ConvertPtr(args[1], &argp3, SWIGTYPE_p_std__vectorT_Properties_t,  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "Properties_GetChildrenArray" "', argument " "3"" of type '" "std::vector< Properties > &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_GetChildrenArray" "', argument " "3"" of type '" "std::vector< Properties > &""'"); 
+  }
+  arg3 = reinterpret_cast< std::vector< Properties > * >(argp3);
+  ((Properties const *)arg1)->GetChildrenArray((char const *)arg2,*arg3);
+  jsresult = SWIGV8_UNDEFINED();
+  
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetProperty__SWIG_0(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  char *arg2 = (char *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  char *result = 0 ;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetProperty" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(args[0], &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  result = (char *)((Properties const *)arg1)->GetProperty((char const *)arg2);
+  jsresult = SWIG_FromCharPtr((const char *)result);
+  
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetProperty__SWIG_1(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  char *arg2 = (char *) 0 ;
+  std::string arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  void *argp3 ;
+  int res3 = 0 ;
+  std::string result;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetProperty" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(args[0], &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  {
+    res3 = SWIG_ConvertPtr(args[1], &argp3, SWIGTYPE_p_std__string,  0 );
+    if (!SWIG_IsOK(res3)) {
+      SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "Properties_GetProperty" "', argument " "3"" of type '" "std::string const""'"); 
+    }  
+    if (!argp3) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_GetProperty" "', argument " "3"" of type '" "std::string const""'");
+    } else {
+      arg3 = *(reinterpret_cast< std::string * >(argp3));
+    }
+  }
+  result = ((Properties const *)arg1)->GetProperty((char const *)arg2,arg3);
+  jsresult = SWIG_NewPointerObj((new std::string(static_cast< const std::string& >(result))), SWIGTYPE_p_std__string, SWIG_POINTER_OWN |  0 );
+  
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetProperty__SWIG_2(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  std::string *arg2 = 0 ;
+  std::string arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  void *argp3 ;
+  int res3 = 0 ;
+  std::string result;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetProperty" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_ConvertPtr(args[0], &argp2, SWIGTYPE_p_std__string,  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  arg2 = reinterpret_cast< std::string * >(argp2);
+  {
+    res3 = SWIG_ConvertPtr(args[1], &argp3, SWIGTYPE_p_std__string,  0 );
+    if (!SWIG_IsOK(res3)) {
+      SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "Properties_GetProperty" "', argument " "3"" of type '" "std::string const""'"); 
+    }  
+    if (!argp3) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_GetProperty" "', argument " "3"" of type '" "std::string const""'");
+    } else {
+      arg3 = *(reinterpret_cast< std::string * >(argp3));
+    }
+  }
+  result = ((Properties const *)arg1)->GetProperty((std::string const &)*arg2,arg3);
+  jsresult = SWIG_NewPointerObj((new std::string(static_cast< const std::string& >(result))), SWIGTYPE_p_std__string, SWIG_POINTER_OWN |  0 );
+  
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetProperty__SWIG_3(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  char *arg2 = (char *) 0 ;
+  char *arg3 = (char *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  int res3 ;
+  char *buf3 = 0 ;
+  int alloc3 = 0 ;
+  char *result = 0 ;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetProperty" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(args[0], &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  res3 = SWIG_AsCharPtrAndSize(args[1], &buf3, NULL, &alloc3);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "Properties_GetProperty" "', argument " "3"" of type '" "char const *""'");
+  }
+  arg3 = reinterpret_cast< char * >(buf3);
+  result = (char *)((Properties const *)arg1)->GetProperty((char const *)arg2,(char const *)arg3);
+  jsresult = SWIG_FromCharPtr((const char *)result);
+  
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  if (alloc3 == SWIG_NEWOBJ) delete[] buf3;
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetProperty__SWIG_4(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  std::string *arg2 = 0 ;
+  char *arg3 = (char *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  int res3 ;
+  char *buf3 = 0 ;
+  int alloc3 = 0 ;
+  char *result = 0 ;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetProperty" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_ConvertPtr(args[0], &argp2, SWIGTYPE_p_std__string,  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  arg2 = reinterpret_cast< std::string * >(argp2);
+  res3 = SWIG_AsCharPtrAndSize(args[1], &buf3, NULL, &alloc3);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "Properties_GetProperty" "', argument " "3"" of type '" "char *""'");
+  }
+  arg3 = reinterpret_cast< char * >(buf3);
+  result = (char *)((Properties const *)arg1)->GetProperty((std::string const &)*arg2,arg3);
+  jsresult = SWIG_FromCharPtr((const char *)result);
+  
+  
+  if (alloc3 == SWIG_NEWOBJ) delete[] buf3;
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetProperty__SWIG_5(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  char *arg2 = (char *) 0 ;
+  int arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  int result;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetProperty" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(args[0], &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  ecode3 = SWIG_AsVal_int(args[1], &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "Properties_GetProperty" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  result = (int)((Properties const *)arg1)->GetProperty((char const *)arg2,arg3);
+  jsresult = SWIG_From_int(static_cast< int >(result));
+  
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetProperty__SWIG_6(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  std::string *arg2 = 0 ;
+  int arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  int result;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetProperty" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_ConvertPtr(args[0], &argp2, SWIGTYPE_p_std__string,  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  arg2 = reinterpret_cast< std::string * >(argp2);
+  ecode3 = SWIG_AsVal_int(args[1], &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "Properties_GetProperty" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  result = (int)((Properties const *)arg1)->GetProperty((std::string const &)*arg2,arg3);
+  jsresult = SWIG_From_int(static_cast< int >(result));
+  
+  
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetProperty__SWIG_7(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  char *arg2 = (char *) 0 ;
+  uint64_t arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  unsigned long long val3 ;
+  int ecode3 = 0 ;
+  uint64_t result;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetProperty" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(args[0], &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  ecode3 = SWIG_AsVal_unsigned_SS_long_SS_long(args[1], &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "Properties_GetProperty" "', argument " "3"" of type '" "uint64_t""'");
+  } 
+  arg3 = static_cast< uint64_t >(val3);
+  result = (uint64_t)((Properties const *)arg1)->GetProperty((char const *)arg2,arg3);
+  jsresult = SWIG_From_unsigned_SS_long_SS_long(static_cast< unsigned long long >(result));
+  
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetProperty__SWIG_8(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  std::string *arg2 = 0 ;
+  uint64_t arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  unsigned long long val3 ;
+  int ecode3 = 0 ;
+  uint64_t result;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetProperty" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_ConvertPtr(args[0], &argp2, SWIGTYPE_p_std__string,  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  arg2 = reinterpret_cast< std::string * >(argp2);
+  ecode3 = SWIG_AsVal_unsigned_SS_long_SS_long(args[1], &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "Properties_GetProperty" "', argument " "3"" of type '" "uint64_t""'");
+  } 
+  arg3 = static_cast< uint64_t >(val3);
+  result = (uint64_t)((Properties const *)arg1)->GetProperty((std::string const &)*arg2,arg3);
+  jsresult = SWIG_From_unsigned_SS_long_SS_long(static_cast< unsigned long long >(result));
+  
+  
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetProperty__SWIG_9(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  char *arg2 = (char *) 0 ;
+  bool arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  bool val3 ;
+  int ecode3 = 0 ;
+  bool result;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetProperty" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(args[0], &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  ecode3 = SWIG_AsVal_bool(args[1], &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "Properties_GetProperty" "', argument " "3"" of type '" "bool""'");
+  } 
+  arg3 = static_cast< bool >(val3);
+  result = (bool)((Properties const *)arg1)->GetProperty((char const *)arg2,arg3);
+  jsresult = SWIG_From_bool(static_cast< bool >(result));
+  
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties_GetProperty__SWIG_10(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
+{
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  Properties *arg1 = (Properties *) 0 ;
+  std::string *arg2 = 0 ;
+  bool arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  bool val3 ;
+  int ecode3 = 0 ;
+  bool result;
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_Properties, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Properties_GetProperty" "', argument " "1"" of type '" "Properties const *""'"); 
+  }
+  arg1 = reinterpret_cast< Properties * >(argp1);
+  res2 = SWIG_ConvertPtr(args[0], &argp2, SWIGTYPE_p_std__string,  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Properties_GetProperty" "', argument " "2"" of type '" "std::string const &""'"); 
+  }
+  arg2 = reinterpret_cast< std::string * >(argp2);
+  ecode3 = SWIG_AsVal_bool(args[1], &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "Properties_GetProperty" "', argument " "3"" of type '" "bool""'");
+  } 
+  arg3 = static_cast< bool >(val3);
+  result = (bool)((Properties const *)arg1)->GetProperty((std::string const &)*arg2,arg3);
+  jsresult = SWIG_From_bool(static_cast< bool >(result));
+  
+  
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_Properties__wrap_Properties_GetProperty(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  OverloadErrorHandler errorHandler;
+  
+  
+  if(args.Length() == 1) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetProperty__SWIG_0(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetProperty__SWIG_0(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetProperty__SWIG_1(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetProperty__SWIG_1(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetProperty__SWIG_2(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetProperty__SWIG_2(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetProperty__SWIG_3(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetProperty__SWIG_3(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetProperty__SWIG_4(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetProperty__SWIG_4(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetProperty__SWIG_5(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetProperty__SWIG_5(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetProperty__SWIG_6(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetProperty__SWIG_6(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetProperty__SWIG_7(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetProperty__SWIG_7(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetProperty__SWIG_8(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetProperty__SWIG_8(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetProperty__SWIG_9(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetProperty__SWIG_9(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    jsresult = _wrap_Properties_GetProperty__SWIG_10(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(jsresult);
+    }
+#else
+    _wrap_Properties_GetProperty__SWIG_10(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  SWIG_exception_fail(SWIG_ERROR, "Illegal arguments for function GetProperty.");
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_new_Properties(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Object> self = args.Holder();
+  Properties *result;
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_Properties.");
+  result = (Properties *)new Properties();
+  
+  
+  
+  SWIGV8_SetPrivateData(self, result, SWIGTYPE_p_Properties, SWIG_POINTER_OWN);
+  SWIGV8_RETURN(self);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031710)
+static void _wrap_delete_Properties(v8::Persistent<v8::Value> object, void *parameter) {
+  SWIGV8_Proxy *proxy = static_cast<SWIGV8_Proxy *>(parameter);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031900)
+  static void _wrap_delete_Properties(v8::Isolate *isolate, v8::Persistent<v8::Value> object, void *parameter) {
+    SWIGV8_Proxy *proxy = static_cast<SWIGV8_Proxy *>(parameter);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < SWIGV8_SETWEAK_VERSION)
+    static void _wrap_delete_Properties(v8::Isolate *isolate, v8::Persistent< v8::Object> *object, SWIGV8_Proxy *proxy) {
+#elif (V8_MAJOR_VERSION-0) < 5
+      static void _wrap_delete_Properties(const v8::WeakCallbackData<v8::Object, SWIGV8_Proxy> &data) {
+        v8::Local<v8::Object> object = data.GetValue();
+        SWIGV8_Proxy *proxy = data.GetParameter();
+#else
+        static void _wrap_delete_Properties(const v8::WeakCallbackInfo<SWIGV8_Proxy> &data) {
+          SWIGV8_Proxy *proxy = data.GetParameter();
+#endif
+          
+          if(proxy->swigCMemOwn && proxy->swigCObject) {
+            Properties * arg1 = (Properties *)proxy->swigCObject;
+            delete arg1;
+          }
+          delete proxy;
+          
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031710)
+          object.Dispose();
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031900)
+          object.Dispose(isolate);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x032100)
+          object->Dispose(isolate);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < SWIGV8_SETWEAK_VERSION)
+          object->Dispose();
+#elif (V8_MAJOR_VERSION-0) < 5
+          object.Clear();
+#endif
+        }
+
+
+static SwigV8ReturnValue _wrap_malloc32(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  size_t arg1 ;
+  size_t val1 ;
+  int ecode1 = 0 ;
+  void *result = 0 ;
+  
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_malloc32.");
+  
+  ecode1 = SWIG_AsVal_size_t(args[0], &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "malloc32" "', argument " "1"" of type '" "size_t""'");
+  } 
+  arg1 = static_cast< size_t >(val1);
+  result = (void *)malloc32(arg1);
+  jsresult = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_void, 0 |  0 );
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_new_ByteBuffer__SWIG_0(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Object> self = args.Holder();
+  ByteBuffer *result;
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_ByteBuffer__SWIG_0.");
+  result = (ByteBuffer *)new ByteBuffer();
+  
+  
+  
+  SWIGV8_SetPrivateData(self, result, SWIGTYPE_p_ByteBuffer, SWIG_POINTER_OWN);
+  SWIGV8_RETURN(self);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_new_ByteBuffer__SWIG_1(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Object> self = args.Holder();
+  uint32_t arg1 ;
+  unsigned int val1 ;
+  int ecode1 = 0 ;
+  ByteBuffer *result;
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_ByteBuffer__SWIG_1.");
+  ecode1 = SWIG_AsVal_unsigned_SS_int(args[0], &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_ByteBuffer" "', argument " "1"" of type '" "uint32_t""'");
+  } 
+  arg1 = static_cast< uint32_t >(val1);
+  result = (ByteBuffer *)new ByteBuffer(arg1);
+  
+  
+  
+  
+  SWIGV8_SetPrivateData(self, result, SWIGTYPE_p_ByteBuffer, SWIG_POINTER_OWN);
+  SWIGV8_RETURN(self);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_new_ByteBuffer__SWIG_2(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Object> self = args.Holder();
+  uint8_t *arg1 = (uint8_t *) 0 ;
+  uint32_t arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  unsigned int val2 ;
+  int ecode2 = 0 ;
+  ByteBuffer *result;
+  if(args.Length() != 2) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_ByteBuffer__SWIG_2.");
+  res1 = SWIG_ConvertPtr(args[0], &argp1,SWIGTYPE_p_unsigned_char, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_ByteBuffer" "', argument " "1"" of type '" "uint8_t const *""'"); 
+  }
+  arg1 = reinterpret_cast< uint8_t * >(argp1);
+  ecode2 = SWIG_AsVal_unsigned_SS_int(args[1], &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_ByteBuffer" "', argument " "2"" of type '" "uint32_t""'");
+  } 
+  arg2 = static_cast< uint32_t >(val2);
+  result = (ByteBuffer *)new ByteBuffer((uint8_t const *)arg1,arg2);
+  
+  
+  
+  
+  
+  SWIGV8_SetPrivateData(self, result, SWIGTYPE_p_ByteBuffer, SWIG_POINTER_OWN);
+  SWIGV8_RETURN(self);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_new_ByteBuffer__SWIG_3(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Object> self = args.Holder();
+  ByteBuffer *arg1 = (ByteBuffer *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ByteBuffer *result;
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_ByteBuffer__SWIG_3.");
+  res1 = SWIG_ConvertPtr(args[0], &argp1,SWIGTYPE_p_ByteBuffer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_ByteBuffer" "', argument " "1"" of type '" "ByteBuffer const *""'"); 
+  }
+  arg1 = reinterpret_cast< ByteBuffer * >(argp1);
+  result = (ByteBuffer *)new ByteBuffer((ByteBuffer const *)arg1);
+  
+  
+  
+  
+  SWIGV8_SetPrivateData(self, result, SWIGTYPE_p_ByteBuffer, SWIG_POINTER_OWN);
+  SWIGV8_RETURN(self);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_new_ByteBuffer__SWIG_4(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Object> self = args.Holder();
+  ByteBuffer *arg1 = 0 ;
+  void *argp1 ;
+  int res1 = 0 ;
+  ByteBuffer *result;
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_ByteBuffer__SWIG_4.");
+  res1 = SWIG_ConvertPtr(args[0], &argp1, SWIGTYPE_p_ByteBuffer,  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_ByteBuffer" "', argument " "1"" of type '" "ByteBuffer const &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_ByteBuffer" "', argument " "1"" of type '" "ByteBuffer const &""'"); 
+  }
+  arg1 = reinterpret_cast< ByteBuffer * >(argp1);
+  result = (ByteBuffer *)new ByteBuffer((ByteBuffer const &)*arg1);
+  
+  
+  
+  
+  SWIGV8_SetPrivateData(self, result, SWIGTYPE_p_ByteBuffer, SWIG_POINTER_OWN);
+  SWIGV8_RETURN(self);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_new_ByteBuffer(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  OverloadErrorHandler errorHandler;
+  v8::Handle<v8::Value> self;
+  
+  // switch all cases by means of series of if-returns.
+  
+  if(args.Length() == 0) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    self = _wrap_new_ByteBuffer__SWIG_0(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(self);
+    }
+#else
+    _wrap_new_ByteBuffer__SWIG_0(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  if(args.Length() == 1) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    self = _wrap_new_ByteBuffer__SWIG_1(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(self);
+    }
+#else
+    _wrap_new_ByteBuffer__SWIG_1(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    self = _wrap_new_ByteBuffer__SWIG_2(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(self);
+    }
+#else
+    _wrap_new_ByteBuffer__SWIG_2(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  if(args.Length() == 1) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    self = _wrap_new_ByteBuffer__SWIG_3(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(self);
+    }
+#else
+    _wrap_new_ByteBuffer__SWIG_3(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  if(args.Length() == 1) {
+    errorHandler.err.Clear();
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+    self = _wrap_new_ByteBuffer__SWIG_4(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      SWIGV8_ESCAPE(self);
+    }
+#else
+    _wrap_new_ByteBuffer__SWIG_4(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+#endif
+  }
+  
+  
+  // default:
+  SWIG_exception_fail(SWIG_ERROR, "Illegal arguments for construction of _exports_ByteBuffer");
+  
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_ByteBuffer_Clone(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  ByteBuffer *arg1 = (ByteBuffer *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ByteBuffer *result = 0 ;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_ByteBuffer_Clone.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_ByteBuffer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "ByteBuffer_Clone" "', argument " "1"" of type '" "ByteBuffer const *""'"); 
+  }
+  arg1 = reinterpret_cast< ByteBuffer * >(argp1);
+  result = (ByteBuffer *)((ByteBuffer const *)arg1)->Clone();
+  jsresult = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_ByteBuffer, 0 |  0 );
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031710)
+static void _wrap_delete_ByteBuffer(v8::Persistent<v8::Value> object, void *parameter) {
+  SWIGV8_Proxy *proxy = static_cast<SWIGV8_Proxy *>(parameter);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031900)
+  static void _wrap_delete_ByteBuffer(v8::Isolate *isolate, v8::Persistent<v8::Value> object, void *parameter) {
+    SWIGV8_Proxy *proxy = static_cast<SWIGV8_Proxy *>(parameter);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < SWIGV8_SETWEAK_VERSION)
+    static void _wrap_delete_ByteBuffer(v8::Isolate *isolate, v8::Persistent< v8::Object> *object, SWIGV8_Proxy *proxy) {
+#elif (V8_MAJOR_VERSION-0) < 5
+      static void _wrap_delete_ByteBuffer(const v8::WeakCallbackData<v8::Object, SWIGV8_Proxy> &data) {
+        v8::Local<v8::Object> object = data.GetValue();
+        SWIGV8_Proxy *proxy = data.GetParameter();
+#else
+        static void _wrap_delete_ByteBuffer(const v8::WeakCallbackInfo<SWIGV8_Proxy> &data) {
+          SWIGV8_Proxy *proxy = data.GetParameter();
+#endif
+          
+          if(proxy->swigCMemOwn && proxy->swigCObject) {
+            ByteBuffer * arg1 = (ByteBuffer *)proxy->swigCObject;
+            delete arg1;
+          }
+          delete proxy;
+          
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031710)
+          object.Dispose();
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031900)
+          object.Dispose(isolate);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x032100)
+          object->Dispose(isolate);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < SWIGV8_SETWEAK_VERSION)
+          object->Dispose();
+#elif (V8_MAJOR_VERSION-0) < 5
+          object.Clear();
+#endif
+        }
+
+
+static SwigV8ReturnValue _wrap_ByteBuffer_Alloc(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  ByteBuffer *arg1 = (ByteBuffer *) 0 ;
+  uint32_t arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  unsigned int val2 ;
+  int ecode2 = 0 ;
+  
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_ByteBuffer_Alloc.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_ByteBuffer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "ByteBuffer_Alloc" "', argument " "1"" of type '" "ByteBuffer *""'"); 
+  }
+  arg1 = reinterpret_cast< ByteBuffer * >(argp1);
+  ecode2 = SWIG_AsVal_unsigned_SS_int(args[0], &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "ByteBuffer_Alloc" "', argument " "2"" of type '" "uint32_t""'");
+  } 
+  arg2 = static_cast< uint32_t >(val2);
+  (arg1)->Alloc(arg2);
+  jsresult = SWIGV8_UNDEFINED();
+  
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_ByteBuffer_Set(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  ByteBuffer *arg1 = (ByteBuffer *) 0 ;
+  uint8_t *arg2 = (uint8_t *) 0 ;
+  uint32_t arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  unsigned int val3 ;
+  int ecode3 = 0 ;
+  
+  if(args.Length() != 2) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_ByteBuffer_Set.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_ByteBuffer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "ByteBuffer_Set" "', argument " "1"" of type '" "ByteBuffer *""'"); 
+  }
+  arg1 = reinterpret_cast< ByteBuffer * >(argp1);
+  res2 = SWIG_ConvertPtr(args[0], &argp2,SWIGTYPE_p_unsigned_char, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ByteBuffer_Set" "', argument " "2"" of type '" "uint8_t const *""'"); 
+  }
+  arg2 = reinterpret_cast< uint8_t * >(argp2);
+  ecode3 = SWIG_AsVal_unsigned_SS_int(args[1], &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "ByteBuffer_Set" "', argument " "3"" of type '" "uint32_t""'");
+  } 
+  arg3 = static_cast< uint32_t >(val3);
+  (arg1)->Set((uint8_t const *)arg2,arg3);
+  jsresult = SWIGV8_UNDEFINED();
+  
+  
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_ByteBuffer_Append(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  ByteBuffer *arg1 = (ByteBuffer *) 0 ;
+  uint8_t *arg2 = (uint8_t *) 0 ;
+  uint32_t arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  unsigned int val3 ;
+  int ecode3 = 0 ;
+  uint32_t result;
+  
+  if(args.Length() != 2) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_ByteBuffer_Append.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_ByteBuffer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "ByteBuffer_Append" "', argument " "1"" of type '" "ByteBuffer *""'"); 
+  }
+  arg1 = reinterpret_cast< ByteBuffer * >(argp1);
+  res2 = SWIG_ConvertPtr(args[0], &argp2,SWIGTYPE_p_unsigned_char, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ByteBuffer_Append" "', argument " "2"" of type '" "uint8_t const *""'"); 
+  }
+  arg2 = reinterpret_cast< uint8_t * >(argp2);
+  ecode3 = SWIG_AsVal_unsigned_SS_int(args[1], &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "ByteBuffer_Append" "', argument " "3"" of type '" "uint32_t""'");
+  } 
+  arg3 = static_cast< uint32_t >(val3);
+  result = (uint32_t)(arg1)->Append((uint8_t const *)arg2,arg3);
+  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+  
+  
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_ByteBuffer_GetData(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  ByteBuffer *arg1 = (ByteBuffer *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  uint8_t *result = 0 ;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_ByteBuffer_GetData.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_ByteBuffer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "ByteBuffer_GetData" "', argument " "1"" of type '" "ByteBuffer const *""'"); 
+  }
+  arg1 = reinterpret_cast< ByteBuffer * >(argp1);
+  result = (uint8_t *)((ByteBuffer const *)arg1)->GetData();
+  jsresult = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_unsigned_char, 0 |  0 );
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_ByteBuffer_GetSize(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  ByteBuffer *arg1 = (ByteBuffer *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  uint32_t result;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_ByteBuffer_GetSize.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_ByteBuffer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "ByteBuffer_GetSize" "', argument " "1"" of type '" "ByteBuffer const *""'"); 
+  }
+  arg1 = reinterpret_cast< ByteBuffer * >(argp1);
+  result = (uint32_t)((ByteBuffer const *)arg1)->GetSize();
+  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_ByteBuffer_GetLength(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  ByteBuffer *arg1 = (ByteBuffer *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  uint32_t result;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_ByteBuffer_GetLength.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_ByteBuffer, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "ByteBuffer_GetLength" "', argument " "1"" of type '" "ByteBuffer const *""'"); 
+  }
+  arg1 = reinterpret_cast< ByteBuffer * >(argp1);
+  result = (uint32_t)((ByteBuffer const *)arg1)->GetLength();
+  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
 
 
 static SwigV8ReturnValue _wrap_new_RTMPApplicationImpl(const SwigV8Arguments &args) {
@@ -2424,6 +5077,344 @@ fail:
 }
 
 
+static SwigV8ReturnValue _wrap_new_veto_RTPIncomingMediaStream(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIG_exception(SWIG_ERROR, "Class RTPIncomingMediaStream can not be instantiated");
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static void _wrap_MediaFrameListenerBridge_numFrames_set(v8::Local<v8::String> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#else
+  static void _wrap_MediaFrameListenerBridge_numFrames_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    uint32_t arg2 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    unsigned int val2 ;
+    int ecode2 = 0 ;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numFrames_set" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    ecode2 = SWIG_AsVal_unsigned_SS_int(value, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_numFrames_set" "', argument " "2"" of type '" "uint32_t""'");
+    } 
+    arg2 = static_cast< uint32_t >(val2);
+    if (arg1) (arg1)->numFrames = arg2;
+    
+    
+    
+    goto fail;
+  fail:
+    return;
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_numFrames_get(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_numFrames_get(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    uint32_t result;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numFrames_get" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    result = (uint32_t) ((arg1)->numFrames);
+    jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+    
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static void _wrap_MediaFrameListenerBridge_numPackets_set(v8::Local<v8::String> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#else
+  static void _wrap_MediaFrameListenerBridge_numPackets_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    uint32_t arg2 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    unsigned int val2 ;
+    int ecode2 = 0 ;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numPackets_set" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    ecode2 = SWIG_AsVal_unsigned_SS_int(value, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_numPackets_set" "', argument " "2"" of type '" "uint32_t""'");
+    } 
+    arg2 = static_cast< uint32_t >(val2);
+    if (arg1) (arg1)->numPackets = arg2;
+    
+    
+    
+    goto fail;
+  fail:
+    return;
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_numPackets_get(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_numPackets_get(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    uint32_t result;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numPackets_get" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    result = (uint32_t) ((arg1)->numPackets);
+    jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+    
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static void _wrap_MediaFrameListenerBridge_totalBytes_set(v8::Local<v8::String> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#else
+  static void _wrap_MediaFrameListenerBridge_totalBytes_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    uint32_t arg2 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    unsigned int val2 ;
+    int ecode2 = 0 ;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_totalBytes_set" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    ecode2 = SWIG_AsVal_unsigned_SS_int(value, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_totalBytes_set" "', argument " "2"" of type '" "uint32_t""'");
+    } 
+    arg2 = static_cast< uint32_t >(val2);
+    if (arg1) (arg1)->totalBytes = arg2;
+    
+    
+    
+    goto fail;
+  fail:
+    return;
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_totalBytes_get(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_totalBytes_get(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    uint32_t result;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_totalBytes_get" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    result = (uint32_t) ((arg1)->totalBytes);
+    jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+    
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static void _wrap_MediaFrameListenerBridge_bitrate_set(v8::Local<v8::String> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#else
+  static void _wrap_MediaFrameListenerBridge_bitrate_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    uint32_t arg2 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    unsigned int val2 ;
+    int ecode2 = 0 ;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_bitrate_set" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    ecode2 = SWIG_AsVal_unsigned_SS_int(value, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_bitrate_set" "', argument " "2"" of type '" "uint32_t""'");
+    } 
+    arg2 = static_cast< uint32_t >(val2);
+    if (arg1) (arg1)->bitrate = arg2;
+    
+    
+    
+    goto fail;
+  fail:
+    return;
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_bitrate_get(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_bitrate_get(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    uint32_t result;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_bitrate_get" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    result = (uint32_t) ((arg1)->bitrate);
+    jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+    
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_Update(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_MediaFrameListenerBridge_Update.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_Update" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+  }
+  arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+  (arg1)->Update();
+  jsresult = SWIGV8_UNDEFINED();
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031710)
+static void _wrap_delete_MediaFrameListenerBridge(v8::Persistent<v8::Value> object, void *parameter) {
+  SWIGV8_Proxy *proxy = static_cast<SWIGV8_Proxy *>(parameter);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031900)
+  static void _wrap_delete_MediaFrameListenerBridge(v8::Isolate *isolate, v8::Persistent<v8::Value> object, void *parameter) {
+    SWIGV8_Proxy *proxy = static_cast<SWIGV8_Proxy *>(parameter);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < SWIGV8_SETWEAK_VERSION)
+    static void _wrap_delete_MediaFrameListenerBridge(v8::Isolate *isolate, v8::Persistent< v8::Object> *object, SWIGV8_Proxy *proxy) {
+#elif (V8_MAJOR_VERSION-0) < 5
+      static void _wrap_delete_MediaFrameListenerBridge(const v8::WeakCallbackData<v8::Object, SWIGV8_Proxy> &data) {
+        v8::Local<v8::Object> object = data.GetValue();
+        SWIGV8_Proxy *proxy = data.GetParameter();
+#else
+        static void _wrap_delete_MediaFrameListenerBridge(const v8::WeakCallbackInfo<SWIGV8_Proxy> &data) {
+          SWIGV8_Proxy *proxy = data.GetParameter();
+#endif
+          
+          if(proxy->swigCMemOwn && proxy->swigCObject) {
+            MediaFrameListenerBridge * arg1 = (MediaFrameListenerBridge *)proxy->swigCObject;
+            delete arg1;
+          }
+          delete proxy;
+          
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031710)
+          object.Dispose();
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031900)
+          object.Dispose(isolate);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x032100)
+          object->Dispose(isolate);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < SWIGV8_SETWEAK_VERSION)
+          object->Dispose();
+#elif (V8_MAJOR_VERSION-0) < 5
+          object.Clear();
+#endif
+        }
+
+
+static SwigV8ReturnValue _wrap_new_veto_MediaFrameListenerBridge(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIG_exception(SWIG_ERROR, "Class MediaFrameListenerBridge can not be instantiated");
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
 static SwigV8ReturnValue _wrap_new_IncomingStreamBridge(const SwigV8Arguments &args) {
   SWIGV8_HANDLESCOPE();
   
@@ -2454,7 +5445,7 @@ static SwigV8ReturnValue _wrap_IncomingStreamBridge_GetAudio(const SwigV8Argumen
   IncomingStreamBridge *arg1 = (IncomingStreamBridge *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  RTPIncomingMediaStream *result = 0 ;
+  MediaFrameListenerBridge *result = 0 ;
   
   if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_IncomingStreamBridge_GetAudio.");
   
@@ -2463,8 +5454,8 @@ static SwigV8ReturnValue _wrap_IncomingStreamBridge_GetAudio(const SwigV8Argumen
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IncomingStreamBridge_GetAudio" "', argument " "1"" of type '" "IncomingStreamBridge *""'"); 
   }
   arg1 = reinterpret_cast< IncomingStreamBridge * >(argp1);
-  result = (RTPIncomingMediaStream *)(arg1)->GetAudio();
-  jsresult = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_RTPIncomingMediaStream, 0 |  0 );
+  result = (MediaFrameListenerBridge *)(arg1)->GetAudio();
+  jsresult = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
   
   
   SWIGV8_RETURN(jsresult);
@@ -2482,7 +5473,7 @@ static SwigV8ReturnValue _wrap_IncomingStreamBridge_GetVideo(const SwigV8Argumen
   IncomingStreamBridge *arg1 = (IncomingStreamBridge *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  RTPIncomingMediaStream *result = 0 ;
+  MediaFrameListenerBridge *result = 0 ;
   
   if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_IncomingStreamBridge_GetVideo.");
   
@@ -2491,8 +5482,8 @@ static SwigV8ReturnValue _wrap_IncomingStreamBridge_GetVideo(const SwigV8Argumen
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IncomingStreamBridge_GetVideo" "', argument " "1"" of type '" "IncomingStreamBridge *""'"); 
   }
   arg1 = reinterpret_cast< IncomingStreamBridge * >(argp1);
-  result = (RTPIncomingMediaStream *)(arg1)->GetVideo();
-  jsresult = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_RTPIncomingMediaStream, 0 |  0 );
+  result = (MediaFrameListenerBridge *)(arg1)->GetVideo();
+  jsresult = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
   
   
   SWIGV8_RETURN(jsresult);
@@ -3255,20 +6246,40 @@ static void _wrap_delete_RTMPServerModule(v8::Persistent<v8::Value> object, void
 static void *_p_IncomingStreamBridgeTo_p_RTMPMediaStreamListener(void *x, int *SWIGUNUSEDPARM(newmemory)) {
     return (void *)((RTMPMediaStreamListener *)  ((IncomingStreamBridge *) x));
 }
+static void *_p_MediaFrameListenerBridgeTo_p_RTPIncomingMediaStream(void *x, int *SWIGUNUSEDPARM(newmemory)) {
+    return (void *)((RTPIncomingMediaStream *)  ((MediaFrameListenerBridge *) x));
+}
+static swig_type_info _swigt__p_ByteBuffer = {"_p_ByteBuffer", "ByteBuffer *|p_ByteBuffer", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_IncomingStreamBridge = {"_p_IncomingStreamBridge", "IncomingStreamBridge *|p_IncomingStreamBridge", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_MediaFrameListenerBridge = {"_p_MediaFrameListenerBridge", "p_MediaFrameListenerBridge|MediaFrameListenerBridge *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_Properties = {"_p_Properties", "Properties *|p_Properties", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPApplicationImpl = {"_p_RTMPApplicationImpl", "RTMPApplicationImpl *|p_RTMPApplicationImpl", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPMediaStreamListener = {"_p_RTMPMediaStreamListener", "p_RTMPMediaStreamListener|RTMPMediaStreamListener *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPNetConnectionImpl = {"_p_RTMPNetConnectionImpl", "RTMPNetConnectionImpl *|p_RTMPNetConnectionImpl", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPNetStreamImpl = {"_p_RTMPNetStreamImpl", "RTMPNetStreamImpl *|p_RTMPNetStreamImpl", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPServerFacade = {"_p_RTMPServerFacade", "p_RTMPServerFacade|RTMPServerFacade *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPServerModule = {"_p_RTMPServerModule", "p_RTMPServerModule", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_RTPIncomingMediaStream = {"_p_RTPIncomingMediaStream", "RTPIncomingMediaStream *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_RTPIncomingMediaStream = {"_p_RTPIncomingMediaStream", "p_RTPIncomingMediaStream|RTPIncomingMediaStream *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTPReceiver = {"_p_RTPReceiver", "RTPReceiver *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_int = {"_p_int", "intptr_t *|int *|int_least32_t *|int_fast32_t *|int32_t *|int_fast16_t *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_long_long = {"_p_long_long", "int_least64_t *|int_fast64_t *|int64_t *|long long *|intmax_t *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_short = {"_p_short", "short *|int_least16_t *|int16_t *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_signed_char = {"_p_signed_char", "signed char *|int_least8_t *|int_fast8_t *|int8_t *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__string = {"_p_std__string", "std::string *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__vectorT_Properties_t = {"_p_std__vectorT_Properties_t", "std::vector< Properties > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_unsigned_char = {"_p_unsigned_char", "unsigned char *|uint_least8_t *|uint_fast8_t *|uint8_t *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_unsigned_int = {"_p_unsigned_int", "uintptr_t *|uint_least32_t *|uint_fast32_t *|uint32_t *|unsigned int *|uint_fast16_t *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_unsigned_long_long = {"_p_unsigned_long_long", "uint_least64_t *|uint_fast64_t *|uint64_t *|unsigned long long *|uintmax_t *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_unsigned_short = {"_p_unsigned_short", "unsigned short *|uint_least16_t *|uint16_t *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_v8__HandleT_v8__Object_t = {"_p_v8__HandleT_v8__Object_t", "v8::Handle< v8::Object > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_void = {"_p_void", "void *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
+  &_swigt__p_ByteBuffer,
   &_swigt__p_IncomingStreamBridge,
+  &_swigt__p_MediaFrameListenerBridge,
+  &_swigt__p_Properties,
   &_swigt__p_RTMPApplicationImpl,
   &_swigt__p_RTMPMediaStreamListener,
   &_swigt__p_RTMPNetConnectionImpl,
@@ -3278,23 +6289,51 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_RTPIncomingMediaStream,
   &_swigt__p_RTPReceiver,
   &_swigt__p_char,
+  &_swigt__p_int,
+  &_swigt__p_long_long,
+  &_swigt__p_short,
+  &_swigt__p_signed_char,
+  &_swigt__p_std__string,
+  &_swigt__p_std__vectorT_Properties_t,
+  &_swigt__p_unsigned_char,
+  &_swigt__p_unsigned_int,
+  &_swigt__p_unsigned_long_long,
+  &_swigt__p_unsigned_short,
   &_swigt__p_v8__HandleT_v8__Object_t,
+  &_swigt__p_void,
 };
 
+static swig_cast_info _swigc__p_ByteBuffer[] = {  {&_swigt__p_ByteBuffer, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_IncomingStreamBridge[] = {  {&_swigt__p_IncomingStreamBridge, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_MediaFrameListenerBridge[] = {  {&_swigt__p_MediaFrameListenerBridge, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_Properties[] = {  {&_swigt__p_Properties, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPApplicationImpl[] = {  {&_swigt__p_RTMPApplicationImpl, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPMediaStreamListener[] = {  {&_swigt__p_RTMPMediaStreamListener, 0, 0, 0},  {&_swigt__p_IncomingStreamBridge, _p_IncomingStreamBridgeTo_p_RTMPMediaStreamListener, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPNetConnectionImpl[] = {  {&_swigt__p_RTMPNetConnectionImpl, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPNetStreamImpl[] = {  {&_swigt__p_RTMPNetStreamImpl, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPServerFacade[] = {  {&_swigt__p_RTMPServerFacade, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPServerModule[] = {  {&_swigt__p_RTMPServerModule, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_RTPIncomingMediaStream[] = {  {&_swigt__p_RTPIncomingMediaStream, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_RTPIncomingMediaStream[] = {  {&_swigt__p_RTPIncomingMediaStream, 0, 0, 0},  {&_swigt__p_MediaFrameListenerBridge, _p_MediaFrameListenerBridgeTo_p_RTPIncomingMediaStream, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTPReceiver[] = {  {&_swigt__p_RTPReceiver, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_long_long[] = {  {&_swigt__p_long_long, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_short[] = {  {&_swigt__p_short, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_signed_char[] = {  {&_swigt__p_signed_char, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__string[] = {  {&_swigt__p_std__string, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__vectorT_Properties_t[] = {  {&_swigt__p_std__vectorT_Properties_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_unsigned_char[] = {  {&_swigt__p_unsigned_char, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_unsigned_int[] = {  {&_swigt__p_unsigned_int, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_unsigned_long_long[] = {  {&_swigt__p_unsigned_long_long, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_unsigned_short[] = {  {&_swigt__p_unsigned_short, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_v8__HandleT_v8__Object_t[] = {  {&_swigt__p_v8__HandleT_v8__Object_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_void[] = {  {&_swigt__p_void, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
+  _swigc__p_ByteBuffer,
   _swigc__p_IncomingStreamBridge,
+  _swigc__p_MediaFrameListenerBridge,
+  _swigc__p_Properties,
   _swigc__p_RTMPApplicationImpl,
   _swigc__p_RTMPMediaStreamListener,
   _swigc__p_RTMPNetConnectionImpl,
@@ -3304,7 +6343,18 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_RTPIncomingMediaStream,
   _swigc__p_RTPReceiver,
   _swigc__p_char,
+  _swigc__p_int,
+  _swigc__p_long_long,
+  _swigc__p_short,
+  _swigc__p_signed_char,
+  _swigc__p_std__string,
+  _swigc__p_std__vectorT_Properties_t,
+  _swigc__p_unsigned_char,
+  _swigc__p_unsigned_int,
+  _swigc__p_unsigned_long_long,
+  _swigc__p_unsigned_short,
   _swigc__p_v8__HandleT_v8__Object_t,
+  _swigc__p_void,
 };
 
 
@@ -3618,7 +6668,21 @@ void SWIGV8_INIT (v8::Handle<v8::Object> exports, v8::Handle<v8::Object> /*modul
   
 
   /* create class templates */
-  /* Name: _exports_RTMPApplicationImpl, Type: p_RTMPApplicationImpl, Dtor: _wrap_delete_RTMPApplicationImpl */
+  /* Name: _exports_Properties, Type: p_Properties, Dtor: _wrap_delete_Properties */
+v8::Handle<v8::FunctionTemplate> _exports_Properties_class = SWIGV8_CreateClassTemplate("_exports_Properties");
+SWIGV8_SET_CLASS_TEMPL(_exports_Properties_clientData.class_templ, _exports_Properties_class);
+_exports_Properties_clientData.dtor = _wrap_delete_Properties;
+if (SWIGTYPE_p_Properties->clientdata == 0) {
+  SWIGTYPE_p_Properties->clientdata = &_exports_Properties_clientData;
+}
+/* Name: _exports_ByteBuffer, Type: p_ByteBuffer, Dtor: _wrap_delete_ByteBuffer */
+v8::Handle<v8::FunctionTemplate> _exports_ByteBuffer_class = SWIGV8_CreateClassTemplate("_exports_ByteBuffer");
+SWIGV8_SET_CLASS_TEMPL(_exports_ByteBuffer_clientData.class_templ, _exports_ByteBuffer_class);
+_exports_ByteBuffer_clientData.dtor = _wrap_delete_ByteBuffer;
+if (SWIGTYPE_p_ByteBuffer->clientdata == 0) {
+  SWIGTYPE_p_ByteBuffer->clientdata = &_exports_ByteBuffer_clientData;
+}
+/* Name: _exports_RTMPApplicationImpl, Type: p_RTMPApplicationImpl, Dtor: _wrap_delete_RTMPApplicationImpl */
 v8::Handle<v8::FunctionTemplate> _exports_RTMPApplicationImpl_class = SWIGV8_CreateClassTemplate("_exports_RTMPApplicationImpl");
 SWIGV8_SET_CLASS_TEMPL(_exports_RTMPApplicationImpl_clientData.class_templ, _exports_RTMPApplicationImpl_class);
 _exports_RTMPApplicationImpl_clientData.dtor = _wrap_delete_RTMPApplicationImpl;
@@ -3631,6 +6695,20 @@ SWIGV8_SET_CLASS_TEMPL(_exports_RTMPMediaStreamListener_clientData.class_templ, 
 _exports_RTMPMediaStreamListener_clientData.dtor = _wrap_delete_RTMPMediaStreamListener;
 if (SWIGTYPE_p_RTMPMediaStreamListener->clientdata == 0) {
   SWIGTYPE_p_RTMPMediaStreamListener->clientdata = &_exports_RTMPMediaStreamListener_clientData;
+}
+/* Name: _exports_RTPIncomingMediaStream, Type: p_RTPIncomingMediaStream, Dtor: 0 */
+v8::Handle<v8::FunctionTemplate> _exports_RTPIncomingMediaStream_class = SWIGV8_CreateClassTemplate("_exports_RTPIncomingMediaStream");
+SWIGV8_SET_CLASS_TEMPL(_exports_RTPIncomingMediaStream_clientData.class_templ, _exports_RTPIncomingMediaStream_class);
+_exports_RTPIncomingMediaStream_clientData.dtor = 0;
+if (SWIGTYPE_p_RTPIncomingMediaStream->clientdata == 0) {
+  SWIGTYPE_p_RTPIncomingMediaStream->clientdata = &_exports_RTPIncomingMediaStream_clientData;
+}
+/* Name: _exports_MediaFrameListenerBridge, Type: p_MediaFrameListenerBridge, Dtor: _wrap_delete_MediaFrameListenerBridge */
+v8::Handle<v8::FunctionTemplate> _exports_MediaFrameListenerBridge_class = SWIGV8_CreateClassTemplate("_exports_MediaFrameListenerBridge");
+SWIGV8_SET_CLASS_TEMPL(_exports_MediaFrameListenerBridge_clientData.class_templ, _exports_MediaFrameListenerBridge_class);
+_exports_MediaFrameListenerBridge_clientData.dtor = _wrap_delete_MediaFrameListenerBridge;
+if (SWIGTYPE_p_MediaFrameListenerBridge->clientdata == 0) {
+  SWIGTYPE_p_MediaFrameListenerBridge->clientdata = &_exports_MediaFrameListenerBridge_clientData;
 }
 /* Name: _exports_IncomingStreamBridge, Type: p_IncomingStreamBridge, Dtor: _wrap_delete_IncomingStreamBridge */
 v8::Handle<v8::FunctionTemplate> _exports_IncomingStreamBridge_class = SWIGV8_CreateClassTemplate("_exports_IncomingStreamBridge");
@@ -3670,7 +6748,50 @@ if (SWIGTYPE_p_RTMPServerModule->clientdata == 0) {
 
 
   /* register wrapper functions */
-  SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetAudio", _wrap_IncomingStreamBridge_GetAudio);
+  SWIGV8_AddStaticVariable(exports_obj, "QCIF", _wrap_QCIF, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "CIF", _wrap_CIF, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "VGA", _wrap_VGA, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "PAL", _wrap_PAL, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "HVGA", _wrap_HVGA, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "QVGA", _wrap_QVGA, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "HD720P", _wrap_HD720P, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "WQVGA", _wrap_WQVGA, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "W448P", _wrap_W448P, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "SD448P", _wrap_SD448P, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "W288P", _wrap_W288P, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "W576", _wrap_W576, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "FOURCIF", _wrap_FOURCIF, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "FOURSIF", _wrap_FOURSIF, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "XGA", _wrap_XGA, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "WVGA", _wrap_WVGA, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "DCIF", _wrap_DCIF, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "SIF", _wrap_SIF, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "QSIF", _wrap_QSIF, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "SD480P", _wrap_SD480P, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "SQCIF", _wrap_SQCIF, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "SCIF", _wrap_SCIF, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "HD1080P", _wrap_HD1080P, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "MTU", _wrap_MTU, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "RTPPAYLOADSIZE", _wrap_RTPPAYLOADSIZE, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "MAXKBITS", _wrap_MAXKBITS, JS_veto_set_variable);
+SWIGV8_AddMemberFunction(_exports_Properties_class, "HasProperty", _wrap_Properties_HasProperty);
+SWIGV8_AddMemberFunction(_exports_Properties_class, "SetProperty", _wrap_Properties__wrap_Properties_SetProperty);
+SWIGV8_AddMemberFunction(_exports_Properties_class, "GetChildren", _wrap_Properties__wrap_Properties_GetChildren);
+SWIGV8_AddMemberFunction(_exports_Properties_class, "GetChildrenArray", _wrap_Properties_GetChildrenArray);
+SWIGV8_AddMemberFunction(_exports_Properties_class, "GetProperty", _wrap_Properties__wrap_Properties_GetProperty);
+SWIGV8_AddMemberFunction(_exports_ByteBuffer_class, "Clone", _wrap_ByteBuffer_Clone);
+SWIGV8_AddMemberFunction(_exports_ByteBuffer_class, "Alloc", _wrap_ByteBuffer_Alloc);
+SWIGV8_AddMemberFunction(_exports_ByteBuffer_class, "Set", _wrap_ByteBuffer_Set);
+SWIGV8_AddMemberFunction(_exports_ByteBuffer_class, "Append", _wrap_ByteBuffer_Append);
+SWIGV8_AddMemberFunction(_exports_ByteBuffer_class, "GetData", _wrap_ByteBuffer_GetData);
+SWIGV8_AddMemberFunction(_exports_ByteBuffer_class, "GetSize", _wrap_ByteBuffer_GetSize);
+SWIGV8_AddMemberFunction(_exports_ByteBuffer_class, "GetLength", _wrap_ByteBuffer_GetLength);
+SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "numFrames", _wrap_MediaFrameListenerBridge_numFrames_get, _wrap_MediaFrameListenerBridge_numFrames_set);
+SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "numPackets", _wrap_MediaFrameListenerBridge_numPackets_get, _wrap_MediaFrameListenerBridge_numPackets_set);
+SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "totalBytes", _wrap_MediaFrameListenerBridge_totalBytes_get, _wrap_MediaFrameListenerBridge_totalBytes_set);
+SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "bitrate", _wrap_MediaFrameListenerBridge_bitrate_get, _wrap_MediaFrameListenerBridge_bitrate_set);
+SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridge_class, "Update", _wrap_MediaFrameListenerBridge_Update);
+SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetAudio", _wrap_IncomingStreamBridge_GetAudio);
 SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetVideo", _wrap_IncomingStreamBridge_GetVideo);
 SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetReceiver", _wrap_IncomingStreamBridge_GetReceiver);
 SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "Stop", _wrap_IncomingStreamBridge_Stop);
@@ -3687,7 +6808,27 @@ SWIGV8_AddMemberFunction(_exports_RTMPServerFacade_class, "Stop", _wrap_RTMPServ
 
 
   /* setup inheritances */
-  if (SWIGTYPE_p_RTMPMediaStreamListener->clientdata && !(static_cast<SWIGV8_ClientData *>(SWIGTYPE_p_RTMPMediaStreamListener->clientdata)->class_templ.IsEmpty()))
+  if (SWIGTYPE_p_RTPIncomingMediaStream->clientdata && !(static_cast<SWIGV8_ClientData *>(SWIGTYPE_p_RTPIncomingMediaStream->clientdata)->class_templ.IsEmpty()))
+{
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+  _exports_MediaFrameListenerBridge_class->Inherit(static_cast<SWIGV8_ClientData *>(SWIGTYPE_p_RTPIncomingMediaStream->clientdata)->class_templ);
+#else
+  _exports_MediaFrameListenerBridge_class->Inherit(
+    v8::Local<v8::FunctionTemplate>::New(
+      v8::Isolate::GetCurrent(),
+      static_cast<SWIGV8_ClientData *>(SWIGTYPE_p_RTPIncomingMediaStream->clientdata)->class_templ)
+    );
+#endif
+  
+#ifdef SWIGRUNTIME_DEBUG
+  printf("Inheritance successful _exports_MediaFrameListenerBridge _RTPIncomingMediaStream\n");
+#endif
+} else {
+#ifdef SWIGRUNTIME_DEBUG
+  printf("Unable to inherit baseclass, it didn't exist _exports_MediaFrameListenerBridge _RTPIncomingMediaStream\n");
+#endif
+}
+if (SWIGTYPE_p_RTMPMediaStreamListener->clientdata && !(static_cast<SWIGV8_ClientData *>(SWIGTYPE_p_RTMPMediaStreamListener->clientdata)->class_templ.IsEmpty()))
 {
 #if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
   _exports_IncomingStreamBridge_class->Inherit(static_cast<SWIGV8_ClientData *>(SWIGTYPE_p_RTMPMediaStreamListener->clientdata)->class_templ);
@@ -3710,7 +6851,19 @@ SWIGV8_AddMemberFunction(_exports_RTMPServerFacade_class, "Stop", _wrap_RTMPServ
 
 
   /* class instances */
-  /* Class: RTMPApplicationImpl (_exports_RTMPApplicationImpl) */
+  /* Class: Properties (_exports_Properties) */
+v8::Handle<v8::FunctionTemplate> _exports_Properties_class_0 = SWIGV8_CreateClassTemplate("Properties");
+_exports_Properties_class_0->SetCallHandler(_wrap_new_Properties);
+_exports_Properties_class_0->Inherit(_exports_Properties_class);
+_exports_Properties_class_0->SetHiddenPrototype(true);
+v8::Handle<v8::Object> _exports_Properties_obj = _exports_Properties_class_0->GetFunction();
+/* Class: ByteBuffer (_exports_ByteBuffer) */
+v8::Handle<v8::FunctionTemplate> _exports_ByteBuffer_class_0 = SWIGV8_CreateClassTemplate("ByteBuffer");
+_exports_ByteBuffer_class_0->SetCallHandler(_wrap_new_ByteBuffer);
+_exports_ByteBuffer_class_0->Inherit(_exports_ByteBuffer_class);
+_exports_ByteBuffer_class_0->SetHiddenPrototype(true);
+v8::Handle<v8::Object> _exports_ByteBuffer_obj = _exports_ByteBuffer_class_0->GetFunction();
+/* Class: RTMPApplicationImpl (_exports_RTMPApplicationImpl) */
 v8::Handle<v8::FunctionTemplate> _exports_RTMPApplicationImpl_class_0 = SWIGV8_CreateClassTemplate("RTMPApplicationImpl");
 _exports_RTMPApplicationImpl_class_0->SetCallHandler(_wrap_new_RTMPApplicationImpl);
 _exports_RTMPApplicationImpl_class_0->Inherit(_exports_RTMPApplicationImpl_class);
@@ -3722,6 +6875,18 @@ _exports_RTMPMediaStreamListener_class_0->SetCallHandler(_wrap_new_veto_RTMPMedi
 _exports_RTMPMediaStreamListener_class_0->Inherit(_exports_RTMPMediaStreamListener_class);
 _exports_RTMPMediaStreamListener_class_0->SetHiddenPrototype(true);
 v8::Handle<v8::Object> _exports_RTMPMediaStreamListener_obj = _exports_RTMPMediaStreamListener_class_0->GetFunction();
+/* Class: RTPIncomingMediaStream (_exports_RTPIncomingMediaStream) */
+v8::Handle<v8::FunctionTemplate> _exports_RTPIncomingMediaStream_class_0 = SWIGV8_CreateClassTemplate("RTPIncomingMediaStream");
+_exports_RTPIncomingMediaStream_class_0->SetCallHandler(_wrap_new_veto_RTPIncomingMediaStream);
+_exports_RTPIncomingMediaStream_class_0->Inherit(_exports_RTPIncomingMediaStream_class);
+_exports_RTPIncomingMediaStream_class_0->SetHiddenPrototype(true);
+v8::Handle<v8::Object> _exports_RTPIncomingMediaStream_obj = _exports_RTPIncomingMediaStream_class_0->GetFunction();
+/* Class: MediaFrameListenerBridge (_exports_MediaFrameListenerBridge) */
+v8::Handle<v8::FunctionTemplate> _exports_MediaFrameListenerBridge_class_0 = SWIGV8_CreateClassTemplate("MediaFrameListenerBridge");
+_exports_MediaFrameListenerBridge_class_0->SetCallHandler(_wrap_new_veto_MediaFrameListenerBridge);
+_exports_MediaFrameListenerBridge_class_0->Inherit(_exports_MediaFrameListenerBridge_class);
+_exports_MediaFrameListenerBridge_class_0->SetHiddenPrototype(true);
+v8::Handle<v8::Object> _exports_MediaFrameListenerBridge_obj = _exports_MediaFrameListenerBridge_class_0->GetFunction();
 /* Class: IncomingStreamBridge (_exports_IncomingStreamBridge) */
 v8::Handle<v8::FunctionTemplate> _exports_IncomingStreamBridge_class_0 = SWIGV8_CreateClassTemplate("IncomingStreamBridge");
 _exports_IncomingStreamBridge_class_0->SetCallHandler(_wrap_new_IncomingStreamBridge);
@@ -3755,7 +6920,10 @@ v8::Handle<v8::Object> _exports_RTMPServerModule_obj = _exports_RTMPServerModule
 
 
   /* add static class functions and variables */
-  SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "Initialize", _wrap_RTMPServerModule_Initialize);
+  SWIGV8_AddStaticFunction(exports_obj, "GetWidth", _wrap_GetWidth);
+SWIGV8_AddStaticFunction(exports_obj, "GetHeight", _wrap_GetHeight);
+SWIGV8_AddStaticFunction(exports_obj, "malloc32", _wrap_malloc32);
+SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "Initialize", _wrap_RTMPServerModule_Initialize);
 SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "Terminate", _wrap_RTMPServerModule_Terminate);
 SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "EnableLog", _wrap_RTMPServerModule_EnableLog);
 SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "EnableDebug", _wrap_RTMPServerModule_EnableDebug);
@@ -3763,8 +6931,12 @@ SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "EnableUltraDebug", _wra
 
 
   /* register classes */
-  exports_obj->Set(SWIGV8_SYMBOL_NEW("RTMPApplicationImpl"), _exports_RTMPApplicationImpl_obj);
+  exports_obj->Set(SWIGV8_SYMBOL_NEW("Properties"), _exports_Properties_obj);
+exports_obj->Set(SWIGV8_SYMBOL_NEW("ByteBuffer"), _exports_ByteBuffer_obj);
+exports_obj->Set(SWIGV8_SYMBOL_NEW("RTMPApplicationImpl"), _exports_RTMPApplicationImpl_obj);
 exports_obj->Set(SWIGV8_SYMBOL_NEW("RTMPMediaStreamListener"), _exports_RTMPMediaStreamListener_obj);
+exports_obj->Set(SWIGV8_SYMBOL_NEW("RTPIncomingMediaStream"), _exports_RTPIncomingMediaStream_obj);
+exports_obj->Set(SWIGV8_SYMBOL_NEW("MediaFrameListenerBridge"), _exports_MediaFrameListenerBridge_obj);
 exports_obj->Set(SWIGV8_SYMBOL_NEW("IncomingStreamBridge"), _exports_IncomingStreamBridge_obj);
 exports_obj->Set(SWIGV8_SYMBOL_NEW("RTMPNetStreamImpl"), _exports_RTMPNetStreamImpl_obj);
 exports_obj->Set(SWIGV8_SYMBOL_NEW("RTMPNetConnectionImpl"), _exports_RTMPNetConnectionImpl_obj);
