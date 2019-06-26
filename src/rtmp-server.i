@@ -20,6 +20,9 @@
 #include <functional>
 #include <nan.h>
 	
+template<typename T >
+using Persistent = Nan::Persistent<T,Nan::CopyablePersistentTraits<T>>;
+	
 v8::Local<v8::Value> toJson(AMFData* data)
 {
 	Nan::EscapableHandleScope scope;
@@ -126,11 +129,11 @@ public:
 	static void MakeCallback(v8::Handle<v8::Object> object, const char* method,Arguments& arguments)
 	{
 		// Create a copiable persistent
-		Nan::Persistent<v8::Object>* persistent = new Nan::Persistent<v8::Object>(object);
+		Persistent<v8::Object>* persistent = new Persistent<v8::Object>(object);
 		
-		std::list<Nan::Persistent<v8::Value>*> pargs;
+		std::list<Persistent<v8::Value>*> pargs;
 		for (auto it = arguments.begin(); it!= arguments.end(); ++it)
-			pargs.push_back(new Nan::Persistent<v8::Value>(*it));
+			pargs.push_back(new Persistent<v8::Value>(*it));
 			
 		
 		//Run function on main node thread
@@ -404,7 +407,7 @@ private:
 	MediaFrameListenerBridge video;
 	Mutex mutex;
 	RTMPMediaStream *attached = nullptr;
-	Nan::Persistent<v8::Object> persistent;	
+	Persistent<v8::Object> persistent;	
 };
 
 class RTMPNetStreamImpl : 
@@ -489,7 +492,7 @@ public:
 		listener = nullptr;
 	}
 private:
-	Nan::Persistent<v8::Object> persistent;	
+	Persistent<v8::Object> persistent;	
 };
 
 
@@ -573,7 +576,7 @@ public:
 	}
 private:
 	std::function<void(bool)> accept;
-	Nan::Persistent<v8::Object> persistent;	
+	Persistent<v8::Object> persistent;	
 };
 
 class RTMPApplicationImpl : 
@@ -614,7 +617,7 @@ public:
 		return connection;
 	}
 private:
-	Nan::Persistent<v8::Object> persistent;	
+	Persistent<v8::Object> persistent;	
 };
 
 
@@ -643,7 +646,7 @@ public:
 		End();
 	}
 private:
-	Nan::Persistent<v8::Object> persistent;	
+	Persistent<v8::Object> persistent;	
 };
 
 
