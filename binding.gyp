@@ -59,6 +59,7 @@
 						],
 						"sources": 
 						[
+							"media-server/src/EventLoop.cpp",
 							"media-server/src/utf8.cpp",
 							"media-server/src/avcdescriptor.cpp",
 							"media-server/src/MediaFrameListenerBridge.cpp",

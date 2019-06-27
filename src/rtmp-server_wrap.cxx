@@ -1598,9 +1598,12 @@ static swig_module_info swig_module = {swig_types, 25, 0, 0, 0, 0};
 #include "rtmp/rtmpnetconnection.h"
 #include "rtmp/rtmppacketizer.h"
 #include "MediaFrameListenerBridge.h"
+#include "EventLoop.h"
 	
+
 #include <string>
 #include <list>
+#include <map>
 #include <functional>
 #include <nan.h>
 	
@@ -1850,8 +1853,45 @@ public:
 	{
 		//Store event callback object
 		persistent.Reset(object);
+		//Start time service
+		loop.Start(-1);
+		
+		//Create dispatch timer
+		dispatch = loop.CreateTimer([this](std::chrono::milliseconds now){
+			
+			//Iterate over the enqueued packets
+			for(auto it = queue.begin(); it!=queue.end(); it = queue.erase(it))
+			{
+				//Get time and frame
+				auto ts	    = std::chrono::milliseconds(it->first);
+				auto& frame = it->second;
+				
+				//If not yet it's time
+				if (ts > now)
+				{
+					Log("-ReDispatching in %llums size=%d\n",(ts-now).count());
+					//Schedule timer for later
+					dispatch->Again(ts-now);
+					//Done
+					break;
+				}
+				Log("-Dispatched from %llums size=%d\n",it->first, queue.size());
+				//Check type
+				if (frame->GetType()==MediaFrame::Audio)
+					//Dispatch audio
+					audio.onMediaFrame(*frame);
+				else
+					//Dispatch video
+					video.onMediaFrame(*frame);
+			}
+		});
+		
 	}
-	virtual ~IncomingStreamBridge() = default;
+		
+	virtual ~IncomingStreamBridge()
+	{
+		Stop();
+	}
 	
 	//Interface
 	virtual void onAttached(RTMPMediaStream *stream)
@@ -1888,6 +1928,9 @@ public:
 
 	void Stop()
 	{
+		//Cancel timer
+		dispatch->Cancel();
+		
 		ScopedLock scope(mutex);
 		
 		//Detach if joined
@@ -1896,8 +1939,44 @@ public:
 			attached->RemoveMediaListener(this);
 		//Detach it anyway
 		attached = nullptr;
+		
+		//Stop thread
+		loop.Stop();
 	}
+	
+	void Enqueue(MediaFrame* frame)
+	{
+		//Get current time
+		uint64_t now = getTimeMS();
+		
+		//Run on thread
+		loop.Async([=](...) {
+			
+			//IF it is first
+			if (!first)
+			{
+				//Get timestamp
+				first = frame->GetTimeStamp();
+				//Get current time
+				ini = now;
+			}
 
+			//Check when it has to be sent
+			auto sched = ini + (frame->GetTimeStamp() - first);
+
+			//Enqueue
+			queue.emplace(sched,frame);
+			
+			//If queue was empty
+			if (queue.size()==1)
+			{
+				Log("-Dispatching in %llums size=%u\n",sched > now ? sched - now : 0, queue.size());
+				//Schedule timer for later
+				dispatch->Again(std::chrono::milliseconds(sched > now ? sched - now : 0));
+			}
+		});
+	}
+	
 	virtual void onMediaFrame(DWORD id,RTMPMediaFrame *frame)
 	{
 		//Depending on the type
@@ -1909,8 +1988,8 @@ public:
 				auto videoFrame = avcPacketizer.AddFrame((RTMPVideoFrame*)frame);
 				//IF got one
 				if (videoFrame)
-					//Send it
-					video.onMediaFrame(*videoFrame);
+					//Push it
+					Enqueue(videoFrame.release());
 				break;
 			}
 			case RTMPMediaFrame::Audio:
@@ -1922,7 +2001,7 @@ public:
 					char aux[3];
 					std::string config;
 					
-					//Encode condig
+					//Encode config
 					for (size_t i=0; i<frame->GetMediaSize();++i)
 					{
 						//Convert to hex
@@ -1930,7 +2009,7 @@ public:
 						//Append
 						config += aux;
 					}
-					Dump(frame->GetMediaData(),frame->GetMediaSize());
+					
 					//Run function on main node thread
 					RTMPServerModule::Async([=](){
 						Nan::HandleScope scope;
@@ -1952,8 +2031,8 @@ public:
 				auto audioFrame = aacPacketizer.AddFrame((RTMPAudioFrame*)frame);
 				//IF got one
 				if (audioFrame)
-					//Send it
-					audio.onMediaFrame(*audioFrame);
+					//Push it
+					Enqueue(audioFrame.release());
 				break;
 			}
 		}
@@ -1992,6 +2071,12 @@ private:
 	Mutex mutex;
 	RTMPMediaStream *attached = nullptr;
 	Persistent<v8::Object> persistent;	
+	std::multimap<uint64_t,std::unique_ptr<MediaFrame>> queue;
+	EventLoop loop;
+	Timer::shared dispatch;
+		
+	uint64_t first = 0;
+	uint64_t ini = 0;
 };
 
 class RTMPNetStreamImpl : 
