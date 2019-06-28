@@ -538,6 +538,10 @@ public:
 	
 	virtual void ProcessCommandMessage(RTMPCommandMessage* cmd)
 	{
+		if (persistent.IsEmpty())
+			//Do nothing
+			return;
+		
 		//Get cmd name params and extra data
 		std::string name = cmd->GetNameUTF8();
 		
