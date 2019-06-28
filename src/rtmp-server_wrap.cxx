@@ -1607,8 +1607,19 @@ static swig_module_info swig_module = {swig_types, 25, 0, 0, 0, 0};
 #include <functional>
 #include <nan.h>
 	
+template<typename T>
+struct CopyablePersistentTraits {
+	typedef Nan::Persistent<T, CopyablePersistentTraits<T> > CopyablePersistent;
+	static const bool kResetInDestructor = true;
+	template<typename S, typename M>
+	static inline void Copy(const Nan::Persistent<S, M> &source, CopyablePersistent *dest) {}
+	template<typename S, typename M>
+	static inline void Copy(const v8::Persistent<S, M>&, v8::Persistent<S, CopyablePersistentTraits<S> >*){}
+};
+
 template<typename T >
-using Persistent = Nan::Persistent<T,Nan::CopyablePersistentTraits<T>>;
+using Persistent = Nan::Persistent<T,CopyablePersistentTraits<T>>;
+
 	
 v8::Local<v8::Value> toJson(AMFData* data)
 {
@@ -1724,7 +1735,7 @@ public:
 			
 		
 		//Run function on main node thread
-		RTMPServerModule::Async([=](){
+		RTMPServerModule::Async([=,persistent = persistent](){
 			Nan::HandleScope scope;
 			int i = 0;
 			v8::Local<v8::Value> argv2[pargs.size()];
@@ -1869,13 +1880,13 @@ public:
 				//If not yet it's time
 				if (ts > now)
 				{
-					Log("-ReDispatching in %llums size=%d\n",(ts-now).count());
+					//Log("-ReDispatching in %llums size=%d\n",(ts-now).count());
 					//Schedule timer for later
 					dispatch->Again(ts-now);
 					//Done
 					break;
 				}
-				Log("-Dispatched from %llums size=%d\n",it->first, queue.size());
+				//Log("-Dispatched from %llums size=%d\n",it->first, queue.size());
 				//Check type
 				if (frame->GetType()==MediaFrame::Audio)
 					//Dispatch audio
@@ -1896,7 +1907,7 @@ public:
 	//Interface
 	virtual void onAttached(RTMPMediaStream *stream)
 	{
-		Log("-IncomingStreamBridge::onAttached() [streamId:%d]\n",stream->GetStreamId());
+		//Log("-IncomingStreamBridge::onAttached() [streamId:%d]\n",stream->GetStreamId());
 		
 		ScopedLock scope(mutex);
 		
@@ -1916,7 +1927,7 @@ public:
 	{
 		ScopedLock scope(mutex);
 		
-		Log("-IncomingStreamBridge::onDetached() [streamId:%d]\n",stream->GetStreamId());
+		//Log("-IncomingStreamBridge::onDetached() [streamId:%d]\n",stream->GetStreamId());
 		
 		//Detach if joined
 		if (attached && attached!=stream)
@@ -1963,17 +1974,28 @@ public:
 
 			//Check when it has to be sent
 			auto sched = ini + (frame->GetTimeStamp() - first);
-
+			
+			//Is this frame late?
+			if (sched < now)
+			{
+				//Update timestamp for first
+				first = frame->GetTimeStamp();
+				//Get current time
+				ini = now;
+				//Send now
+				sched = now;
+			}
+			//Log("-Frame scheduled for diff:%lld time:%lu sched:%llu first:%lu ini:%llu\n",sched - now,frame->GetTimeStamp(),sched, first, ini);
 			//Enqueue
 			queue.emplace(sched,frame);
 			
 			//If queue was empty
 			if (queue.size()==1)
 			{
-				Log("-Dispatching in %llums size=%u\n",sched > now ? sched - now : 0, queue.size());
+				//Log("-Dispatching in %llums size=%u\n",sched > now ? sched - now : 0, queue.size());
 				//Schedule timer for later
 				dispatch->Again(std::chrono::milliseconds(sched > now ? sched - now : 0));
-			}
+			}		
 		});
 	}
 	
@@ -2011,7 +2033,7 @@ public:
 					}
 					
 					//Run function on main node thread
-					RTMPServerModule::Async([=](){
+					RTMPServerModule::Async([=,persistent = persistent](){
 						Nan::HandleScope scope;
 						//Get a local reference
 						v8::Local<v8::Object> local = Nan::New(persistent);
@@ -2104,7 +2126,7 @@ public:
 			extras.push_back(extra ? extra->Clone() : nullptr);
 		}
 		//Run function on main node thread
-		RTMPServerModule::Async([=](){
+		RTMPServerModule::Async([=,persistent = persistent](){
 			Nan::HandleScope scope;
 			//Get a local reference
 			v8::Local<v8::Object> local = Nan::New(persistent);
@@ -2145,7 +2167,7 @@ public:
 		Log("-RTMPNetStreamImpl::Stop() [streamId:%d]\n",id);
 		
 		//Run function on main node thread
-		RTMPServerModule::Async([=](){
+		RTMPServerModule::Async([=,persistent = persistent](){
 			Nan::HandleScope scope;
 			//Get a local reference
 			v8::Local<v8::Object> local = Nan::New(persistent);
@@ -2199,7 +2221,7 @@ public:
 		RegisterStream(stream);
 		
 		//Run function on main node thread
-		RTMPServerModule::Async([=](){
+		RTMPServerModule::Async([=,persistent = persistent](){
 			Nan::HandleScope scope;
 			//Create local args
 			auto object	= SWIG_NewPointerObj(SWIG_as_voidptr(stream), SWIGTYPE_p_RTMPNetStreamImpl,SWIG_POINTER_OWN);
@@ -2231,7 +2253,7 @@ public:
 	void Disconnected() 
 	{
 		//Run function on main node thread
-		RTMPServerModule::Async([=](){
+		RTMPServerModule::Async([=,persistent = persistent](){
 			Nan::HandleScope scope;
 			//Create arguments
 			v8::Local<v8::Value> argv0[0] = {};
@@ -2265,7 +2287,7 @@ public:
 		auto connection = new RTMPNetConnectionImpl(listener,accept);
 		
 		//Run function on main node thread
-		RTMPServerModule::Async([=](){
+		RTMPServerModule::Async([=,persistent = persistent](){
 			Nan::HandleScope scope;
 			
 			//Create local args
