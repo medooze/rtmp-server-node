@@ -22,7 +22,9 @@
 #include <map>
 #include <functional>
 #include <nan.h>
-	
+
+using MediaFrameListener = MediaFrame::Listener;
+
 template<typename T>
 struct CopyablePersistentTraits {
 	typedef Nan::Persistent<T, CopyablePersistentTraits<T> > CopyablePersistent;
@@ -529,6 +531,11 @@ public:
 		persistent.Reset(object);
 	}
 	
+	void ResetListener()
+	{
+		persistent.Reset();
+	}
+	
 	virtual void ProcessCommandMessage(RTMPCommandMessage* cmd)
 	{
 		//Get cmd name params and extra data
@@ -581,6 +588,10 @@ public:
 	void Stop()
 	{
 		Log("-RTMPNetStreamImpl::Stop() [streamId:%d]\n",id);
+		
+		if (persistent.IsEmpty())
+			//Do nothing
+			return;
 		
 		//Run function on main node thread
 		RTMPServerModule::Async([=,persistent = persistent](){
@@ -786,6 +797,12 @@ struct RTMPMediaStreamListener
 struct RTPIncomingMediaStream
 {
 };
+
+%nodefaultctor MediaFrameListener;
+%nodefaultdtor MediaFrameListener;
+struct MediaFrameListener
+{
+};
 	
 %nodefaultctor MediaFrameListenerBridge;
 struct MediaFrameListenerBridge : public RTPIncomingMediaStream
@@ -795,6 +812,9 @@ struct MediaFrameListenerBridge : public RTPIncomingMediaStream
 	DWORD totalBytes;
 	DWORD bitrate;
 	void Update();
+	
+	void AddMediaListener(MediaFrameListener* listener);
+	void RemoveMediaListener(MediaFrameListener* listener);
 };
 
 class IncomingStreamBridge : public RTMPMediaStreamListener
@@ -812,6 +832,7 @@ class RTMPNetStreamImpl
 {
 public:
 	void SetListener(v8::Handle<v8::Object> object);
+	void ResetListener();
 	void SendStatus(v8::Handle<v8::Object> status,v8::Handle<v8::Object> level,v8::Handle<v8::Object> desc);
 	void AddMediaListener(RTMPMediaStreamListener* listener);
 	void RemoveMediaListener(RTMPMediaStreamListener* listener);
