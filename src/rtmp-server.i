@@ -138,53 +138,11 @@ public:
 	typedef std::list<v8::Local<v8::Value>> Arguments;
 public:
 
-	/*
-	 * MakeCallback
-	 *  Executes an object method async on the main node loop
-	 */
-	static void MakeCallback(v8::Handle<v8::Object> object, const char* method,Arguments& arguments)
+	~RTMPServerModule()
 	{
-		// Create a copiable persistent
-		Persistent<v8::Object>* persistent = new Persistent<v8::Object>(object);
-		
-		std::list<Persistent<v8::Value>*> pargs;
-		for (auto it = arguments.begin(); it!= arguments.end(); ++it)
-			pargs.push_back(new Persistent<v8::Value>(*it));
-			
-		
-		//Run function on main node thread
-		RTMPServerModule::Async([=,persistent = persistent](){
-			Nan::HandleScope scope;
-			int i = 0;
-			v8::Local<v8::Value> argv2[pargs.size()];
-			
-			//Create local args
-			for (auto it = pargs.begin(); it!= pargs.end(); ++it)
-				argv2[i++] = Nan::New(*(*it));
-			
-			//Get a local reference
-			v8::Local<v8::Object> local = Nan::New(*persistent);
-			//Create callback function from object
-			v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(Nan::New(method).ToLocalChecked()));
-			//Call object method with arguments
-			Nan::MakeCallback(local, callback, i, argv2);
-			//Release object
-			delete(persistent);
-			//Release args
-			//TODO
-		});
-		
+		Terminate();
 	}
 	
-	/*
-	 * MakeCallback
-	 *  Executes object "emit" method async on the main node loop
-	 */
-	static void Emit(v8::Handle<v8::Object> object,Arguments& arguments)
-	{
-		RTMPServerModule::MakeCallback(object,"emit",arguments);
-	}
-
 	/*
 	 * Async
 	 *  Enqueus a function to the async queue and signals main thread to execute it
@@ -193,23 +151,34 @@ public:
 	{
 		//Lock
 		mutex.Lock();
+		//Check if not terminatd
+		if (uv_is_active((uv_handle_t *)&async))
+		{
 		//Enqueue
 		queue.push_back(func);
-		//Unlock
-		mutex.Unlock();
 		//Signal main thread
 		uv_async_send(&async);
+	}
+		//Unlock
+		mutex.Unlock();
 	}
 
 	static void Initialize()
 	{
+		Log("-RTMPServerModule::Initialize\n");
 		//Init async handler
 		uv_async_init(uv_default_loop(), &async, async_cb_handler);
 	}
 	
 	static void Terminate()
 	{
+		Log("-RTMPServerModule::Terminate\n");
+		//Lock
+		mutex.Lock();
+		//Close handle
 		uv_close((uv_handle_t *)&async, NULL);
+		//Unlock
+		mutex.Unlock();
 	}
 	
 	static void EnableLog(bool flag)
@@ -217,7 +186,6 @@ public:
 		//Enable log
 		Log("-EnableLog [%d]\n",flag);
 		Logger::EnableLog(flag);
-		Log("-EnableLog [%d]\n",flag);
 	}
 	
 	static void EnableDebug(bool flag)
@@ -281,7 +249,7 @@ public:
 		mutex(true)
 	{
 		//Store event callback object
-		persistent.Reset(object);
+		persistent = std::make_shared<Persistent<v8::Object>>(object);
 		//Start time service
 		loop.Start(-1);
 		
@@ -451,10 +419,10 @@ public:
 					}
 					
 					//Run function on main node thread
-					RTMPServerModule::Async([=,persistent = persistent](){
+					RTMPServerModule::Async([=](){
 						Nan::HandleScope scope;
 						//Get a local reference
-						v8::Local<v8::Object> local = Nan::New(persistent);
+						v8::Local<v8::Object> local = Nan::New(*persistent);
 						//Create arguments
 						v8::Local<v8::Value> argvs[1];
 						uint32_t len = 0;
@@ -510,7 +478,7 @@ private:
 	MediaFrameListenerBridge video;
 	Mutex mutex;
 	RTMPMediaStream *attached = nullptr;
-	Persistent<v8::Object> persistent;	
+	std::shared_ptr<Persistent<v8::Object>> persistent;	
 	std::multimap<uint64_t,std::unique_ptr<MediaFrame>> queue;
 	EventLoop loop;
 	Timer::shared dispatch;
@@ -528,17 +496,18 @@ public:
 	void SetListener(v8::Handle<v8::Object> object)
 	{
 		//Store event callback object
-		persistent.Reset(object);
+		persistent = std::make_shared<Persistent<v8::Object>>(object);
 	}
 	
 	void ResetListener()
 	{
-		persistent.Reset();
+		if (persistent)
+			persistent->Reset();
 	}
 	
 	virtual void ProcessCommandMessage(RTMPCommandMessage* cmd)
 	{
-		if (persistent.IsEmpty())
+		if (!persistent || persistent->IsEmpty())
 			//Do nothing
 			return;
 		
@@ -553,10 +522,10 @@ public:
 			extras.push_back(extra ? extra->Clone() : nullptr);
 		}
 		//Run function on main node thread
-		RTMPServerModule::Async([=,persistent = persistent](){
+		RTMPServerModule::Async([=](){
 			Nan::HandleScope scope;
 			//Get a local reference
-			v8::Local<v8::Object> local = Nan::New(persistent);
+			v8::Local<v8::Object> local = Nan::New(*persistent);
 			//Create arguments
 			v8::Local<v8::Value> argvs[extras.size()+2];
 			uint32_t len = 0;
@@ -593,15 +562,15 @@ public:
 	{
 		Log("-RTMPNetStreamImpl::Stop() [streamId:%d]\n",id);
 		
-		if (persistent.IsEmpty())
+		if (!persistent || persistent->IsEmpty())
 			//Do nothing
 			return;
 		
 		//Run function on main node thread
-		RTMPServerModule::Async([=,persistent = persistent](){
+		RTMPServerModule::Async([=](){
 			Nan::HandleScope scope;
 			//Get a local reference
-			v8::Local<v8::Object> local = Nan::New(persistent);
+			v8::Local<v8::Object> local = Nan::New(*persistent);
 			//Create arguments
 			v8::Local<v8::Value> argv0[0] = {};
 			//Create callback function from object
@@ -614,7 +583,7 @@ public:
 		listener = nullptr;
 	}
 private:
-	Persistent<v8::Object> persistent;	
+	std::shared_ptr<Persistent<v8::Object>> persistent;	
 };
 
 
@@ -630,7 +599,7 @@ public:
 	void Accept(v8::Handle<v8::Object> object)
 	{
 		//Store event callback object
-		persistent.Reset(object);
+		persistent = std::make_shared<Persistent<v8::Object>>(object);
 		//Accept connection
 		accept(true);
 	}
@@ -651,15 +620,20 @@ public:
 		//Register stream
 		RegisterStream(stream);
 		
+		//Check we have a callback object
+		if (!persistent || persistent->IsEmpty())
+			//Do nothing
+			return stream;
+		
 		//Run function on main node thread
-		RTMPServerModule::Async([=,persistent = persistent](){
+		RTMPServerModule::Async([=](){
 			Nan::HandleScope scope;
 			//Create local args
 			auto object	= SWIG_NewPointerObj(SWIG_as_voidptr(stream), SWIGTYPE_p_RTMPNetStreamImpl,SWIG_POINTER_OWN);
 			//Create arguments
 			v8::Local<v8::Value> argv1[1] = {object};
 			//Get a local reference
-			v8::Local<v8::Object> local = Nan::New(persistent);
+			v8::Local<v8::Object> local = Nan::New(*persistent);
 			//Create callback function from object
 			v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(Nan::New("onstream").ToLocalChecked()));
 			//Call object method with arguments
@@ -683,13 +657,17 @@ public:
 	
 	void Disconnected() 
 	{
+		if (!persistent || persistent->IsEmpty())
+			//Do nothing
+			return;
+		
 		//Run function on main node thread
-		RTMPServerModule::Async([=,persistent = persistent](){
+		RTMPServerModule::Async([=](){
 			Nan::HandleScope scope;
 			//Create arguments
 			v8::Local<v8::Value> argv0[0] = {};
 			//Get a local reference
-			v8::Local<v8::Object> local = Nan::New(persistent);
+			v8::Local<v8::Object> local = Nan::New(*persistent);
 			//Create callback function from object
 			v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(Nan::New("ondisconnect").ToLocalChecked()));
 			//Call object method with arguments
@@ -698,16 +676,16 @@ public:
 	}
 private:
 	std::function<void(bool)> accept;
-	Persistent<v8::Object> persistent;	
+	std::shared_ptr<Persistent<v8::Object>> persistent;	
 };
 
 class RTMPApplicationImpl : 
 	public RTMPApplication
 {
 public:
-	RTMPApplicationImpl(v8::Handle<v8::Object> object) :
-		persistent(object)
+	RTMPApplicationImpl(v8::Handle<v8::Object> object)
 	{
+		persistent = std::make_shared<Persistent<v8::Object>>(object);
 	}
 
 	virtual ~RTMPApplicationImpl() = default;
@@ -718,7 +696,7 @@ public:
 		auto connection = new RTMPNetConnectionImpl(listener,accept);
 		
 		//Run function on main node thread
-		RTMPServerModule::Async([=,persistent = persistent](){
+		RTMPServerModule::Async([=](){
 			Nan::HandleScope scope;
 			
 			//Create local args
@@ -729,7 +707,7 @@ public:
 			v8::Local<v8::Value> argv2[2] = {str.ToLocalChecked(),object};
 			
 			//Get a local reference
-			v8::Local<v8::Object> local = Nan::New(persistent);
+			v8::Local<v8::Object> local = Nan::New(*persistent);
 			//Create callback function from object
 			v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(Nan::New("onconnect").ToLocalChecked()));
 			//Call object method with arguments
@@ -739,7 +717,7 @@ public:
 		return connection;
 	}
 private:
-	Persistent<v8::Object> persistent;	
+	std::shared_ptr<Persistent<v8::Object>> persistent;	
 };
 
 
@@ -747,9 +725,9 @@ class RTMPServerFacade :
 	public RTMPServer
 {
 public:	
-	RTMPServerFacade(v8::Handle<v8::Object> object) :
-		persistent(object)
+	RTMPServerFacade(v8::Handle<v8::Object> object)
 	{
+		persistent = std::make_shared<Persistent<v8::Object>>(object);
 	}
 	void Start(int port)
 	{
@@ -768,7 +746,7 @@ public:
 		End();
 	}
 private:
-	Persistent<v8::Object> persistent;	
+	std::shared_ptr<Persistent<v8::Object>> persistent;	
 };
 
 
