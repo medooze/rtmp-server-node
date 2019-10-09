@@ -21,12 +21,14 @@
 #include <list>
 #include <map>
 #include <functional>
+#include <memory>
 #include <nan.h>
 
 using MediaFrameListener = MediaFrame::Listener;
 
 template<typename T>
 struct CopyablePersistentTraits {
+public:
 	typedef Nan::Persistent<T, CopyablePersistentTraits<T> > CopyablePersistent;
 	static const bool kResetInDestructor = true;
 	template<typename S, typename M>
@@ -35,9 +37,49 @@ struct CopyablePersistentTraits {
 	static inline void Copy(const v8::Persistent<S, M>&, v8::Persistent<S, CopyablePersistentTraits<S> >*){}
 };
 
-template<typename T >
-using Persistent = Nan::Persistent<T,CopyablePersistentTraits<T>>;
+template<typename T>
+class NonCopyablePersistentTraits { 
+public:
+  typedef Nan::Persistent<T, NonCopyablePersistentTraits<T> > NonCopyablePersistent;
+  static const bool kResetInDestructor = true;
 
+  template<typename S, typename M>
+  static void Copy(const Nan::Persistent<S, M> &source, NonCopyablePersistent *dest);
+
+  template<typename O> static void Uncompilable();
+};
+
+template<typename T >
+using Persistent = Nan::Persistent<T,NonCopyablePersistentTraits<T>>;
+
+
+bool MakeCallback(const std::shared_ptr<Persistent<v8::Object>>& persistent, const char* name, int argc = 0, v8::Local<v8::Value>* argv = nullptr)
+{
+	Nan::HandleScope scope;
+	//Ensure we have an object
+	if (!persistent)
+		return false;
+	//Get a local reference
+	v8::Local<v8::Object> local = Nan::New(*persistent);
+	//Check it is not empty
+	if (local.IsEmpty())
+		return false;
+	//Get event name
+	auto method = Nan::New(name).ToLocalChecked();
+	//Check it has it
+	if (!local->Has(method))
+		return false;
+	//Create callback function from object
+	v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(method));
+	//If it is callable
+	if (!callback->IsCallable())
+		return false;
+	//Call object method with arguments
+	Nan::MakeCallback(local, callback, argc, argv);
+	
+	//Done 
+	return true;
+}
 	
 v8::Local<v8::Value> toJson(AMFData* data)
 {
@@ -154,11 +196,11 @@ public:
 		//Check if not terminatd
 		if (uv_is_active((uv_handle_t *)&async))
 		{
-		//Enqueue
-		queue.push_back(func);
-		//Signal main thread
-		uv_async_send(&async);
-	}
+			//Enqueue
+			queue.push_back(func);
+			//Signal main thread
+			uv_async_send(&async);
+		}
 		//Unlock
 		mutex.Unlock();
 	}
@@ -175,6 +217,8 @@ public:
 		Log("-RTMPServerModule::Terminate\n");
 		//Lock
 		mutex.Lock();
+		//empty queue
+		queue.clear();
 		//Close handle
 		uv_close((uv_handle_t *)&async, NULL);
 		//Unlock
@@ -184,21 +228,18 @@ public:
 	static void EnableLog(bool flag)
 	{
 		//Enable log
-		Log("-EnableLog [%d]\n",flag);
 		Logger::EnableLog(flag);
 	}
 	
 	static void EnableDebug(bool flag)
 	{
 		//Enable debug
-		Log("-EnableDebug [%d]\n",flag);
 		Logger::EnableDebug(flag);
 	}
 	
 	static void EnableUltraDebug(bool flag)
 	{
 		//Enable debug
-		Log("-EnableUltraDebug [%d]\n",flag);
 		Logger::EnableUltraDebug(flag);
 	}
 	
@@ -419,19 +460,14 @@ public:
 					}
 					
 					//Run function on main node thread
-					RTMPServerModule::Async([=](){
+					RTMPServerModule::Async([=,cloned=persistent](){
 						Nan::HandleScope scope;
-						//Get a local reference
-						v8::Local<v8::Object> local = Nan::New(*persistent);
-						//Create arguments
-						v8::Local<v8::Value> argvs[1];
-						uint32_t len = 0;
-
-						argvs[len++] = Nan::New<v8::String>(config).ToLocalChecked();
-						//Create callback function from object
-						v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(Nan::New("onaacconfig").ToLocalChecked()));
+						int i = 0;
+						v8::Local<v8::Value> argv[1];
+						//Create local args
+						argv[i++] = Nan::New<v8::String>(config).ToLocalChecked();
 						//Call object method with arguments
-						Nan::MakeCallback(local, callback, len, argvs);
+						MakeCallback(cloned, "onaacconfig", i, argv);
 					});
 				}
 
@@ -501,8 +537,7 @@ public:
 	
 	void ResetListener()
 	{
-		if (persistent)
-			persistent->Reset();
+		persistent.reset();
 	}
 	
 	virtual void ProcessCommandMessage(RTMPCommandMessage* cmd)
@@ -522,27 +557,22 @@ public:
 			extras.push_back(extra ? extra->Clone() : nullptr);
 		}
 		//Run function on main node thread
-		RTMPServerModule::Async([=](){
+		RTMPServerModule::Async([=,cloned=persistent](){
 			Nan::HandleScope scope;
-			//Get a local reference
-			v8::Local<v8::Object> local = Nan::New(*persistent);
-			//Create arguments
-			v8::Local<v8::Value> argvs[extras.size()+2];
-			uint32_t len = 0;
+			int i = 0;
+			v8::Local<v8::Value> argv[extras.size()+2];
 			
-			argvs[len++] = Nan::New<v8::String>(name).ToLocalChecked();
-			argvs[len++] = toJson(params); 
+			//Create local args
+			argv[i++] = Nan::New<v8::String>(name).ToLocalChecked();
+			argv[i++] = toJson(params); 
 			delete(params);
 			for (auto& extra : extras)
 			{
-				argvs[len++] = toJson(extra);
+				argv[i++] = toJson(extra);
 				delete(extra);
 			}
-		
-			//Create callback function from object
-			v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(Nan::New("oncmd").ToLocalChecked()));
 			//Call object method with arguments
-			Nan::MakeCallback(local, callback, len, argvs);
+			MakeCallback(cloned, "oncmd", i, argv);
 		});
 	}
 	
@@ -567,16 +597,9 @@ public:
 			return;
 		
 		//Run function on main node thread
-		RTMPServerModule::Async([=](){
-			Nan::HandleScope scope;
-			//Get a local reference
-			v8::Local<v8::Object> local = Nan::New(*persistent);
-			//Create arguments
-			v8::Local<v8::Value> argv0[0] = {};
-			//Create callback function from object
-			v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(Nan::New("onstopped").ToLocalChecked()));
+		RTMPServerModule::Async([=,cloned=persistent](){
 			//Call object method with arguments
-			Nan::MakeCallback(local, callback, 0, argv0);
+			MakeCallback(cloned, "onstopped");
 		});
 		
 		RTMPMediaStream::RemoveAllMediaListeners();
@@ -610,12 +633,12 @@ public:
 		accept(false);
 	}
 
-	virtual RTMPNetStream* CreateStream(DWORD streamId,DWORD audioCaps,DWORD videoCaps,RTMPNetStream::Listener *listener) override
+	virtual RTMPNetStream::shared CreateStream(DWORD streamId,DWORD audioCaps,DWORD videoCaps,RTMPNetStream::Listener *listener) override
 	{
 		Log("-RTMPNetConnectionImpl::CreateStream() [streamId:%d]\n",streamId);
 		
 		//Create connection
-		auto stream = new RTMPNetStreamImpl(streamId,listener);
+		auto stream = std::make_shared<RTMPNetStreamImpl>(streamId,listener);
 		
 		//Register stream
 		RegisterStream(stream);
@@ -626,29 +649,27 @@ public:
 			return stream;
 		
 		//Run function on main node thread
-		RTMPServerModule::Async([=](){
+		RTMPServerModule::Async([=,cloned=persistent](){
 			Nan::HandleScope scope;
+			//We create a new shared pointer
+			auto shared = new std::shared_ptr<RTMPNetStream>(stream);
 			//Create local args
-			auto object	= SWIG_NewPointerObj(SWIG_as_voidptr(stream), SWIGTYPE_p_RTMPNetStreamImpl,SWIG_POINTER_OWN);
-			//Create arguments
-			v8::Local<v8::Value> argv1[1] = {object};
-			//Get a local reference
-			v8::Local<v8::Object> local = Nan::New(*persistent);
-			//Create callback function from object
-			v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(Nan::New("onstream").ToLocalChecked()));
+			v8::Local<v8::Value> argv[1] = {
+				SWIG_NewPointerObj(SWIG_as_voidptr(shared), SWIGTYPE_p_RTMPNetStreamShared,SWIG_POINTER_OWN)
+			};
 			//Call object method with arguments
-			Nan::MakeCallback(local, callback, 1, argv1);
+			MakeCallback(cloned, "onstream", 1, argv);
 		});
 		
 		return stream;
 	}
 
-	virtual void DeleteStream(RTMPNetStream *stream) override
+	virtual void DeleteStream(const RTMPNetStream::shared& stream) override
 	{
 		Log("-RTMPNetConnectionImpl::CreateStream() [streamId:%d]\n",stream->GetStreamId());
 		
 		//Cast
-		auto impl = static_cast<RTMPNetStreamImpl*>(stream);
+		auto impl = std::static_pointer_cast<RTMPNetStreamImpl>(stream);
 		//Signael stop event
 		impl->Stop();
 		//Unregister stream
@@ -660,18 +681,11 @@ public:
 		if (!persistent || persistent->IsEmpty())
 			//Do nothing
 			return;
-		
+	
 		//Run function on main node thread
-		RTMPServerModule::Async([=](){
-			Nan::HandleScope scope;
-			//Create arguments
-			v8::Local<v8::Value> argv0[0] = {};
-			//Get a local reference
-			v8::Local<v8::Object> local = Nan::New(*persistent);
-			//Create callback function from object
-			v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(Nan::New("ondisconnect").ToLocalChecked()));
+		RTMPServerModule::Async([=,cloned=persistent](){
 			//Call object method with arguments
-			Nan::MakeCallback(local, callback, 0, argv0);
+			MakeCallback(cloned, "ondisconnect");
 		});
 	}
 private:
@@ -696,7 +710,7 @@ public:
 		auto connection = new RTMPNetConnectionImpl(listener,accept);
 		
 		//Run function on main node thread
-		RTMPServerModule::Async([=](){
+		RTMPServerModule::Async([=,cloned=persistent](){
 			Nan::HandleScope scope;
 			
 			//Create local args
@@ -704,14 +718,13 @@ public:
 			auto str	= Nan::New<v8::String>(parser.GetUTF8String());
 			auto object	= SWIG_NewPointerObj(SWIG_as_voidptr(connection), SWIGTYPE_p_RTMPNetConnectionImpl,SWIG_POINTER_OWN);
 			//Create arguments
-			v8::Local<v8::Value> argv2[2] = {str.ToLocalChecked(),object};
+			v8::Local<v8::Value> argv[2] = {
+				str.ToLocalChecked(),
+				object
+			};
 			
-			//Get a local reference
-			v8::Local<v8::Object> local = Nan::New(*persistent);
-			//Create callback function from object
-			v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(Nan::New("onconnect").ToLocalChecked()));
 			//Call object method with arguments
-			Nan::MakeCallback(local, callback, 2, argv2);
+			MakeCallback(cloned, "onconnect", 2, argv);
 		});
 		
 		return connection;
@@ -819,7 +832,16 @@ public:
 	void AddMediaListener(RTMPMediaStreamListener* listener);
 	void RemoveMediaListener(RTMPMediaStreamListener* listener);
 };
-	
+
+%{
+using RTMPNetStreamShared =  std::shared_ptr<RTMPNetStream>;
+%}
+%nodefaultctor RTMPNetStreamShared;
+struct RTMPNetStreamShared
+{
+	RTMPNetStreamImpl* get();
+};
+
 %nodefaultctor RTMPNetConnectionImpl;
 class RTMPNetConnectionImpl
 {
