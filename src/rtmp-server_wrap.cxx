@@ -3131,6 +3131,25 @@ static SwigV8ReturnValue _wrap_HD1080P(v8::Local<v8::String> property, const Swi
 
 
 #if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_UW720P(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_UW720P(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    
+    jsresult = SWIG_From_int(static_cast< int >(23));
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
 static SwigV8ReturnValue _wrap_MTU(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
 #else
   static SwigV8ReturnValue _wrap_MTU(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
@@ -7098,6 +7117,7 @@ SWIGV8_AddStaticVariable(exports_obj, "SD480P", _wrap_SD480P, JS_veto_set_variab
 SWIGV8_AddStaticVariable(exports_obj, "SQCIF", _wrap_SQCIF, JS_veto_set_variable);
 SWIGV8_AddStaticVariable(exports_obj, "SCIF", _wrap_SCIF, JS_veto_set_variable);
 SWIGV8_AddStaticVariable(exports_obj, "HD1080P", _wrap_HD1080P, JS_veto_set_variable);
+SWIGV8_AddStaticVariable(exports_obj, "UW720P", _wrap_UW720P, JS_veto_set_variable);
 SWIGV8_AddStaticVariable(exports_obj, "MTU", _wrap_MTU, JS_veto_set_variable);
 SWIGV8_AddStaticVariable(exports_obj, "RTPPAYLOADSIZE", _wrap_RTPPAYLOADSIZE, JS_veto_set_variable);
 SWIGV8_AddStaticVariable(exports_obj, "MAXKBITS", _wrap_MAXKBITS, JS_veto_set_variable);
