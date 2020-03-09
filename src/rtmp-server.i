@@ -617,6 +617,8 @@ public:
 	RTMPNetConnectionImpl(Listener *listener,std::function<void(bool)> accept) :
 		accept(accept)
 	{
+		//Add us as listeners
+		AddListener(listener);
 	}
 
 	void Accept(v8::Handle<v8::Object> object)

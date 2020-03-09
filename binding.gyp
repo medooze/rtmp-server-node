@@ -25,7 +25,6 @@
 				"-O3",
 				"-g",
 				"-Wno-unused-function",
-				"-faligned-new",
 				#"-O0",
 				#"-fsanitize=address,leak"
 			],
