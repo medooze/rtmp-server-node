@@ -678,8 +678,10 @@ public:
 		UnRegisterStream(stream);
 	}
 	
-	void Disconnected() 
+	virtual void Disconnected() 
 	{
+		RTMPNetConnection::Disconnected();
+		
 		if (!persistent || persistent->IsEmpty())
 			//Do nothing
 			return;
