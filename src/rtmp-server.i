@@ -390,23 +390,26 @@ public:
 		//Run on thread
 		loop.Async([=](...) {
 			
+			//Convert timestamp 
+			uint64_t timestamp = frame->GetTimeStamp()*1000/frame->GetClockRate();
+			
 			//IF it is first
 			if (!first)
 			{
 				//Get timestamp
-				first = frame->GetTimeStamp();
+				first = timestamp;
 				//Get current time
 				ini = now;
 			}
 
 			//Check when it has to be sent
-			auto sched = ini + (frame->GetTimeStamp() - first);
+			auto sched = ini + (timestamp - first);
 			
 			//Is this frame late?
 			if (sched < now)
 			{
 				//Update timestamp for first
-				first = frame->GetTimeStamp();
+				first = timestamp;
 				//Get current time
 				ini = now;
 				//Send now
