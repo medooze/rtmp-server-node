@@ -601,6 +601,7 @@ public:
 		
 		//Run function on main node thread
 		RTMPServerModule::Async([=,cloned=persistent](){
+			Nan::HandleScope scope;
 			//Call object method with arguments
 			MakeCallback(cloned, "onstopped");
 		});
@@ -681,6 +682,14 @@ public:
 		UnRegisterStream(stream);
 	}
 	
+	virtual void Disconnect()
+	{
+		//Ensure no callback is fired
+		persistent.reset();
+		//Disconnect
+		RTMPNetConnection::Disconnect();
+	}
+	
 	virtual void Disconnected() 
 	{
 		RTMPNetConnection::Disconnected();
@@ -691,6 +700,7 @@ public:
 	
 		//Run function on main node thread
 		RTMPServerModule::Async([=,cloned=persistent](){
+			Nan::HandleScope scope;
 			//Call object method with arguments
 			MakeCallback(cloned, "ondisconnect");
 		});
