@@ -1973,6 +1973,9 @@ public:
 		//Get current time
 		uint64_t now = getTimeMS();
 		
+		//Set current time
+		frame->SetTime(now);
+		
 		//Run on thread
 		loop.Async([=](...) {
 			
@@ -2122,6 +2125,12 @@ public:
 	{
 		//Store event callback object
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
+		//Launc pending commands
+		for (auto& cmd : pending)
+			//Proccess them now
+			ProcessCommandMessage(cmd.get());
+		//Clear pending
+		pending.clear();
 	}
 	
 	void ResetListener()
@@ -2132,8 +2141,12 @@ public:
 	virtual void ProcessCommandMessage(RTMPCommandMessage* cmd)
 	{
 		if (!persistent || persistent->IsEmpty())
-			//Do nothing
+		{
+			//Add command to pending until the listener is set
+			pending.emplace_back(cmd->Clone());
+			//Do nothing yet
 			return;
+		}
 		
 		//Get cmd name params and extra data
 		std::string name = cmd->GetNameUTF8();
@@ -2197,6 +2210,7 @@ public:
 	}
 private:
 	std::shared_ptr<Persistent<v8::Object>> persistent;	
+	std::vector<std::unique_ptr<RTMPCommandMessage>> pending;
 };
 
 
@@ -5505,6 +5519,134 @@ static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_numPackets_get(v8::Local
 
 
 #if (V8_MAJOR_VERSION-0) < 5
+static void _wrap_MediaFrameListenerBridge_numFramesDelta_set(v8::Local<v8::String> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#else
+  static void _wrap_MediaFrameListenerBridge_numFramesDelta_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    uint32_t arg2 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    unsigned int val2 ;
+    int ecode2 = 0 ;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numFramesDelta_set" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    ecode2 = SWIG_AsVal_unsigned_SS_int(value, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_numFramesDelta_set" "', argument " "2"" of type '" "uint32_t""'");
+    } 
+    arg2 = static_cast< uint32_t >(val2);
+    if (arg1) (arg1)->numFramesDelta = arg2;
+    
+    
+    
+    goto fail;
+  fail:
+    return;
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_numFramesDelta_get(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_numFramesDelta_get(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    uint32_t result;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numFramesDelta_get" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    result = (uint32_t) ((arg1)->numFramesDelta);
+    jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+    
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static void _wrap_MediaFrameListenerBridge_numPacketsDelta_set(v8::Local<v8::String> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#else
+  static void _wrap_MediaFrameListenerBridge_numPacketsDelta_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    uint32_t arg2 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    unsigned int val2 ;
+    int ecode2 = 0 ;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numPacketsDelta_set" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    ecode2 = SWIG_AsVal_unsigned_SS_int(value, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_numPacketsDelta_set" "', argument " "2"" of type '" "uint32_t""'");
+    } 
+    arg2 = static_cast< uint32_t >(val2);
+    if (arg1) (arg1)->numPacketsDelta = arg2;
+    
+    
+    
+    goto fail;
+  fail:
+    return;
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_numPacketsDelta_get(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_numPacketsDelta_get(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    uint32_t result;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numPacketsDelta_get" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    result = (uint32_t) ((arg1)->numPacketsDelta);
+    jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+    
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
 static void _wrap_MediaFrameListenerBridge_totalBytes_set(v8::Local<v8::String> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
 #else
   static void _wrap_MediaFrameListenerBridge_totalBytes_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
@@ -5621,6 +5763,198 @@ static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_bitrate_get(v8::Local<v8
     }
     arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
     result = (uint32_t) ((arg1)->bitrate);
+    jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+    
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static void _wrap_MediaFrameListenerBridge_minWaitedTime_set(v8::Local<v8::String> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#else
+  static void _wrap_MediaFrameListenerBridge_minWaitedTime_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    uint32_t arg2 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    unsigned int val2 ;
+    int ecode2 = 0 ;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_minWaitedTime_set" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    ecode2 = SWIG_AsVal_unsigned_SS_int(value, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_minWaitedTime_set" "', argument " "2"" of type '" "uint32_t""'");
+    } 
+    arg2 = static_cast< uint32_t >(val2);
+    if (arg1) (arg1)->minWaitedTime = arg2;
+    
+    
+    
+    goto fail;
+  fail:
+    return;
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_minWaitedTime_get(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_minWaitedTime_get(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    uint32_t result;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_minWaitedTime_get" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    result = (uint32_t) ((arg1)->minWaitedTime);
+    jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+    
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static void _wrap_MediaFrameListenerBridge_maxWaitedTime_set(v8::Local<v8::String> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#else
+  static void _wrap_MediaFrameListenerBridge_maxWaitedTime_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    uint32_t arg2 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    unsigned int val2 ;
+    int ecode2 = 0 ;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_maxWaitedTime_set" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    ecode2 = SWIG_AsVal_unsigned_SS_int(value, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_maxWaitedTime_set" "', argument " "2"" of type '" "uint32_t""'");
+    } 
+    arg2 = static_cast< uint32_t >(val2);
+    if (arg1) (arg1)->maxWaitedTime = arg2;
+    
+    
+    
+    goto fail;
+  fail:
+    return;
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_maxWaitedTime_get(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_maxWaitedTime_get(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    uint32_t result;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_maxWaitedTime_get" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    result = (uint32_t) ((arg1)->maxWaitedTime);
+    jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+    
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static void _wrap_MediaFrameListenerBridge_avgWaitedTime_set(v8::Local<v8::String> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#else
+  static void _wrap_MediaFrameListenerBridge_avgWaitedTime_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    uint32_t arg2 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    unsigned int val2 ;
+    int ecode2 = 0 ;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_avgWaitedTime_set" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    ecode2 = SWIG_AsVal_unsigned_SS_int(value, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_avgWaitedTime_set" "', argument " "2"" of type '" "uint32_t""'");
+    } 
+    arg2 = static_cast< uint32_t >(val2);
+    if (arg1) (arg1)->avgWaitedTime = arg2;
+    
+    
+    
+    goto fail;
+  fail:
+    return;
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_avgWaitedTime_get(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_avgWaitedTime_get(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    v8::Handle<v8::Value> jsresult;
+    MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    uint32_t result;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_avgWaitedTime_get" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+    }
+    arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+    result = (uint32_t) ((arg1)->avgWaitedTime);
     jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
     
     
@@ -7274,8 +7608,13 @@ SWIGV8_AddMemberFunction(_exports_ByteBuffer_class, "GetSize", _wrap_ByteBuffer_
 SWIGV8_AddMemberFunction(_exports_ByteBuffer_class, "GetLength", _wrap_ByteBuffer_GetLength);
 SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "numFrames", _wrap_MediaFrameListenerBridge_numFrames_get, _wrap_MediaFrameListenerBridge_numFrames_set);
 SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "numPackets", _wrap_MediaFrameListenerBridge_numPackets_get, _wrap_MediaFrameListenerBridge_numPackets_set);
+SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "numFramesDelta", _wrap_MediaFrameListenerBridge_numFramesDelta_get, _wrap_MediaFrameListenerBridge_numFramesDelta_set);
+SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "numPacketsDelta", _wrap_MediaFrameListenerBridge_numPacketsDelta_get, _wrap_MediaFrameListenerBridge_numPacketsDelta_set);
 SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "totalBytes", _wrap_MediaFrameListenerBridge_totalBytes_get, _wrap_MediaFrameListenerBridge_totalBytes_set);
 SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "bitrate", _wrap_MediaFrameListenerBridge_bitrate_get, _wrap_MediaFrameListenerBridge_bitrate_set);
+SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "minWaitedTime", _wrap_MediaFrameListenerBridge_minWaitedTime_get, _wrap_MediaFrameListenerBridge_minWaitedTime_set);
+SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "maxWaitedTime", _wrap_MediaFrameListenerBridge_maxWaitedTime_get, _wrap_MediaFrameListenerBridge_maxWaitedTime_set);
+SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "avgWaitedTime", _wrap_MediaFrameListenerBridge_avgWaitedTime_get, _wrap_MediaFrameListenerBridge_avgWaitedTime_set);
 SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridge_class, "Update", _wrap_MediaFrameListenerBridge_Update);
 SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridge_class, "AddMediaListener", _wrap_MediaFrameListenerBridge_AddMediaListener);
 SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridge_class, "RemoveMediaListener", _wrap_MediaFrameListenerBridge_RemoveMediaListener);

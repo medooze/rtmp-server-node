@@ -387,6 +387,9 @@ public:
 		//Get current time
 		uint64_t now = getTimeMS();
 		
+		//Set current time
+		frame->SetTime(now);
+		
 		//Run on thread
 		loop.Async([=](...) {
 			
@@ -536,6 +539,12 @@ public:
 	{
 		//Store event callback object
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
+		//Launc pending commands
+		for (auto& cmd : pending)
+			//Proccess them now
+			ProcessCommandMessage(cmd.get());
+		//Clear pending
+		pending.clear();
 	}
 	
 	void ResetListener()
@@ -546,8 +555,12 @@ public:
 	virtual void ProcessCommandMessage(RTMPCommandMessage* cmd)
 	{
 		if (!persistent || persistent->IsEmpty())
-			//Do nothing
+		{
+			//Add command to pending until the listener is set
+			pending.emplace_back(cmd->Clone());
+			//Do nothing yet
 			return;
+		}
 		
 		//Get cmd name params and extra data
 		std::string name = cmd->GetNameUTF8();
@@ -611,6 +624,7 @@ public:
 	}
 private:
 	std::shared_ptr<Persistent<v8::Object>> persistent;	
+	std::vector<std::unique_ptr<RTMPCommandMessage>> pending;
 };
 
 
@@ -821,8 +835,13 @@ struct MediaFrameListenerBridge : public RTPIncomingMediaStream
 {
 	DWORD numFrames;
 	DWORD numPackets;
+	DWORD numFramesDelta;
+	DWORD numPacketsDelta;
 	DWORD totalBytes;
 	DWORD bitrate;
+	DWORD minWaitedTime;
+	DWORD maxWaitedTime;
+	DWORD avgWaitedTime;
 	void Update();
 	
 	void AddMediaListener(MediaFrameListener* listener);
