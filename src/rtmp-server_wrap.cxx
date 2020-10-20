@@ -2123,8 +2123,14 @@ public:
 	
 	void SetListener(v8::Handle<v8::Object> object)
 	{
+		
+		//Lock
+		mutex.Lock();
 		//Store event callback object
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
+		//Unlock
+		mutex.Unlock();
+		
 		//Launc pending commands
 		for (auto& cmd : pending)
 			//Proccess them now
@@ -2135,11 +2141,17 @@ public:
 	
 	void ResetListener()
 	{
+		//Lock
+		ScopedLock scope(mutex);
+		//Reset js listener object
 		persistent.reset();
 	}
 	
 	virtual void ProcessCommandMessage(RTMPCommandMessage* cmd)
 	{
+		//Lock
+		ScopedLock scope(mutex);
+		
 		if (!persistent || persistent->IsEmpty())
 		{
 			//Add command to pending until the listener is set
@@ -2192,7 +2204,13 @@ public:
 	
 	void Stop()
 	{
+		//Lock
+		ScopedLock scope(mutex);
+		
 		Log("-RTMPNetStreamImpl::Stop() [streamId:%d]\n",id);
+		
+		RTMPMediaStream::RemoveAllMediaListeners();
+		listener = nullptr;
 		
 		if (!persistent || persistent->IsEmpty())
 			//Do nothing
@@ -2205,10 +2223,10 @@ public:
 			MakeCallback(cloned, "onstopped");
 		});
 		
-		RTMPMediaStream::RemoveAllMediaListeners();
-		listener = nullptr;
+		
 	}
 private:
+	Mutex mutex;
 	std::shared_ptr<Persistent<v8::Object>> persistent;	
 	std::vector<std::unique_ptr<RTMPCommandMessage>> pending;
 };
@@ -6451,6 +6469,33 @@ fail:
 }
 
 
+static SwigV8ReturnValue _wrap_RTMPNetStreamImpl_Stop(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  v8::Handle<v8::Value> jsresult;
+  RTMPNetStreamImpl *arg1 = (RTMPNetStreamImpl *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPNetStreamImpl_Stop.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_RTMPNetStreamImpl, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "RTMPNetStreamImpl_Stop" "', argument " "1"" of type '" "RTMPNetStreamImpl *""'"); 
+  }
+  arg1 = reinterpret_cast< RTMPNetStreamImpl * >(argp1);
+  (arg1)->Stop();
+  jsresult = SWIGV8_UNDEFINED();
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
 #if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031710)
 static void _wrap_delete_RTMPNetStreamImpl(v8::Persistent<v8::Value> object, void *parameter) {
   SWIGV8_Proxy *proxy = static_cast<SWIGV8_Proxy *>(parameter);
@@ -7627,6 +7672,7 @@ SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "ResetListener", _wra
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "SendStatus", _wrap_RTMPNetStreamImpl_SendStatus);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "AddMediaListener", _wrap_RTMPNetStreamImpl_AddMediaListener);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "RemoveMediaListener", _wrap_RTMPNetStreamImpl_RemoveMediaListener);
+SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "Stop", _wrap_RTMPNetStreamImpl_Stop);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamShared_class, "get", _wrap_RTMPNetStreamShared_get);
 SWIGV8_AddMemberFunction(_exports_RTMPNetConnectionImpl_class, "Accept", _wrap_RTMPNetConnectionImpl_Accept);
 SWIGV8_AddMemberFunction(_exports_RTMPNetConnectionImpl_class, "Reject", _wrap_RTMPNetConnectionImpl_Reject);

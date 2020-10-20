@@ -537,8 +537,14 @@ public:
 	
 	void SetListener(v8::Handle<v8::Object> object)
 	{
+		
+		//Lock
+		mutex.Lock();
 		//Store event callback object
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
+		//Unlock
+		mutex.Unlock();
+		
 		//Launc pending commands
 		for (auto& cmd : pending)
 			//Proccess them now
@@ -549,11 +555,17 @@ public:
 	
 	void ResetListener()
 	{
+		//Lock
+		ScopedLock scope(mutex);
+		//Reset js listener object
 		persistent.reset();
 	}
 	
 	virtual void ProcessCommandMessage(RTMPCommandMessage* cmd)
 	{
+		//Lock
+		ScopedLock scope(mutex);
+		
 		if (!persistent || persistent->IsEmpty())
 		{
 			//Add command to pending until the listener is set
@@ -606,7 +618,13 @@ public:
 	
 	void Stop()
 	{
+		//Lock
+		ScopedLock scope(mutex);
+		
 		Log("-RTMPNetStreamImpl::Stop() [streamId:%d]\n",id);
+		
+		RTMPMediaStream::RemoveAllMediaListeners();
+		listener = nullptr;
 		
 		if (!persistent || persistent->IsEmpty())
 			//Do nothing
@@ -619,10 +637,10 @@ public:
 			MakeCallback(cloned, "onstopped");
 		});
 		
-		RTMPMediaStream::RemoveAllMediaListeners();
-		listener = nullptr;
+		
 	}
 private:
+	Mutex mutex;
 	std::shared_ptr<Persistent<v8::Object>> persistent;	
 	std::vector<std::unique_ptr<RTMPCommandMessage>> pending;
 };
@@ -867,6 +885,7 @@ public:
 	void SendStatus(v8::Handle<v8::Object> status,v8::Handle<v8::Object> level,v8::Handle<v8::Object> desc);
 	void AddMediaListener(RTMPMediaStreamListener* listener);
 	void RemoveMediaListener(RTMPMediaStreamListener* listener);
+	void Stop();
 };
 
 %{
