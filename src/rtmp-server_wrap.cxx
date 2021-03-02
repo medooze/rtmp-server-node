@@ -1952,6 +1952,15 @@ public:
 
 	void Stop()
 	{
+		//Check if already stopped
+		if (stopped)
+			return;
+
+		Log("-IncomingStreamBridge::Stop()\n");
+
+		//We are stopped
+		stopped = true;
+
 		//Cancel timer
 		dispatch->Cancel();
 		
@@ -1993,10 +2002,17 @@ public:
 
 			//Check when it has to be sent
 			auto sched = ini + (timestamp - first);
-			
-			//Is this frame late?
-			if (sched < now)
+
+			//Is this frame too late? (allow 200ms offset)
+			if (sched + 200 < now)
 			{
+				/*Log("-Got late frame %s timestamp:%lu(%llu) time:%llu ini:%llu\n",
+					frame->GetType() == MediaFrame::Video ? "VIDEO" : "AUDIO",
+					frame->GetTimeStamp(),
+					timestamp,
+					frame->GetTime() - ini,
+					ini
+				);*/
 				//Update timestamp for first
 				first = timestamp;
 				//Get current time
@@ -2004,7 +2020,16 @@ public:
 				//Send now
 				sched = now;
 			}
-			//Log("-Frame scheduled for diff:%lld time:%lu sched:%llu first:%lu ini:%llu\n",sched - now,frame->GetTimeStamp(),sched, first, ini);
+
+			/*Log("-Frame %s scheduled in %lldms timestamp:%lu time:%llu rel:%llu first:%lu ini:%llu\n", 
+				frame->GetType()== MediaFrame::Video ? "VIDEO": "AUDIO",
+				sched - now,
+				frame->GetTimeStamp(),
+				frame->GetTime()-ini,
+				frame->GetTime()-first,
+				first,
+				ini
+			 );*/
 			//Enqueue
 			queue.emplace(sched,frame);
 			
@@ -2111,8 +2136,9 @@ private:
 	EventLoop loop;
 	Timer::shared dispatch;
 		
-	uint64_t first = 0;
-	uint64_t ini = 0;
+	uint64_t first = (uint64_t)-1;
+	uint64_t ini = (uint64_t)-1;
+	bool stopped = false;
 };
 
 class RTMPNetStreamImpl : 
