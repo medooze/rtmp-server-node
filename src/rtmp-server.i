@@ -66,16 +66,18 @@ bool MakeCallback(const std::shared_ptr<Persistent<v8::Object>>& persistent, con
 		return false;
 	//Get event name
 	auto method = Nan::New(name).ToLocalChecked();
-	//Check it has it
-	if (!local->Has(method))
+	//Get attribute 
+	auto attr = Nan::Get(local,method);
+	//Check 
+	if (attr.IsEmpty())
 		return false;
-	//Create callback function from object
-	v8::Local<v8::Function> callback = v8::Local<v8::Function>::Cast(local->Get(method));
-	//If it is callable
-	if (!callback->IsCallable())
+	//Create callback function
+	auto callback = Nan::To<v8::Function>(attr.ToLocalChecked());
+	//Check 
+	if (callback.IsEmpty())
 		return false;
 	//Call object method with arguments
-	Nan::MakeCallback(local, callback, argc, argv);
+	Nan::MakeCallback(local, callback.ToLocalChecked(), argc, argv);
 	
 	//Done 
 	return true;
@@ -284,7 +286,7 @@ class IncomingStreamBridge :
 	public RTPReceiver
 {
 public:
-	IncomingStreamBridge(v8::Handle<v8::Object> object) :
+	IncomingStreamBridge(v8::Local<v8::Object> object) :
 		audio(1),
 		video(2),
 		mutex(true)
@@ -561,7 +563,7 @@ class RTMPNetStreamImpl :
 public:
 	RTMPNetStreamImpl(DWORD id,Listener *listener) : RTMPNetStream(id,listener) {}
 	
-	void SetListener(v8::Handle<v8::Object> object)
+	void SetListener(v8::Local<v8::Object> object)
 	{
 		
 		//Lock
@@ -630,14 +632,15 @@ public:
 		});
 	}
 	
-	void SendStatus(v8::Handle<v8::Object> code,v8::Handle<v8::Object> level,v8::Handle<v8::Object> desc)
+	void SendStatus(v8::Local<v8::Object> code,v8::Local<v8::Object> level,v8::Local<v8::Object> desc)
 	{
+
 		UTF8Parser parserCode;
 		UTF8Parser parserLevel;
 		UTF8Parser parserDesc;
-		parserCode.SetString(*v8::String::Utf8Value(code.As<v8::String>()));
-		parserLevel.SetString(*v8::String::Utf8Value(level.As<v8::String>()));
-		parserDesc.SetString(*v8::String::Utf8Value(desc.As<v8::String>()));
+		parserCode.SetString(*Nan::Utf8String(code));
+		parserLevel.SetString(*Nan::Utf8String(level));
+		parserDesc.SetString(*Nan::Utf8String(desc));
 		fireOnNetStreamStatus({parserCode.GetWChar(),parserLevel.GetWChar()},parserDesc.GetWChar());
 		
 	}
@@ -683,7 +686,7 @@ public:
 		AddListener(listener);
 	}
 
-	void Accept(v8::Handle<v8::Object> object)
+	void Accept(v8::Local<v8::Object> object)
 	{
 		//Store event callback object
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
@@ -772,7 +775,7 @@ class RTMPApplicationImpl :
 	public RTMPApplication
 {
 public:
-	RTMPApplicationImpl(v8::Handle<v8::Object> object)
+	RTMPApplicationImpl(v8::Local<v8::Object> object)
 	{
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
 	}
@@ -813,7 +816,7 @@ class RTMPServerFacade :
 	public RTMPServer
 {
 public:	
-	RTMPServerFacade(v8::Handle<v8::Object> object)
+	RTMPServerFacade(v8::Local<v8::Object> object)
 	{
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
 	}
@@ -822,10 +825,10 @@ public:
 		Init(port);
 	}
 
-	void AddApplication(v8::Handle<v8::Object> name,RTMPApplicationImpl *app)
+	void AddApplication(v8::Local<v8::Object> name,RTMPApplicationImpl *app)
 	{
 		UTF8Parser parser;
-		parser.SetString(*v8::String::Utf8Value(name.As<v8::String>()));
+		parser.SetString(*Nan::Utf8String(name));
 		RTMPServer::AddApplication(parser.GetWChar(),app);
 	}
 	
@@ -843,14 +846,14 @@ private:
 %include "std_vector.i"
 %include "../media-server/include/config.h"
 
-%typemap(in) v8::Handle<v8::Object> {
-	$1 = v8::Handle<v8::Object>::Cast($input);
+%typemap(in) v8::Local<v8::Object> {
+	$1 = v8::Local<v8::Object>::Cast($input);
 }
 
 class RTMPApplicationImpl
 {
 public:
-	RTMPApplicationImpl(v8::Handle<v8::Object> object);
+	RTMPApplicationImpl(v8::Local<v8::Object> object);
 };
 
 %{
@@ -895,7 +898,7 @@ struct MediaFrameListenerBridge : public RTPIncomingMediaStream
 class IncomingStreamBridge : public RTMPMediaStreamListener
 {
 public:
-	IncomingStreamBridge(v8::Handle<v8::Object> object);
+	IncomingStreamBridge(v8::Local<v8::Object> object);
 	MediaFrameListenerBridge* GetAudio();
 	MediaFrameListenerBridge* GetVideo();
 	RTPReceiver*		GetReceiver();
@@ -906,9 +909,9 @@ public:
 class RTMPNetStreamImpl
 {
 public:
-	void SetListener(v8::Handle<v8::Object> object);
+	void SetListener(v8::Local<v8::Object> object);
 	void ResetListener();
-	void SendStatus(v8::Handle<v8::Object> status,v8::Handle<v8::Object> level,v8::Handle<v8::Object> desc);
+	void SendStatus(v8::Local<v8::Object> status,v8::Local<v8::Object> level,v8::Local<v8::Object> desc);
 	void AddMediaListener(RTMPMediaStreamListener* listener);
 	void RemoveMediaListener(RTMPMediaStreamListener* listener);
 	void Stop();
@@ -927,7 +930,7 @@ struct RTMPNetStreamShared
 class RTMPNetConnectionImpl
 {
 public:
-	void Accept(v8::Handle<v8::Object> object);
+	void Accept(v8::Local<v8::Object> object);
 	void Reject();
 	void Disconnect();
 };
@@ -935,9 +938,9 @@ public:
 class RTMPServerFacade
 {
 public:	
-	RTMPServerFacade(v8::Handle<v8::Object> object);
+	RTMPServerFacade(v8::Local<v8::Object> object);
 	void Start(int port);
-	void AddApplication(v8::Handle<v8::Object> name,RTMPApplicationImpl *app);
+	void AddApplication(v8::Local<v8::Object> name,RTMPApplicationImpl *app);
 	void Stop();
 };
 
