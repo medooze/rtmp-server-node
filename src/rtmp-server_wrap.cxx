@@ -1623,27 +1623,28 @@ fail: ;
 #define SWIGTYPE_p_RTMPApplicationImpl swig_types[5]
 #define SWIGTYPE_p_RTMPMediaStreamListener swig_types[6]
 #define SWIGTYPE_p_RTMPNetConnectionImpl swig_types[7]
-#define SWIGTYPE_p_RTMPNetStreamImpl swig_types[8]
-#define SWIGTYPE_p_RTMPNetStreamShared swig_types[9]
-#define SWIGTYPE_p_RTMPServerFacade swig_types[10]
-#define SWIGTYPE_p_RTMPServerModule swig_types[11]
-#define SWIGTYPE_p_RTPIncomingMediaStream swig_types[12]
-#define SWIGTYPE_p_RTPReceiver swig_types[13]
-#define SWIGTYPE_p_char swig_types[14]
-#define SWIGTYPE_p_int swig_types[15]
-#define SWIGTYPE_p_long_long swig_types[16]
-#define SWIGTYPE_p_short swig_types[17]
-#define SWIGTYPE_p_signed_char swig_types[18]
-#define SWIGTYPE_p_std__string swig_types[19]
-#define SWIGTYPE_p_std__vectorT_Properties_t swig_types[20]
-#define SWIGTYPE_p_unsigned_char swig_types[21]
-#define SWIGTYPE_p_unsigned_int swig_types[22]
-#define SWIGTYPE_p_unsigned_long_long swig_types[23]
-#define SWIGTYPE_p_unsigned_short swig_types[24]
-#define SWIGTYPE_p_v8__LocalT_v8__Object_t swig_types[25]
-#define SWIGTYPE_p_void swig_types[26]
-static swig_type_info *swig_types[28];
-static swig_module_info swig_module = {swig_types, 27, 0, 0, 0, 0};
+#define SWIGTYPE_p_RTMPNetConnectionShared swig_types[8]
+#define SWIGTYPE_p_RTMPNetStreamImpl swig_types[9]
+#define SWIGTYPE_p_RTMPNetStreamShared swig_types[10]
+#define SWIGTYPE_p_RTMPServerFacade swig_types[11]
+#define SWIGTYPE_p_RTMPServerModule swig_types[12]
+#define SWIGTYPE_p_RTPIncomingMediaStream swig_types[13]
+#define SWIGTYPE_p_RTPReceiver swig_types[14]
+#define SWIGTYPE_p_char swig_types[15]
+#define SWIGTYPE_p_int swig_types[16]
+#define SWIGTYPE_p_long_long swig_types[17]
+#define SWIGTYPE_p_short swig_types[18]
+#define SWIGTYPE_p_signed_char swig_types[19]
+#define SWIGTYPE_p_std__string swig_types[20]
+#define SWIGTYPE_p_std__vectorT_Properties_t swig_types[21]
+#define SWIGTYPE_p_unsigned_char swig_types[22]
+#define SWIGTYPE_p_unsigned_int swig_types[23]
+#define SWIGTYPE_p_unsigned_long_long swig_types[24]
+#define SWIGTYPE_p_unsigned_short swig_types[25]
+#define SWIGTYPE_p_v8__LocalT_v8__Object_t swig_types[26]
+#define SWIGTYPE_p_void swig_types[27]
+static swig_type_info *swig_types[29];
+static swig_module_info swig_module = {swig_types, 28, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -2447,19 +2448,20 @@ public:
 
 	virtual ~RTMPApplicationImpl() = default;
 
-	virtual RTMPNetConnection* Connect(const std::wstring& appName,RTMPNetConnection::Listener *listener,std::function<void(bool)> accept) override
+	virtual RTMPNetConnection::shared Connect(const std::wstring& appName,RTMPNetConnection::Listener *listener,std::function<void(bool)> accept) override
 	{
 		//Create connection
-		auto connection = new RTMPNetConnectionImpl(listener,accept);
+		auto connection = std::make_shared<RTMPNetConnectionImpl>(listener,accept);
 		
 		//Run function on main node thread
 		RTMPServerModule::Async([=,cloned=persistent](){
 			Nan::HandleScope scope;
-			
+			//We create a new shared pointer
+			auto shared = new std::shared_ptr<RTMPNetConnection>(connection);
 			//Create local args
 			UTF8Parser parser(appName);
 			auto str	= Nan::New<v8::String>(parser.GetUTF8String());
-			auto object	= SWIG_NewPointerObj(SWIG_as_voidptr(connection), SWIGTYPE_p_RTMPNetConnectionImpl,SWIG_POINTER_OWN);
+			auto object	= SWIG_NewPointerObj(SWIG_as_voidptr(shared), SWIGTYPE_p_RTMPNetConnectionShared,SWIG_POINTER_OWN);
 			//Create arguments
 			v8::Local<v8::Value> argv[2] = {
 				str.ToLocalChecked(),
@@ -2840,6 +2842,9 @@ using RTMPMediaStreamListener =  RTMPMediaStream::Listener;
 using RTMPNetStreamShared =  std::shared_ptr<RTMPNetStream>;
 
 
+using RTMPNetConnectionShared =  std::shared_ptr<RTMPNetConnection>;
+
+
 #define SWIGV8_INIT medooze_initialize
 
 
@@ -2853,6 +2858,7 @@ SWIGV8_ClientData _exports_MediaFrameListenerBridge_clientData;
 SWIGV8_ClientData _exports_IncomingStreamBridge_clientData;
 SWIGV8_ClientData _exports_RTMPNetStreamImpl_clientData;
 SWIGV8_ClientData _exports_RTMPNetStreamShared_clientData;
+SWIGV8_ClientData _exports_RTMPNetConnectionShared_clientData;
 SWIGV8_ClientData _exports_RTMPNetConnectionImpl_clientData;
 SWIGV8_ClientData _exports_RTMPServerFacade_clientData;
 SWIGV8_ClientData _exports_RTMPServerModule_clientData;
@@ -6740,6 +6746,80 @@ fail:
 }
 
 
+static SwigV8ReturnValue _wrap_RTMPNetConnectionShared_get(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  RTMPNetConnectionShared *arg1 = (RTMPNetConnectionShared *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  RTMPNetConnectionImpl *result = 0 ;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPNetConnectionShared_get.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_RTMPNetConnectionShared, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "RTMPNetConnectionShared_get" "', argument " "1"" of type '" "RTMPNetConnectionShared *""'"); 
+  }
+  arg1 = reinterpret_cast< RTMPNetConnectionShared * >(argp1);
+  result = (RTMPNetConnectionImpl *)(arg1)->get();
+  jsresult = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_RTMPNetConnectionImpl, 0 |  0 );
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031710)
+static void _wrap_delete_RTMPNetConnectionShared(v8::Persistent<v8::Value> object, void *parameter) {
+  SWIGV8_Proxy *proxy = static_cast<SWIGV8_Proxy *>(parameter);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031900)
+  static void _wrap_delete_RTMPNetConnectionShared(v8::Isolate *isolate, v8::Persistent<v8::Value> object, void *parameter) {
+    SWIGV8_Proxy *proxy = static_cast<SWIGV8_Proxy *>(parameter);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < SWIGV8_SETWEAK_VERSION)
+    static void _wrap_delete_RTMPNetConnectionShared(v8::Isolate *isolate, v8::Persistent< v8::Object> *object, SWIGV8_Proxy *proxy) {
+#elif (V8_MAJOR_VERSION-0) < 5
+      static void _wrap_delete_RTMPNetConnectionShared(const v8::WeakCallbackData<v8::Object, SWIGV8_Proxy> &data) {
+        v8::Local<v8::Object> object = data.GetValue();
+        SWIGV8_Proxy *proxy = data.GetParameter();
+#else
+        static void _wrap_delete_RTMPNetConnectionShared(const v8::WeakCallbackInfo<SWIGV8_Proxy> &data) {
+          SWIGV8_Proxy *proxy = data.GetParameter();
+#endif
+          
+          if(proxy->swigCMemOwn && proxy->swigCObject) {
+            RTMPNetConnectionShared * arg1 = (RTMPNetConnectionShared *)proxy->swigCObject;
+            delete arg1;
+          }
+          delete proxy;
+          
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031710)
+          object.Dispose();
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031900)
+          object.Dispose(isolate);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x032100)
+          object->Dispose(isolate);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < SWIGV8_SETWEAK_VERSION)
+          object->Dispose();
+#elif (V8_MAJOR_VERSION-0) < 5
+          object.Clear();
+#endif
+        }
+
+
+static SwigV8ReturnValue _wrap_new_veto_RTMPNetConnectionShared(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIG_exception(SWIG_ERROR, "Class RTMPNetConnectionShared can not be instantiated");
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
 static SwigV8ReturnValue _wrap_RTMPNetConnectionImpl_Accept(const SwigV8Arguments &args) {
   SWIGV8_HANDLESCOPE();
   
@@ -7225,6 +7305,7 @@ static swig_type_info _swigt__p_Properties = {"_p_Properties", "Properties *|p_P
 static swig_type_info _swigt__p_RTMPApplicationImpl = {"_p_RTMPApplicationImpl", "RTMPApplicationImpl *|p_RTMPApplicationImpl", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPMediaStreamListener = {"_p_RTMPMediaStreamListener", "p_RTMPMediaStreamListener|RTMPMediaStreamListener *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPNetConnectionImpl = {"_p_RTMPNetConnectionImpl", "RTMPNetConnectionImpl *|p_RTMPNetConnectionImpl", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_RTMPNetConnectionShared = {"_p_RTMPNetConnectionShared", "p_RTMPNetConnectionShared|RTMPNetConnectionShared *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPNetStreamImpl = {"_p_RTMPNetStreamImpl", "RTMPNetStreamImpl *|p_RTMPNetStreamImpl", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPNetStreamShared = {"_p_RTMPNetStreamShared", "p_RTMPNetStreamShared|RTMPNetStreamShared *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPServerFacade = {"_p_RTMPServerFacade", "p_RTMPServerFacade|RTMPServerFacade *", 0, 0, (void*)0, 0};
@@ -7254,6 +7335,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_RTMPApplicationImpl,
   &_swigt__p_RTMPMediaStreamListener,
   &_swigt__p_RTMPNetConnectionImpl,
+  &_swigt__p_RTMPNetConnectionShared,
   &_swigt__p_RTMPNetStreamImpl,
   &_swigt__p_RTMPNetStreamShared,
   &_swigt__p_RTMPServerFacade,
@@ -7283,6 +7365,7 @@ static swig_cast_info _swigc__p_Properties[] = {  {&_swigt__p_Properties, 0, 0, 
 static swig_cast_info _swigc__p_RTMPApplicationImpl[] = {  {&_swigt__p_RTMPApplicationImpl, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPMediaStreamListener[] = {  {&_swigt__p_RTMPMediaStreamListener, 0, 0, 0},  {&_swigt__p_IncomingStreamBridge, _p_IncomingStreamBridgeTo_p_RTMPMediaStreamListener, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPNetConnectionImpl[] = {  {&_swigt__p_RTMPNetConnectionImpl, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_RTMPNetConnectionShared[] = {  {&_swigt__p_RTMPNetConnectionShared, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPNetStreamImpl[] = {  {&_swigt__p_RTMPNetStreamImpl, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPNetStreamShared[] = {  {&_swigt__p_RTMPNetStreamShared, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPServerFacade[] = {  {&_swigt__p_RTMPServerFacade, 0, 0, 0},{0, 0, 0, 0}};
@@ -7312,6 +7395,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_RTMPApplicationImpl,
   _swigc__p_RTMPMediaStreamListener,
   _swigc__p_RTMPNetConnectionImpl,
+  _swigc__p_RTMPNetConnectionShared,
   _swigc__p_RTMPNetStreamImpl,
   _swigc__p_RTMPNetStreamShared,
   _swigc__p_RTMPServerFacade,
@@ -7714,6 +7798,13 @@ _exports_RTMPNetStreamShared_clientData.dtor = _wrap_delete_RTMPNetStreamShared;
 if (SWIGTYPE_p_RTMPNetStreamShared->clientdata == 0) {
   SWIGTYPE_p_RTMPNetStreamShared->clientdata = &_exports_RTMPNetStreamShared_clientData;
 }
+/* Name: _exports_RTMPNetConnectionShared, Type: p_RTMPNetConnectionShared, Dtor: _wrap_delete_RTMPNetConnectionShared */
+SWIGV8_FUNCTION_TEMPLATE _exports_RTMPNetConnectionShared_class = SWIGV8_CreateClassTemplate("_exports_RTMPNetConnectionShared");
+SWIGV8_SET_CLASS_TEMPL(_exports_RTMPNetConnectionShared_clientData.class_templ, _exports_RTMPNetConnectionShared_class);
+_exports_RTMPNetConnectionShared_clientData.dtor = _wrap_delete_RTMPNetConnectionShared;
+if (SWIGTYPE_p_RTMPNetConnectionShared->clientdata == 0) {
+  SWIGTYPE_p_RTMPNetConnectionShared->clientdata = &_exports_RTMPNetConnectionShared_clientData;
+}
 /* Name: _exports_RTMPNetConnectionImpl, Type: p_RTMPNetConnectionImpl, Dtor: _wrap_delete_RTMPNetConnectionImpl */
 SWIGV8_FUNCTION_TEMPLATE _exports_RTMPNetConnectionImpl_class = SWIGV8_CreateClassTemplate("_exports_RTMPNetConnectionImpl");
 SWIGV8_SET_CLASS_TEMPL(_exports_RTMPNetConnectionImpl_clientData.class_templ, _exports_RTMPNetConnectionImpl_class);
@@ -7800,6 +7891,7 @@ SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "AddMediaListener", _
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "RemoveMediaListener", _wrap_RTMPNetStreamImpl_RemoveMediaListener);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "Stop", _wrap_RTMPNetStreamImpl_Stop);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamShared_class, "get", _wrap_RTMPNetStreamShared_get);
+SWIGV8_AddMemberFunction(_exports_RTMPNetConnectionShared_class, "get", _wrap_RTMPNetConnectionShared_get);
 SWIGV8_AddMemberFunction(_exports_RTMPNetConnectionImpl_class, "Accept", _wrap_RTMPNetConnectionImpl_Accept);
 SWIGV8_AddMemberFunction(_exports_RTMPNetConnectionImpl_class, "Reject", _wrap_RTMPNetConnectionImpl_Reject);
 SWIGV8_AddMemberFunction(_exports_RTMPNetConnectionImpl_class, "Disconnect", _wrap_RTMPNetConnectionImpl_Disconnect);
@@ -7982,6 +8074,19 @@ v8::Local<v8::Object> _exports_RTMPNetStreamShared_obj = _exports_RTMPNetStreamS
 #else
 v8::Local<v8::Object> _exports_RTMPNetStreamShared_obj = _exports_RTMPNetStreamShared_class_0->GetFunction(SWIGV8_CURRENT_CONTEXT()).ToLocalChecked();
 #endif
+/* Class: RTMPNetConnectionShared (_exports_RTMPNetConnectionShared) */
+SWIGV8_FUNCTION_TEMPLATE _exports_RTMPNetConnectionShared_class_0 = SWIGV8_CreateClassTemplate("RTMPNetConnectionShared");
+_exports_RTMPNetConnectionShared_class_0->SetCallHandler(_wrap_new_veto_RTMPNetConnectionShared);
+_exports_RTMPNetConnectionShared_class_0->Inherit(_exports_RTMPNetConnectionShared_class);
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+_exports_RTMPNetConnectionShared_class_0->SetHiddenPrototype(true);
+v8::Handle<v8::Object> _exports_RTMPNetConnectionShared_obj = _exports_RTMPNetConnectionShared_class_0->GetFunction();
+#elif (SWIG_V8_VERSION < 0x0704)
+_exports_RTMPNetConnectionShared_class_0->SetHiddenPrototype(true);
+v8::Local<v8::Object> _exports_RTMPNetConnectionShared_obj = _exports_RTMPNetConnectionShared_class_0->GetFunction();
+#else
+v8::Local<v8::Object> _exports_RTMPNetConnectionShared_obj = _exports_RTMPNetConnectionShared_class_0->GetFunction(SWIGV8_CURRENT_CONTEXT()).ToLocalChecked();
+#endif
 /* Class: RTMPNetConnectionImpl (_exports_RTMPNetConnectionImpl) */
 SWIGV8_FUNCTION_TEMPLATE _exports_RTMPNetConnectionImpl_class_0 = SWIGV8_CreateClassTemplate("RTMPNetConnectionImpl");
 _exports_RTMPNetConnectionImpl_class_0->SetCallHandler(_wrap_new_veto_RTMPNetConnectionImpl);
@@ -8084,6 +8189,11 @@ SWIGV8_MAYBE_CHECK(exports_obj->Set(SWIGV8_CURRENT_CONTEXT(), SWIGV8_SYMBOL_NEW(
 exports_obj->Set(SWIGV8_SYMBOL_NEW("RTMPNetStreamShared"), _exports_RTMPNetStreamShared_obj);
 #else
 SWIGV8_MAYBE_CHECK(exports_obj->Set(SWIGV8_CURRENT_CONTEXT(), SWIGV8_SYMBOL_NEW("RTMPNetStreamShared"), _exports_RTMPNetStreamShared_obj));
+#endif
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+exports_obj->Set(SWIGV8_SYMBOL_NEW("RTMPNetConnectionShared"), _exports_RTMPNetConnectionShared_obj);
+#else
+SWIGV8_MAYBE_CHECK(exports_obj->Set(SWIGV8_CURRENT_CONTEXT(), SWIGV8_SYMBOL_NEW("RTMPNetConnectionShared"), _exports_RTMPNetConnectionShared_obj));
 #endif
 #if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
 exports_obj->Set(SWIGV8_SYMBOL_NEW("RTMPNetConnectionImpl"), _exports_RTMPNetConnectionImpl_obj);

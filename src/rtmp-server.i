@@ -782,19 +782,20 @@ public:
 
 	virtual ~RTMPApplicationImpl() = default;
 
-	virtual RTMPNetConnection* Connect(const std::wstring& appName,RTMPNetConnection::Listener *listener,std::function<void(bool)> accept) override
+	virtual RTMPNetConnection::shared Connect(const std::wstring& appName,RTMPNetConnection::Listener *listener,std::function<void(bool)> accept) override
 	{
 		//Create connection
-		auto connection = new RTMPNetConnectionImpl(listener,accept);
+		auto connection = std::make_shared<RTMPNetConnectionImpl>(listener,accept);
 		
 		//Run function on main node thread
 		RTMPServerModule::Async([=,cloned=persistent](){
 			Nan::HandleScope scope;
-			
+			//We create a new shared pointer
+			auto shared = new std::shared_ptr<RTMPNetConnection>(connection);
 			//Create local args
 			UTF8Parser parser(appName);
 			auto str	= Nan::New<v8::String>(parser.GetUTF8String());
-			auto object	= SWIG_NewPointerObj(SWIG_as_voidptr(connection), SWIGTYPE_p_RTMPNetConnectionImpl,SWIG_POINTER_OWN);
+			auto object	= SWIG_NewPointerObj(SWIG_as_voidptr(shared), SWIGTYPE_p_RTMPNetConnectionShared,SWIG_POINTER_OWN);
 			//Create arguments
 			v8::Local<v8::Value> argv[2] = {
 				str.ToLocalChecked(),
@@ -924,6 +925,15 @@ using RTMPNetStreamShared =  std::shared_ptr<RTMPNetStream>;
 struct RTMPNetStreamShared
 {
 	RTMPNetStreamImpl* get();
+};
+
+%{
+using RTMPNetConnectionShared =  std::shared_ptr<RTMPNetConnection>;
+%}
+%nodefaultctor RTMPNetConnectionShared;
+struct RTMPNetConnectionShared
+{
+	RTMPNetConnectionImpl* get();
 };
 
 %nodefaultctor RTMPNetConnectionImpl;
