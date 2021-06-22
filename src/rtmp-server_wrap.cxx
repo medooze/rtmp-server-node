@@ -1975,13 +1975,13 @@ public:
 				//If not yet it's time
 				if (ts > now)
 				{
-					//Log("-ReDispatching in %llums size=%d\n",(ts-now).count());
+					//Log("-IncomingStreamBridge::Dispatch() ReDispatching in %llums size=%d\n",(ts-now).count());
 					//Schedule timer for later
 					dispatch->Again(ts-now);
 					//Done
 					break;
 				}
-				//Log("-Dispatched from %llums size=%d\n",it->first, queue.size());
+				//Log("-IncomingStreamBridge::Dispatch() Dispatched from %llums timestamp:%llu size=%d\n",it->first, frame->GetTimestamp(), queue.size());
 				//Check type
 				if (frame->GetType()==MediaFrame::Audio)
 					//Dispatch audio
@@ -2069,17 +2069,32 @@ public:
 		
 		//Run on thread
 		loop.Async([=](...) {
-			
+			//Ensure that we are not overflowing
+			if (queue.size()>2048)
+			{
+				//Show error
+				Error("-IncomingStreamBridge::Enqueue() Queue buffer overflowing, cleaning it [size:%d]\n",queue.size());
+				//Clear all pending data
+				queue.clear();
+			}
+
 			//Convert timestamp 
 			uint64_t timestamp = frame->GetTimeStamp()*1000/frame->GetClockRate();
 			
 			//IF it is first
-			if (!first)
+			if (first==std::numeric_limits<uint64_t>::max())
 			{
 				//Get timestamp
 				first = timestamp;
 				//Get current time
 				ini = now;
+
+				Debug("-IncomingStreamBridge::Enqueue() First frame %s scheduled timestamp:%lu ini:%llu queue:%d\n", 
+					frame->GetType()== MediaFrame::Video ? "VIDEO": "AUDIO",
+					frame->GetTimeStamp(),
+					ini,
+					queue.size()
+				);
 			}
 
 			//Check when it has to be sent
@@ -2088,40 +2103,60 @@ public:
 			//Is this frame too late? (allow 200ms offset)
 			if (sched + 200 < now)
 			{
-				/*Log("-Got late frame %s timestamp:%lu(%llu) time:%llu ini:%llu\n",
+				UltraDebug("-IncomingStreamBridge::Enqueue() Got late frame %s timestamp:%lu(%llu) time:%llu(%llu) ini:%llu sched:%llu now:%llu first:%llu queue:%d\n",
 					frame->GetType() == MediaFrame::Video ? "VIDEO" : "AUDIO",
 					frame->GetTimeStamp(),
 					timestamp,
 					frame->GetTime() - ini,
-					ini
-				);*/
-				//Update timestamp for first
-				first = timestamp;
-				//Get current time
-				ini = now;
-				//Send now
-				sched = now;
+					frame->GetTime(),
+					ini,
+					sched,
+					now,
+					first,
+					queue.size()
+				);
+				//If there are no other on the queue
+				if (queue.empty())
+				{
+					//Update timestamp for first
+					first = timestamp;
+					//Get current time
+					ini = now;
+					//Send now
+					sched = now;
+
+					Debug("-IncomingStreamBridge::Enqueue() Reseting first frame %s scheduled timestamp:%lu ini:%llu queue:%d\n", 
+						frame->GetType()== MediaFrame::Video ? "VIDEO": "AUDIO",
+						frame->GetTimeStamp(),
+						ini,
+						queue.size()
+					);
+				} else {
+					//Use last frame time
+					sched = queue.back().first;
+				}
 			}
 
-			/*Log("-Frame %s scheduled in %lldms timestamp:%lu time:%llu rel:%llu first:%lu ini:%llu\n", 
+			/*Log("-IncomingStreamBridge::Enqueue() Frame %s scheduled in %lldms timestamp:%lu time:%llu rel:%llu first:%lu ini:%llu queue:%d\n", 
 				frame->GetType()== MediaFrame::Video ? "VIDEO": "AUDIO",
 				sched - now,
 				frame->GetTimeStamp(),
 				frame->GetTime()-ini,
 				frame->GetTime()-first,
 				first,
-				ini
-			 );*/
+				ini,
+				queue.size()
+			);*/
 			//Enqueue
-			queue.emplace(sched,frame);
+			queue.emplace_back(sched,frame);
 			
 			//If queue was empty
 			if (queue.size()==1)
 			{
-				//Log("-Dispatching in %llums size=%u\n",sched > now ? sched - now : 0, queue.size());
+				//Log("-IncomingStreamBridge::Enqueue() Dispatching in %llums size=%u\n",sched > now ? sched - now : 0, queue.size());
 				//Schedule timer for later
 				dispatch->Again(std::chrono::milliseconds(sched > now ? sched - now : 0));
-			}		
+			}
 		});
 	}
 	
@@ -2214,12 +2249,12 @@ private:
 	Mutex mutex;
 	RTMPMediaStream *attached = nullptr;
 	std::shared_ptr<Persistent<v8::Object>> persistent;	
-	std::multimap<uint64_t,std::unique_ptr<MediaFrame>> queue;
+	std::vector<std::pair<uint64_t,std::unique_ptr<MediaFrame>>> queue;
 	EventLoop loop;
 	Timer::shared dispatch;
 		
-	uint64_t first = (uint64_t)-1;
-	uint64_t ini = (uint64_t)-1;
+	uint64_t first = std::numeric_limits<uint64_t>::max();
+	uint64_t ini = std::numeric_limits<uint64_t>::max();
 	bool stopped = false;
 };
 
