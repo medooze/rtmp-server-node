@@ -1630,21 +1630,22 @@ fail: ;
 #define SWIGTYPE_p_RTMPServerModule swig_types[12]
 #define SWIGTYPE_p_RTPIncomingMediaStream swig_types[13]
 #define SWIGTYPE_p_RTPReceiver swig_types[14]
-#define SWIGTYPE_p_char swig_types[15]
-#define SWIGTYPE_p_int swig_types[16]
-#define SWIGTYPE_p_long_long swig_types[17]
-#define SWIGTYPE_p_short swig_types[18]
-#define SWIGTYPE_p_signed_char swig_types[19]
-#define SWIGTYPE_p_std__string swig_types[20]
-#define SWIGTYPE_p_std__vectorT_Properties_t swig_types[21]
-#define SWIGTYPE_p_unsigned_char swig_types[22]
-#define SWIGTYPE_p_unsigned_int swig_types[23]
-#define SWIGTYPE_p_unsigned_long_long swig_types[24]
-#define SWIGTYPE_p_unsigned_short swig_types[25]
-#define SWIGTYPE_p_v8__LocalT_v8__Object_t swig_types[26]
-#define SWIGTYPE_p_void swig_types[27]
-static swig_type_info *swig_types[29];
-static swig_module_info swig_module = {swig_types, 28, 0, 0, 0, 0};
+#define SWIGTYPE_p_VideoOrientation swig_types[15]
+#define SWIGTYPE_p_char swig_types[16]
+#define SWIGTYPE_p_int swig_types[17]
+#define SWIGTYPE_p_long_long swig_types[18]
+#define SWIGTYPE_p_short swig_types[19]
+#define SWIGTYPE_p_signed_char swig_types[20]
+#define SWIGTYPE_p_std__string swig_types[21]
+#define SWIGTYPE_p_std__vectorT_Properties_t swig_types[22]
+#define SWIGTYPE_p_unsigned_char swig_types[23]
+#define SWIGTYPE_p_unsigned_int swig_types[24]
+#define SWIGTYPE_p_unsigned_long_long swig_types[25]
+#define SWIGTYPE_p_unsigned_short swig_types[26]
+#define SWIGTYPE_p_v8__LocalT_v8__Object_t swig_types[27]
+#define SWIGTYPE_p_void swig_types[28]
+static swig_type_info *swig_types[30];
+static swig_module_info swig_module = {swig_types, 29, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -2231,6 +2232,12 @@ public:
 	};
 	
 	virtual int SendPLI(DWORD ssrc)
+	{
+		//oh, not possible on rtmp
+		return 1;
+	}
+
+	virtual int Reset(DWORD ssrc)
 	{
 		//oh, not possible on rtmp
 		return 1;
@@ -2871,6 +2878,29 @@ SWIG_AsVal_size_t (SWIGV8_VALUE obj, size_t *val)
 }
 
 
+SWIGINTERN int
+SWIG_AsVal_unsigned_SS_char (SWIGV8_VALUE obj, unsigned char *val)
+{
+  unsigned long v;
+  int res = SWIG_AsVal_unsigned_SS_long (obj, &v);
+  if (SWIG_IsOK(res)) {
+    if ((v > UCHAR_MAX)) {
+      return SWIG_OverflowError;
+    } else {
+      if (val) *val = static_cast< unsigned char >(v);
+    }
+  }  
+  return res;
+}
+
+
+SWIGINTERNINLINE SWIGV8_VALUE
+SWIG_From_unsigned_SS_char  (unsigned char value)
+{    
+  return SWIG_From_unsigned_SS_long  (value);
+}
+
+
 using RTMPMediaStreamListener =  RTMPMediaStream::Listener;
 
 
@@ -2884,6 +2914,7 @@ using RTMPNetConnectionShared =  std::shared_ptr<RTMPNetConnection>;
 
 
 SWIGV8_ClientData _exports_Properties_clientData;
+SWIGV8_ClientData _exports_VideoOrientation_clientData;
 SWIGV8_ClientData _exports_ByteBuffer_clientData;
 SWIGV8_ClientData _exports_RTMPApplicationImpl_clientData;
 SWIGV8_ClientData _exports_RTMPMediaStreamListener_clientData;
@@ -4929,6 +4960,255 @@ static SwigV8ReturnValue _wrap_malloc32(const SwigV8Arguments &args) {
 fail:
   SWIGV8_RETURN(SWIGV8_UNDEFINED());
 }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static void _wrap_VideoOrientation_facing_set(v8::Local<v8::String> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#else
+  static void _wrap_VideoOrientation_facing_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    VideoOrientation *arg1 = (VideoOrientation *) 0 ;
+    bool arg2 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    bool val2 ;
+    int ecode2 = 0 ;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_VideoOrientation, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "VideoOrientation_facing_set" "', argument " "1"" of type '" "VideoOrientation *""'"); 
+    }
+    arg1 = reinterpret_cast< VideoOrientation * >(argp1);
+    ecode2 = SWIG_AsVal_bool(value, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "VideoOrientation_facing_set" "', argument " "2"" of type '" "bool""'");
+    } 
+    arg2 = static_cast< bool >(val2);
+    if (arg1) (arg1)->facing = arg2;
+    
+    
+    
+    goto fail;
+  fail:
+    return;
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_VideoOrientation_facing_get(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_VideoOrientation_facing_get(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    SWIGV8_VALUE jsresult;
+    VideoOrientation *arg1 = (VideoOrientation *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    bool result;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_VideoOrientation, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "VideoOrientation_facing_get" "', argument " "1"" of type '" "VideoOrientation *""'"); 
+    }
+    arg1 = reinterpret_cast< VideoOrientation * >(argp1);
+    result = (bool) ((arg1)->facing);
+    jsresult = SWIG_From_bool(static_cast< bool >(result));
+    
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static void _wrap_VideoOrientation_flip_set(v8::Local<v8::String> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#else
+  static void _wrap_VideoOrientation_flip_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    VideoOrientation *arg1 = (VideoOrientation *) 0 ;
+    bool arg2 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    bool val2 ;
+    int ecode2 = 0 ;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_VideoOrientation, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "VideoOrientation_flip_set" "', argument " "1"" of type '" "VideoOrientation *""'"); 
+    }
+    arg1 = reinterpret_cast< VideoOrientation * >(argp1);
+    ecode2 = SWIG_AsVal_bool(value, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "VideoOrientation_flip_set" "', argument " "2"" of type '" "bool""'");
+    } 
+    arg2 = static_cast< bool >(val2);
+    if (arg1) (arg1)->flip = arg2;
+    
+    
+    
+    goto fail;
+  fail:
+    return;
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_VideoOrientation_flip_get(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_VideoOrientation_flip_get(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    SWIGV8_VALUE jsresult;
+    VideoOrientation *arg1 = (VideoOrientation *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    bool result;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_VideoOrientation, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "VideoOrientation_flip_get" "', argument " "1"" of type '" "VideoOrientation *""'"); 
+    }
+    arg1 = reinterpret_cast< VideoOrientation * >(argp1);
+    result = (bool) ((arg1)->flip);
+    jsresult = SWIG_From_bool(static_cast< bool >(result));
+    
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static void _wrap_VideoOrientation_rotation_set(v8::Local<v8::String> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#else
+  static void _wrap_VideoOrientation_rotation_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    VideoOrientation *arg1 = (VideoOrientation *) 0 ;
+    uint8_t arg2 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    unsigned char val2 ;
+    int ecode2 = 0 ;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_VideoOrientation, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "VideoOrientation_rotation_set" "', argument " "1"" of type '" "VideoOrientation *""'"); 
+    }
+    arg1 = reinterpret_cast< VideoOrientation * >(argp1);
+    ecode2 = SWIG_AsVal_unsigned_SS_char(value, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "VideoOrientation_rotation_set" "', argument " "2"" of type '" "uint8_t""'");
+    } 
+    arg2 = static_cast< uint8_t >(val2);
+    if (arg1) (arg1)->rotation = arg2;
+    
+    
+    
+    goto fail;
+  fail:
+    return;
+  }
+
+
+#if (V8_MAJOR_VERSION-0) < 5
+static SwigV8ReturnValue _wrap_VideoOrientation_rotation_get(v8::Local<v8::String> property, const SwigV8PropertyCallbackInfo &info) {
+#else
+  static SwigV8ReturnValue _wrap_VideoOrientation_rotation_get(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+#endif
+    SWIGV8_HANDLESCOPE();
+    
+    SWIGV8_VALUE jsresult;
+    VideoOrientation *arg1 = (VideoOrientation *) 0 ;
+    void *argp1 = 0 ;
+    int res1 = 0 ;
+    uint8_t result;
+    
+    res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_VideoOrientation, 0 |  0 );
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "VideoOrientation_rotation_get" "', argument " "1"" of type '" "VideoOrientation *""'"); 
+    }
+    arg1 = reinterpret_cast< VideoOrientation * >(argp1);
+    result = (uint8_t) ((arg1)->rotation);
+    jsresult = SWIG_From_unsigned_SS_char(static_cast< unsigned char >(result));
+    
+    
+    SWIGV8_RETURN_INFO(jsresult, info);
+    
+    goto fail;
+  fail:
+    SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+  }
+
+
+static SwigV8ReturnValue _wrap_new_VideoOrientation(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_OBJECT self = args.Holder();
+  VideoOrientation *result;
+  if(self->InternalFieldCount() < 1) SWIG_exception_fail(SWIG_ERROR, "Illegal call of constructor _wrap_new_VideoOrientation.");
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_VideoOrientation.");
+  result = (VideoOrientation *)new VideoOrientation();
+  
+  
+  
+  SWIGV8_SetPrivateData(self, result, SWIGTYPE_p_VideoOrientation, SWIG_POINTER_OWN);
+  SWIGV8_RETURN(self);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031710)
+static void _wrap_delete_VideoOrientation(v8::Persistent<v8::Value> object, void *parameter) {
+  SWIGV8_Proxy *proxy = static_cast<SWIGV8_Proxy *>(parameter);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031900)
+  static void _wrap_delete_VideoOrientation(v8::Isolate *isolate, v8::Persistent<v8::Value> object, void *parameter) {
+    SWIGV8_Proxy *proxy = static_cast<SWIGV8_Proxy *>(parameter);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < SWIGV8_SETWEAK_VERSION)
+    static void _wrap_delete_VideoOrientation(v8::Isolate *isolate, v8::Persistent< v8::Object> *object, SWIGV8_Proxy *proxy) {
+#elif (V8_MAJOR_VERSION-0) < 5
+      static void _wrap_delete_VideoOrientation(const v8::WeakCallbackData<v8::Object, SWIGV8_Proxy> &data) {
+        v8::Local<v8::Object> object = data.GetValue();
+        SWIGV8_Proxy *proxy = data.GetParameter();
+#else
+        static void _wrap_delete_VideoOrientation(const v8::WeakCallbackInfo<SWIGV8_Proxy> &data) {
+          SWIGV8_Proxy *proxy = data.GetParameter();
+#endif
+          
+          if(proxy->swigCMemOwn && proxy->swigCObject) {
+            VideoOrientation * arg1 = (VideoOrientation *)proxy->swigCObject;
+            delete arg1;
+          }
+          delete proxy;
+          
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031710)
+          object.Dispose();
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031900)
+          object.Dispose(isolate);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x032100)
+          object->Dispose(isolate);
+#elif (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < SWIGV8_SETWEAK_VERSION)
+          object->Dispose();
+#elif (V8_MAJOR_VERSION-0) < 5
+          object.Clear();
+#endif
+        }
 
 
 static SwigV8ReturnValue _wrap_new_ByteBuffer__SWIG_0(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler) {
@@ -7347,6 +7627,7 @@ static swig_type_info _swigt__p_RTMPServerFacade = {"_p_RTMPServerFacade", "p_RT
 static swig_type_info _swigt__p_RTMPServerModule = {"_p_RTMPServerModule", "p_RTMPServerModule", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTPIncomingMediaStream = {"_p_RTPIncomingMediaStream", "p_RTPIncomingMediaStream|RTPIncomingMediaStream *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTPReceiver = {"_p_RTPReceiver", "RTPReceiver *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_VideoOrientation = {"_p_VideoOrientation", "p_VideoOrientation|VideoOrientation *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_int = {"_p_int", "intptr_t *|int *|int_least32_t *|int_fast32_t *|int32_t *|int_fast16_t *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_long_long = {"_p_long_long", "int_least64_t *|int_fast64_t *|int64_t *|long long *|intmax_t *", 0, 0, (void*)0, 0};
@@ -7377,6 +7658,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_RTMPServerModule,
   &_swigt__p_RTPIncomingMediaStream,
   &_swigt__p_RTPReceiver,
+  &_swigt__p_VideoOrientation,
   &_swigt__p_char,
   &_swigt__p_int,
   &_swigt__p_long_long,
@@ -7407,6 +7689,7 @@ static swig_cast_info _swigc__p_RTMPServerFacade[] = {  {&_swigt__p_RTMPServerFa
 static swig_cast_info _swigc__p_RTMPServerModule[] = {  {&_swigt__p_RTMPServerModule, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTPIncomingMediaStream[] = {  {&_swigt__p_RTPIncomingMediaStream, 0, 0, 0},  {&_swigt__p_MediaFrameListenerBridge, _p_MediaFrameListenerBridgeTo_p_RTPIncomingMediaStream, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTPReceiver[] = {  {&_swigt__p_RTPReceiver, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_VideoOrientation[] = {  {&_swigt__p_VideoOrientation, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_long_long[] = {  {&_swigt__p_long_long, 0, 0, 0},{0, 0, 0, 0}};
@@ -7437,6 +7720,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_RTMPServerModule,
   _swigc__p_RTPIncomingMediaStream,
   _swigc__p_RTPReceiver,
+  _swigc__p_VideoOrientation,
   _swigc__p_char,
   _swigc__p_int,
   _swigc__p_long_long,
@@ -7770,6 +8054,13 @@ _exports_Properties_clientData.dtor = _wrap_delete_Properties;
 if (SWIGTYPE_p_Properties->clientdata == 0) {
   SWIGTYPE_p_Properties->clientdata = &_exports_Properties_clientData;
 }
+/* Name: _exports_VideoOrientation, Type: p_VideoOrientation, Dtor: _wrap_delete_VideoOrientation */
+SWIGV8_FUNCTION_TEMPLATE _exports_VideoOrientation_class = SWIGV8_CreateClassTemplate("_exports_VideoOrientation");
+SWIGV8_SET_CLASS_TEMPL(_exports_VideoOrientation_clientData.class_templ, _exports_VideoOrientation_class);
+_exports_VideoOrientation_clientData.dtor = _wrap_delete_VideoOrientation;
+if (SWIGTYPE_p_VideoOrientation->clientdata == 0) {
+  SWIGTYPE_p_VideoOrientation->clientdata = &_exports_VideoOrientation_clientData;
+}
 /* Name: _exports_ByteBuffer, Type: p_ByteBuffer, Dtor: _wrap_delete_ByteBuffer */
 SWIGV8_FUNCTION_TEMPLATE _exports_ByteBuffer_class = SWIGV8_CreateClassTemplate("_exports_ByteBuffer");
 SWIGV8_SET_CLASS_TEMPL(_exports_ByteBuffer_clientData.class_templ, _exports_ByteBuffer_class);
@@ -7896,6 +8187,9 @@ SWIGV8_AddMemberFunction(_exports_Properties_class, "SetProperty", _wrap_Propert
 SWIGV8_AddMemberFunction(_exports_Properties_class, "GetChildren", _wrap_Properties__wrap_Properties_GetChildren);
 SWIGV8_AddMemberFunction(_exports_Properties_class, "GetChildrenArray", _wrap_Properties_GetChildrenArray);
 SWIGV8_AddMemberFunction(_exports_Properties_class, "GetProperty", _wrap_Properties__wrap_Properties_GetProperty);
+SWIGV8_AddMemberVariable(_exports_VideoOrientation_class, "facing", _wrap_VideoOrientation_facing_get, _wrap_VideoOrientation_facing_set);
+SWIGV8_AddMemberVariable(_exports_VideoOrientation_class, "flip", _wrap_VideoOrientation_flip_get, _wrap_VideoOrientation_flip_set);
+SWIGV8_AddMemberVariable(_exports_VideoOrientation_class, "rotation", _wrap_VideoOrientation_rotation_get, _wrap_VideoOrientation_rotation_set);
 SWIGV8_AddMemberFunction(_exports_ByteBuffer_class, "Clone", _wrap_ByteBuffer_Clone);
 SWIGV8_AddMemberFunction(_exports_ByteBuffer_class, "Alloc", _wrap_ByteBuffer_Alloc);
 SWIGV8_AddMemberFunction(_exports_ByteBuffer_class, "Set", _wrap_ByteBuffer_Set);
@@ -7991,6 +8285,19 @@ _exports_Properties_class_0->SetHiddenPrototype(true);
 v8::Local<v8::Object> _exports_Properties_obj = _exports_Properties_class_0->GetFunction();
 #else
 v8::Local<v8::Object> _exports_Properties_obj = _exports_Properties_class_0->GetFunction(SWIGV8_CURRENT_CONTEXT()).ToLocalChecked();
+#endif
+/* Class: VideoOrientation (_exports_VideoOrientation) */
+SWIGV8_FUNCTION_TEMPLATE _exports_VideoOrientation_class_0 = SWIGV8_CreateClassTemplate("VideoOrientation");
+_exports_VideoOrientation_class_0->SetCallHandler(_wrap_new_VideoOrientation);
+_exports_VideoOrientation_class_0->Inherit(_exports_VideoOrientation_class);
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+_exports_VideoOrientation_class_0->SetHiddenPrototype(true);
+v8::Handle<v8::Object> _exports_VideoOrientation_obj = _exports_VideoOrientation_class_0->GetFunction();
+#elif (SWIG_V8_VERSION < 0x0704)
+_exports_VideoOrientation_class_0->SetHiddenPrototype(true);
+v8::Local<v8::Object> _exports_VideoOrientation_obj = _exports_VideoOrientation_class_0->GetFunction();
+#else
+v8::Local<v8::Object> _exports_VideoOrientation_obj = _exports_VideoOrientation_class_0->GetFunction(SWIGV8_CURRENT_CONTEXT()).ToLocalChecked();
 #endif
 /* Class: ByteBuffer (_exports_ByteBuffer) */
 SWIGV8_FUNCTION_TEMPLATE _exports_ByteBuffer_class_0 = SWIGV8_CreateClassTemplate("ByteBuffer");
@@ -8179,6 +8486,11 @@ SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "EnableUltraDebug", _wra
 exports_obj->Set(SWIGV8_SYMBOL_NEW("Properties"), _exports_Properties_obj);
 #else
 SWIGV8_MAYBE_CHECK(exports_obj->Set(SWIGV8_CURRENT_CONTEXT(), SWIGV8_SYMBOL_NEW("Properties"), _exports_Properties_obj));
+#endif
+#if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
+exports_obj->Set(SWIGV8_SYMBOL_NEW("VideoOrientation"), _exports_VideoOrientation_obj);
+#else
+SWIGV8_MAYBE_CHECK(exports_obj->Set(SWIGV8_CURRENT_CONTEXT(), SWIGV8_SYMBOL_NEW("VideoOrientation"), _exports_VideoOrientation_obj));
 #endif
 #if (V8_MAJOR_VERSION-0) < 4 && (SWIG_V8_VERSION < 0x031903)
 exports_obj->Set(SWIGV8_SYMBOL_NEW("ByteBuffer"), _exports_ByteBuffer_obj);

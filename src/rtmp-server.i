@@ -569,6 +569,12 @@ public:
 		//oh, not possible on rtmp
 		return 1;
 	}
+
+	virtual int Reset(DWORD ssrc)
+	{
+		//oh, not possible on rtmp
+		return 1;
+	}
 	
 	MediaFrameListenerBridge* GetAudio()	{ return &audio; }
 	MediaFrameListenerBridge* GetVideo()	{ return &video; }
