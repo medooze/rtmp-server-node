@@ -1,6 +1,6 @@
 {
   "name": "medooze-rtmp-server",
-  "version": "0.8.19",
+  "version": "0.8.20",
   "description": "RTMP Server by Medooze",
   "main": "index.js",
   "scripts": {
