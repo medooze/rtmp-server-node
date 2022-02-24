@@ -1883,6 +1883,10 @@ public:
 		Log("-RTMPServerModule::Terminate\n");
 		//Close handle
 		uv_close((uv_handle_t *)&async, NULL);
+		
+		std::function<void()> func;
+		//Dequeue all pending functions
+		while(queue.try_dequeue(func)){}
 	}
 	
 	static void EnableLog(bool flag)
