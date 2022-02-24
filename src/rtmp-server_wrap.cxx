@@ -1667,6 +1667,7 @@ static swig_module_info swig_module = {swig_types, 29, 0, 0, 0, 0};
 #include <assert.h>
 
 
+#include "concurrentqueue.h"
 #include "rtp.h"
 #include "rtmp/amf.h"
 #include "rtmp/rtmp.h"
@@ -1860,18 +1861,14 @@ public:
 	 */
 	static void Async(std::function<void()> func) 
 	{
-		//Lock
-		mutex.Lock();
 		//Check if not terminatd
 		if (uv_is_active((uv_handle_t *)&async))
 		{
 			//Enqueue
-			queue.push_back(func);
+			queue.enqueue(std::move(func));
 			//Signal main thread
 			uv_async_send(&async);
 		}
-		//Unlock
-		mutex.Unlock();
 	}
 
 	static void Initialize()
@@ -1884,14 +1881,8 @@ public:
 	static void Terminate()
 	{
 		Log("-RTMPServerModule::Terminate\n");
-		//Lock
-		mutex.Lock();
-		//empty queue
-		queue.clear();
 		//Close handle
 		uv_close((uv_handle_t *)&async, NULL);
-		//Unlock
-		mutex.Unlock();
 	}
 	
 	static void EnableLog(bool flag)
@@ -1914,39 +1905,26 @@ public:
 	
 	static void async_cb_handler(uv_async_t *handle)
 	{
-		//Lock
-		mutex.Lock();
-		//Get all
-		while(!queue.empty())
+		std::function<void()> func;
+		//Get all pending functions
+		while(queue.try_dequeue(func))
 		{
-			//Get from queue
-			auto func = queue.front();
-			//Remove from queue
-			queue.pop_front();
-			//Unlock
-			mutex.Unlock();
 			//Execute async function
 			func();
-			//Lock
-			mutex.Lock();
 		}
-		//Unlock
-		mutex.Unlock();
 	}
 	
 	
 private:
 	//http://stackoverflow.com/questions/31207454/v8-multithreaded-function
 	static uv_async_t  async;
-	static Mutex mutex;
-	static std::list<std::function<void()>> queue;
+	static moodycamel::ConcurrentQueue<std::function<void()>> queue;
 };
 
 
 //Static initializaion
 uv_async_t RTMPServerModule::async;
-Mutex RTMPServerModule::mutex;
-std::list<std::function<void()>>  RTMPServerModule::queue;
+moodycamel::ConcurrentQueue<std::function<void()>>  RTMPServerModule::queue;
 
 class IncomingStreamBridge : 
 	public RTMPMediaStream::Listener,
