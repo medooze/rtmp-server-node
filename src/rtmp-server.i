@@ -891,8 +891,10 @@ struct RTMPMediaStreamListener
 
 %nodefaultctor RTPIncomingMediaStream;
 %nodefaultdtor RTPIncomingMediaStream;
-struct RTPIncomingMediaStream
+struct RTPIncomingMediaStream 
 {
+	DWORD GetMediaSSRC();
+	TimeService& GetTimeService();
 };
 
 %nodefaultctor MediaFrameListener;
