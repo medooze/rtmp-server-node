@@ -5772,6 +5772,34 @@ fail:
 }
 
 
+static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_GetMediaSSRC(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  uint32_t result;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_MediaFrameListenerBridge_GetMediaSSRC.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_GetMediaSSRC" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+  }
+  arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+  result = (uint32_t)(arg1)->GetMediaSSRC();
+  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
 static void _wrap_delete_MediaFrameListenerBridge(const v8::WeakCallbackInfo<SWIGV8_Proxy> &data) {
   SWIGV8_Proxy *proxy = data.GetParameter();
   
@@ -7248,6 +7276,7 @@ SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "avgWaitedTime
 SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridge_class, "Update", _wrap_MediaFrameListenerBridge_Update);
 SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridge_class, "AddMediaListener", _wrap_MediaFrameListenerBridge_AddMediaListener);
 SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridge_class, "RemoveMediaListener", _wrap_MediaFrameListenerBridge_RemoveMediaListener);
+SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridge_class, "GetMediaSSRC", _wrap_MediaFrameListenerBridge_GetMediaSSRC);
 SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetAudio", _wrap_IncomingStreamBridge_GetAudio);
 SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetVideo", _wrap_IncomingStreamBridge_GetVideo);
 SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetReceiver", _wrap_IncomingStreamBridge_GetReceiver);

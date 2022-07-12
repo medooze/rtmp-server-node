@@ -919,6 +919,8 @@ struct MediaFrameListenerBridge : public RTPIncomingMediaStream
 	
 	void AddMediaListener(MediaFrameListener* listener);
 	void RemoveMediaListener(MediaFrameListener* listener);
+
+	DWORD GetMediaSSRC();
 };
 
 class IncomingStreamBridge : public RTMPMediaStreamListener
