@@ -889,12 +889,24 @@ struct RTMPMediaStreamListener
 };
 
 
+%{
+using RTPIncomingMediaStreamListener = RTPIncomingMediaStream::Listener;
+%}
+%nodefaultctor RTPIncomingMediaStreamListener;
+struct RTPIncomingMediaStreamListener
+{
+};
+
+
 %nodefaultctor RTPIncomingMediaStream;
 %nodefaultdtor RTPIncomingMediaStream;
 struct RTPIncomingMediaStream 
 {
 	DWORD GetMediaSSRC();
 	TimeService& GetTimeService();
+
+	void AddListener(RTPIncomingMediaStreamListener* listener);
+	void RemoveListener(RTPIncomingMediaStreamListener* listener);
 };
 
 %nodefaultctor MediaFrameListener;
@@ -919,8 +931,6 @@ struct MediaFrameListenerBridge : public RTPIncomingMediaStream
 	
 	void AddMediaListener(MediaFrameListener* listener);
 	void RemoveMediaListener(MediaFrameListener* listener);
-
-	DWORD GetMediaSSRC();
 };
 
 class IncomingStreamBridge : public RTMPMediaStreamListener
