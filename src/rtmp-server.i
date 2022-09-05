@@ -25,8 +25,6 @@
 #include <memory>
 #include <nan.h>
 
-using MediaFrameListener = MediaFrame::Listener;
-
 template<typename T>
 struct CopyablePersistentTraits {
 public:
@@ -897,7 +895,6 @@ struct RTPIncomingMediaStreamListener
 {
 };
 
-
 %nodefaultctor RTPIncomingMediaStream;
 %nodefaultdtor RTPIncomingMediaStream;
 struct RTPIncomingMediaStream 
@@ -907,8 +904,12 @@ struct RTPIncomingMediaStream
 
 	void AddListener(RTPIncomingMediaStreamListener* listener);
 	void RemoveListener(RTPIncomingMediaStreamListener* listener);
+	void Mute(bool muting);
 };
 
+%{
+using MediaFrameListener = MediaFrame::Listener;
+%}
 %nodefaultctor MediaFrameListener;
 %nodefaultdtor MediaFrameListener;
 struct MediaFrameListener
@@ -928,9 +929,6 @@ struct MediaFrameListenerBridge : public RTPIncomingMediaStream
 	DWORD maxWaitedTime;
 	DWORD avgWaitedTime;
 	void Update();
-	
-	void AddMediaListener(MediaFrameListener* listener);
-	void RemoveMediaListener(MediaFrameListener* listener);
 };
 
 class IncomingStreamBridge : public RTMPMediaStreamListener
