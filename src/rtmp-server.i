@@ -269,8 +269,8 @@ class IncomingStreamBridge :
 {
 public:
 	IncomingStreamBridge(v8::Local<v8::Object> object) :
-		audio(1),
-		video(2),
+		audio(loop, 1),
+		video(loop, 2),
 		mutex(true)
 	{
 		//Store event callback object
@@ -355,6 +355,10 @@ public:
 			return;
 
 		Log("-IncomingStreamBridge::Stop()\n");
+
+		//Stop audio and video
+		audio.Stop();
+		video.Stop();
 
 		//We are stopped
 		stopped = true;
@@ -864,7 +868,6 @@ private:
 	std::shared_ptr<Persistent<v8::Object>> persistent;	
 };
 
-
 %}
 %include "stdint.i"
 %include "std_vector.i"
@@ -909,15 +912,22 @@ struct RTPIncomingMediaStream
 	void RemoveListener(RTPIncomingMediaStreamListener* listener);
 };
 
+%{
+using MediaFrameListener = MediaFrame::Listener;
+%}
 %nodefaultctor MediaFrameListener;
 %nodefaultdtor MediaFrameListener;
 struct MediaFrameListener
 {
 };
-	
+
 %nodefaultctor MediaFrameListenerBridge;
-struct MediaFrameListenerBridge : public RTPIncomingMediaStream
+struct MediaFrameListenerBridge : 
+	public RTPIncomingMediaStream,
+	public MediaFrameListener
 {
+	MediaFrameListenerBridge(TimeService& timeService, int ssrc);
+
 	DWORD numFrames;
 	DWORD numPackets;
 	DWORD numFramesDelta;
@@ -931,7 +941,16 @@ struct MediaFrameListenerBridge : public RTPIncomingMediaStream
 	
 	void AddMediaListener(MediaFrameListener* listener);
 	void RemoveMediaListener(MediaFrameListener* listener);
+	void Stop();
 };
+//SWIG only supports single class inheritance
+MediaFrameListener* MediaFrameListenerBridgeToMediaFrameListener(MediaFrameListenerBridge* bridge);
+%{
+MediaFrameListener* MediaFrameListenerBridgeToMediaFrameListener(MediaFrameListenerBridge* bridge)
+{
+	return (MediaFrameListener*)bridge;
+}
+%}
 
 class IncomingStreamBridge : public RTMPMediaStreamListener
 {
