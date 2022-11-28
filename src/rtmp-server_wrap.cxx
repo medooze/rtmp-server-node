@@ -1959,7 +1959,7 @@ public:
 	RTPReceiver*		GetReceiver()	{ return this; }
 	
 private:
-	
+	EventLoop loop;
 	RTMPAVCPacketizer avcPacketizer;
 	RTMPAACPacketizer aacPacketizer;
 	MediaFrameListenerBridge audio;
@@ -1968,7 +1968,6 @@ private:
 	RTMPMediaStream *attached = nullptr;
 	std::shared_ptr<Persistent<v8::Object>> persistent;	
 	std::vector<std::pair<uint64_t,std::unique_ptr<MediaFrame>>> queue;
-	EventLoop loop;
 	Timer::shared dispatch;
 		
 	uint64_t first = std::numeric_limits<uint64_t>::max();
