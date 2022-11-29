@@ -421,7 +421,7 @@ public:
 			auto sched = ini + (timestamp - first);
 
 			//Is this frame too late? (allow 200ms offset)
-			if (sched + 200 < now)
+			if (sched < now && sched + 200 > now)
 			{
 				UltraDebug("-IncomingStreamBridge::Enqueue() Got late frame %s timestamp:%lu(%llu) time:%llu(%llu) ini:%llu sched:%llu now:%llu first:%llu queue:%d\n",
 					frame->GetType() == MediaFrame::Video ? "VIDEO" : "AUDIO",
