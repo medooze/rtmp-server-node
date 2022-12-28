@@ -30,6 +30,7 @@
   "homepage": "https://github.com/medooze/rtmp-server-node#readme",
   "dependencies": {
     "nan": "^2.12.1",
+    "tap": "^16.3.2",
     "uuid": "^3.3.2"
   }
 }
