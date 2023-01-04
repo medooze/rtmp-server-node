@@ -1931,7 +1931,10 @@ static MediaFrameListenerShared MediaFrameListenerShared_null_ptr = {};
 MediaFrameListenerShared* MediaFrameListenerShared_from_proxy(const v8::Local<v8::Value> input)
 {
   void *ptr = nullptr;
-  v8::Local<v8::Value> target = v8::Local<v8::Proxy>::Cast(input)->GetTarget();
+  if (input.IsEmpty() || !input->IsObject()) return &MediaFrameListenerShared_null_ptr;
+  v8::Local<v8::Proxy> proxy = v8::Local<v8::Proxy>::Cast(input);
+  if (proxy.IsEmpty()) return &MediaFrameListenerShared_null_ptr;
+  v8::Local<v8::Value> target = proxy->GetTarget();
   SWIG_ConvertPtr(target, &ptr, SWIGTYPE_p_MediaFrameListenerShared,  0 );
   if (!ptr) return &MediaFrameListenerShared_null_ptr;
   return reinterpret_cast<MediaFrameListenerShared*>(ptr);
@@ -1952,7 +1955,10 @@ static RTPIncomingMediaStreamShared RTPIncomingMediaStreamShared_null_ptr = {};
 RTPIncomingMediaStreamShared* RTPIncomingMediaStreamShared_from_proxy(const v8::Local<v8::Value> input)
 {
   void *ptr = nullptr;
-  v8::Local<v8::Value> target = v8::Local<v8::Proxy>::Cast(input)->GetTarget();
+  if (input.IsEmpty() || !input->IsObject()) return &RTPIncomingMediaStreamShared_null_ptr;
+  v8::Local<v8::Proxy> proxy = v8::Local<v8::Proxy>::Cast(input);
+  if (proxy.IsEmpty()) return &RTPIncomingMediaStreamShared_null_ptr;
+  v8::Local<v8::Value> target = proxy->GetTarget();
   SWIG_ConvertPtr(target, &ptr, SWIGTYPE_p_RTPIncomingMediaStreamShared,  0 );
   if (!ptr) return &RTPIncomingMediaStreamShared_null_ptr;
   return reinterpret_cast<RTPIncomingMediaStreamShared*>(ptr);
@@ -1970,7 +1976,10 @@ static RTPReceiverShared RTPReceiverShared_null_ptr = {};
 RTPReceiverShared* RTPReceiverShared_from_proxy(const v8::Local<v8::Value> input)
 {
   void *ptr = nullptr;
-  v8::Local<v8::Value> target = v8::Local<v8::Proxy>::Cast(input)->GetTarget();
+  if (input.IsEmpty() || !input->IsObject()) return &RTPReceiverShared_null_ptr;
+  v8::Local<v8::Proxy> proxy = v8::Local<v8::Proxy>::Cast(input);
+  if (proxy.IsEmpty()) return &RTPReceiverShared_null_ptr;
+  v8::Local<v8::Value> target = proxy->GetTarget();
   SWIG_ConvertPtr(target, &ptr, SWIGTYPE_p_RTPReceiverShared,  0 );
   if (!ptr) return &RTPReceiverShared_null_ptr;
   return reinterpret_cast<RTPReceiverShared*>(ptr);
@@ -1985,7 +1994,10 @@ static MediaFrameListenerBridgeShared MediaFrameListenerBridgeShared_null_ptr = 
 MediaFrameListenerBridgeShared* MediaFrameListenerBridgeShared_from_proxy(const v8::Local<v8::Value> input)
 {
   void *ptr = nullptr;
-  v8::Local<v8::Value> target = v8::Local<v8::Proxy>::Cast(input)->GetTarget();
+  if (input.IsEmpty() || !input->IsObject()) return &MediaFrameListenerBridgeShared_null_ptr;
+  v8::Local<v8::Proxy> proxy = v8::Local<v8::Proxy>::Cast(input);
+  if (proxy.IsEmpty()) return &MediaFrameListenerBridgeShared_null_ptr;
+  v8::Local<v8::Value> target = proxy->GetTarget();
   SWIG_ConvertPtr(target, &ptr, SWIGTYPE_p_MediaFrameListenerBridgeShared,  0 );
   if (!ptr) return &MediaFrameListenerBridgeShared_null_ptr;
   return reinterpret_cast<MediaFrameListenerBridgeShared*>(ptr);
@@ -2543,7 +2555,10 @@ static RTMPNetStreamShared RTMPNetStreamShared_null_ptr = {};
 RTMPNetStreamShared* RTMPNetStreamShared_from_proxy(const v8::Local<v8::Value> input)
 {
   void *ptr = nullptr;
-  v8::Local<v8::Value> target = v8::Local<v8::Proxy>::Cast(input)->GetTarget();
+  if (input.IsEmpty() || !input->IsObject()) return &RTMPNetStreamShared_null_ptr;
+  v8::Local<v8::Proxy> proxy = v8::Local<v8::Proxy>::Cast(input);
+  if (proxy.IsEmpty()) return &RTMPNetStreamShared_null_ptr;
+  v8::Local<v8::Value> target = proxy->GetTarget();
   SWIG_ConvertPtr(target, &ptr, SWIGTYPE_p_RTMPNetStreamShared,  0 );
   if (!ptr) return &RTMPNetStreamShared_null_ptr;
   return reinterpret_cast<RTMPNetStreamShared*>(ptr);
@@ -2558,7 +2573,10 @@ static RTMPNetStreamImplShared RTMPNetStreamImplShared_null_ptr = {};
 RTMPNetStreamImplShared* RTMPNetStreamImplShared_from_proxy(const v8::Local<v8::Value> input)
 {
   void *ptr = nullptr;
-  v8::Local<v8::Value> target = v8::Local<v8::Proxy>::Cast(input)->GetTarget();
+  if (input.IsEmpty() || !input->IsObject()) return &RTMPNetStreamImplShared_null_ptr;
+  v8::Local<v8::Proxy> proxy = v8::Local<v8::Proxy>::Cast(input);
+  if (proxy.IsEmpty()) return &RTMPNetStreamImplShared_null_ptr;
+  v8::Local<v8::Value> target = proxy->GetTarget();
   SWIG_ConvertPtr(target, &ptr, SWIGTYPE_p_RTMPNetStreamImplShared,  0 );
   if (!ptr) return &RTMPNetStreamImplShared_null_ptr;
   return reinterpret_cast<RTMPNetStreamImplShared*>(ptr);
@@ -2675,7 +2693,10 @@ static RTMPNetConnectionShared RTMPNetConnectionShared_null_ptr = {};
 RTMPNetConnectionShared* RTMPNetConnectionShared_from_proxy(const v8::Local<v8::Value> input)
 {
   void *ptr = nullptr;
-  v8::Local<v8::Value> target = v8::Local<v8::Proxy>::Cast(input)->GetTarget();
+  if (input.IsEmpty() || !input->IsObject()) return &RTMPNetConnectionShared_null_ptr;
+  v8::Local<v8::Proxy> proxy = v8::Local<v8::Proxy>::Cast(input);
+  if (proxy.IsEmpty()) return &RTMPNetConnectionShared_null_ptr;
+  v8::Local<v8::Value> target = proxy->GetTarget();
   SWIG_ConvertPtr(target, &ptr, SWIGTYPE_p_RTMPNetConnectionShared,  0 );
   if (!ptr) return &RTMPNetConnectionShared_null_ptr;
   return reinterpret_cast<RTMPNetConnectionShared*>(ptr);
@@ -2690,7 +2711,10 @@ static RTMPNetConnectionImplShared RTMPNetConnectionImplShared_null_ptr = {};
 RTMPNetConnectionImplShared* RTMPNetConnectionImplShared_from_proxy(const v8::Local<v8::Value> input)
 {
   void *ptr = nullptr;
-  v8::Local<v8::Value> target = v8::Local<v8::Proxy>::Cast(input)->GetTarget();
+  if (input.IsEmpty() || !input->IsObject()) return &RTMPNetConnectionImplShared_null_ptr;
+  v8::Local<v8::Proxy> proxy = v8::Local<v8::Proxy>::Cast(input);
+  if (proxy.IsEmpty()) return &RTMPNetConnectionImplShared_null_ptr;
+  v8::Local<v8::Value> target = proxy->GetTarget();
   SWIG_ConvertPtr(target, &ptr, SWIGTYPE_p_RTMPNetConnectionImplShared,  0 );
   if (!ptr) return &RTMPNetConnectionImplShared_null_ptr;
   return reinterpret_cast<RTMPNetConnectionImplShared*>(ptr);
