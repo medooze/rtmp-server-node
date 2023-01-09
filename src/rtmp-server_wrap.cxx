@@ -2234,15 +2234,6 @@ public:
 		
 		//Run on thread
 		loop.Async([=](...) {
-			//Ensure that we are not overflowing
-			if (queue.size()>2048)
-			{
-				//Show error
-				Error("-IncomingStreamBridge::Enqueue() Queue buffer overflowing, cleaning it [size:%d]\n",queue.size());
-				//Clear all pending data
-				queue.clear();
-			}
-
 			//Convert timestamp 
 			uint64_t timestamp = frame->GetTimeStamp()*1000/frame->GetClockRate();
 			
