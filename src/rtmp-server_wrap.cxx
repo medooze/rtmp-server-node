@@ -2160,7 +2160,7 @@ public:
 				auto& frame = it->second;
 				
 				//If not yet it's time
-				if (ts > now)
+				if (!hurryUp && ts > now)
 				{
 					//Log("-IncomingStreamBridge::Dispatch() ReDispatching in %llums size=%d\n",(ts-now).count());
 					//Schedule timer for later
@@ -2177,6 +2177,8 @@ public:
 					//Dispatch video
 					video->onMediaFrame(*frame);
 			}
+			//No hurry
+			hurryUp = false;
 		});
 		
 	}
@@ -2315,7 +2317,19 @@ public:
 					//Use last frame time
 					sched = queue.back().first;
 				}
-			}
+			//Do not queue more than 200ms
+			} else if (sched > now + 200) {
+                                Debug("-IncomingStreamBridge::Enqueue() Hurry Up!\n");
+				//release all frames now
+                                hurryUp = true;
+				 //Update timestamp for first
+                                first = timestamp;
+                                //Get current time
+                                ini = now;
+                                //Send now
+                                sched = now;
+                        }
+
 
 			/*Log("-IncomingStreamBridge::Enqueue() Frame %s scheduled in %lldms timestamp:%lu time:%llu rel:%llu first:%lu ini:%llu queue:%d\n", 
 				frame->GetType()== MediaFrame::Video ? "VIDEO": "AUDIO",
@@ -2329,9 +2343,15 @@ public:
 			);*/
 			//Enqueue
 			queue.emplace_back(sched,frame);
-			
+
+			//If we need to drain the queue			
+			if (hurryUp) 
+			{
+				//Run now
+                                dispatch->Again(0ms);
+                        } 
 			//If queue was empty
-			if (queue.size()==1)
+			else if (queue.size()==1)
 			{
 				//Log("-IncomingStreamBridge::Enqueue() Dispatching in %llums size=%u\n",sched > now ? sched - now : 0, queue.size());
 				//Schedule timer for later
@@ -2440,6 +2460,7 @@ private:
 	uint64_t first = std::numeric_limits<uint64_t>::max();
 	uint64_t ini = std::numeric_limits<uint64_t>::max();
 	bool stopped = false;
+	bool hurryUp = false;
 };
 
 
