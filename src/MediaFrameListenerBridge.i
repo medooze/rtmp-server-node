@@ -28,6 +28,10 @@ struct MediaFrameListenerBridge :
 	void Update();
 	
 	void Stop();
+
+	//From MediaFrameProducer
+	void AddMediaListener(const MediaFrameListenerShared& listener);
+	void RemoveMediaListener(const MediaFrameListenerShared& listener);
 };
 
 SHARED_PTR_BEGIN(MediaFrameListenerBridge)
