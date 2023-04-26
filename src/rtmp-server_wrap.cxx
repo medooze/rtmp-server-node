@@ -2139,10 +2139,12 @@ class IncomingStreamBridge :
 	public RTPReceiver
 {
 public:
-	IncomingStreamBridge(v8::Local<v8::Object> object) :
+	IncomingStreamBridge(v8::Local<v8::Object> object, int maxLateOffset = 200, int maxBufferingTime = 400) :
 		audio(new MediaFrameListenerBridge(loop, 1)),
 		video(new MediaFrameListenerBridge(loop, 2)),
-		mutex(true)
+		mutex(true),
+		maxLateOffset(maxLateOffset),
+		maxBufferingTime(maxBufferingTime)
 	{
 		//Store event callback object
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
@@ -2283,7 +2285,7 @@ public:
 			auto sched = ini + (timestamp - first);
 
 			//Is this frame too late? (allow 200ms offset)
-			if (sched < now && sched + 200 > now)
+			if (sched < now && sched + maxLateOffset > now)
 			{
 				UltraDebug("-IncomingStreamBridge::Enqueue() Got late frame %s timestamp:%lu(%llu) time:%llu(%llu) ini:%llu sched:%llu now:%llu first:%llu queue:%d\n",
 					frame->GetType() == MediaFrame::Video ? "VIDEO" : "AUDIO",
@@ -2318,7 +2320,7 @@ public:
 					sched = queue.back().first;
 				}
 			//Do not queue more than 200ms
-			} else if (sched > now + 200) {
+			} else if (sched > now + maxBufferingTime) {
                                 Debug("-IncomingStreamBridge::Enqueue() Hurry Up!\n");
 				//release all frames now
                                 hurryUp = true;
@@ -2461,6 +2463,8 @@ private:
 	uint64_t ini = std::numeric_limits<uint64_t>::max();
 	bool stopped = false;
 	bool hurryUp = false;
+	int maxLateOffset = 200;
+	int maxBufferingTime = 400;
 };
 
 
@@ -6867,14 +6871,89 @@ static void _wrap_delete_RTMPServerModule(const v8::WeakCallbackInfo<SWIGV8_Prox
 }
 
 
-static SwigV8ReturnValue _wrap_new_IncomingStreamBridge(const SwigV8Arguments &args) {
+static SwigV8ReturnValue _wrap_new_IncomingStreamBridge__SWIG_0(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_OBJECT self = args.Holder();
+  v8::Local< v8::Object > arg1 ;
+  int arg2 ;
+  int arg3 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  IncomingStreamBridge *result;
+  if(self->InternalFieldCount() < 1) SWIG_exception_fail(SWIG_ERROR, "Illegal call of constructor _wrap_new_IncomingStreamBridge__SWIG_0.");
+  if(args.Length() != 3) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_IncomingStreamBridge__SWIG_0.");
+  {
+    arg1 = v8::Local<v8::Object>::Cast(args[0]);
+  }
+  ecode2 = SWIG_AsVal_int(args[1], &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_IncomingStreamBridge" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(args[2], &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "new_IncomingStreamBridge" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  result = (IncomingStreamBridge *)new IncomingStreamBridge(arg1,arg2,arg3);
+  
+  
+  
+  
+  
+  SWIGV8_SetPrivateData(self, result, SWIGTYPE_p_IncomingStreamBridge, SWIG_POINTER_OWN);
+  SWIGV8_RETURN(self);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_new_IncomingStreamBridge__SWIG_1(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_OBJECT self = args.Holder();
+  v8::Local< v8::Object > arg1 ;
+  int arg2 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  IncomingStreamBridge *result;
+  if(self->InternalFieldCount() < 1) SWIG_exception_fail(SWIG_ERROR, "Illegal call of constructor _wrap_new_IncomingStreamBridge__SWIG_1.");
+  if(args.Length() != 2) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_IncomingStreamBridge__SWIG_1.");
+  {
+    arg1 = v8::Local<v8::Object>::Cast(args[0]);
+  }
+  ecode2 = SWIG_AsVal_int(args[1], &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_IncomingStreamBridge" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  result = (IncomingStreamBridge *)new IncomingStreamBridge(arg1,arg2);
+  
+  
+  
+  
+  SWIGV8_SetPrivateData(self, result, SWIGTYPE_p_IncomingStreamBridge, SWIG_POINTER_OWN);
+  SWIGV8_RETURN(self);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_new_IncomingStreamBridge__SWIG_2(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler) {
   SWIGV8_HANDLESCOPE();
   
   SWIGV8_OBJECT self = args.Holder();
   v8::Local< v8::Object > arg1 ;
   IncomingStreamBridge *result;
-  if(self->InternalFieldCount() < 1) SWIG_exception_fail(SWIG_ERROR, "Illegal call of constructor _wrap_new_IncomingStreamBridge.");
-  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_IncomingStreamBridge.");
+  if(self->InternalFieldCount() < 1) SWIG_exception_fail(SWIG_ERROR, "Illegal call of constructor _wrap_new_IncomingStreamBridge__SWIG_2.");
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_IncomingStreamBridge__SWIG_2.");
   {
     arg1 = v8::Local<v8::Object>::Cast(args[0]);
   }
@@ -6886,6 +6965,47 @@ static SwigV8ReturnValue _wrap_new_IncomingStreamBridge(const SwigV8Arguments &a
   SWIGV8_RETURN(self);
   
   goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_new_IncomingStreamBridge(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  OverloadErrorHandler errorHandler;
+  SWIGV8_VALUE self;
+  
+  // switch all cases by means of series of if-returns.
+  
+  if(args.Length() == 3) {
+    errorHandler.err.Clear();
+    _wrap_new_IncomingStreamBridge__SWIG_0(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+  }
+  
+  if(args.Length() == 2) {
+    errorHandler.err.Clear();
+    _wrap_new_IncomingStreamBridge__SWIG_1(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+  }
+  
+  if(args.Length() == 1) {
+    errorHandler.err.Clear();
+    _wrap_new_IncomingStreamBridge__SWIG_2(args, errorHandler);
+    if(errorHandler.err.IsEmpty()) {
+      return;
+    }
+  }
+  
+  
+  // default:
+  SWIG_exception_fail(SWIG_ERROR, "Illegal arguments for construction of _exports_IncomingStreamBridge");
+  
 fail:
   SWIGV8_RETURN(SWIGV8_UNDEFINED());
 }

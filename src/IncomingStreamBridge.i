@@ -7,10 +7,12 @@ class IncomingStreamBridge :
 	public RTPReceiver
 {
 public:
-	IncomingStreamBridge(v8::Local<v8::Object> object) :
+	IncomingStreamBridge(v8::Local<v8::Object> object, int maxLateOffset = 200, int maxBufferingTime = 400) :
 		audio(new MediaFrameListenerBridge(loop, 1)),
 		video(new MediaFrameListenerBridge(loop, 2)),
-		mutex(true)
+		mutex(true),
+		maxLateOffset(maxLateOffset),
+		maxBufferingTime(maxBufferingTime)
 	{
 		//Store event callback object
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
@@ -151,7 +153,7 @@ public:
 			auto sched = ini + (timestamp - first);
 
 			//Is this frame too late? (allow 200ms offset)
-			if (sched < now && sched + 200 > now)
+			if (sched < now && sched + maxLateOffset > now)
 			{
 				UltraDebug("-IncomingStreamBridge::Enqueue() Got late frame %s timestamp:%lu(%llu) time:%llu(%llu) ini:%llu sched:%llu now:%llu first:%llu queue:%d\n",
 					frame->GetType() == MediaFrame::Video ? "VIDEO" : "AUDIO",
@@ -186,7 +188,7 @@ public:
 					sched = queue.back().first;
 				}
 			//Do not queue more than 200ms
-			} else if (sched > now + 200) {
+			} else if (sched > now + maxBufferingTime) {
                                 Debug("-IncomingStreamBridge::Enqueue() Hurry Up!\n");
 				//release all frames now
                                 hurryUp = true;
@@ -329,6 +331,8 @@ private:
 	uint64_t ini = std::numeric_limits<uint64_t>::max();
 	bool stopped = false;
 	bool hurryUp = false;
+	int maxLateOffset = 200;
+	int maxBufferingTime = 400;
 };
 
 %}
@@ -337,7 +341,7 @@ private:
 class IncomingStreamBridge : public RTMPMediaStreamListener
 {
 public:
-	IncomingStreamBridge(v8::Local<v8::Object> object);
+	IncomingStreamBridge(v8::Local<v8::Object> object, int maxLateOffset = 200, int maxBufferingTime = 400);
 	MediaFrameListenerBridgeShared GetAudio();
 	MediaFrameListenerBridgeShared GetVideo();
 	void Stop();
