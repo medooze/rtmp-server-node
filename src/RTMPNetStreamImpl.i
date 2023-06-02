@@ -47,6 +47,7 @@ public:
 		
 		//Get cmd name params and extra data
 		std::string name = cmd->GetNameUTF8();
+		double transId = cmd->GetTransId();
 		
 		AMFData* params = cmd->HasParams() ? cmd->GetParams()->Clone() : nullptr;
 		std::vector<AMFData*> extras;
@@ -65,6 +66,7 @@ public:
 			argv[i++] = Nan::New<v8::String>(name).ToLocalChecked();
 			argv[i++] = toJson(params); 
 			delete(params);
+			argv[i++] = Nan::New<v8::Number>(transId);
 			for (auto& extra : extras)
 			{
 				argv[i++] = toJson(extra);
@@ -75,7 +77,7 @@ public:
 		});
 	}
 	
-	void SendStatus(v8::Local<v8::Object> code,v8::Local<v8::Object> level,v8::Local<v8::Object> desc)
+	void SendStatus(double transId, v8::Local<v8::Object> code,v8::Local<v8::Object> level,v8::Local<v8::Object> desc)
 	{
 
 		UTF8Parser parserCode;
@@ -84,7 +86,7 @@ public:
 		parserCode.SetString(*Nan::Utf8String(code));
 		parserLevel.SetString(*Nan::Utf8String(level));
 		parserDesc.SetString(*Nan::Utf8String(desc));
-		fireOnNetStreamStatus({parserCode.GetWChar(),parserLevel.GetWChar()},parserDesc.GetWChar());
+		fireOnNetStreamStatus(transId, {parserCode.GetWChar(),parserLevel.GetWChar()},parserDesc.GetWChar());
 		
 	}
 	
@@ -131,7 +133,7 @@ class RTMPNetStreamImpl
 public:
 	void SetListener(v8::Local<v8::Object> object);
 	void ResetListener();
-	void SendStatus(v8::Local<v8::Object> status,v8::Local<v8::Object> level,v8::Local<v8::Object> desc);
+	void SendStatus(double transId, v8::Local<v8::Object> code,v8::Local<v8::Object> level,v8::Local<v8::Object> desc);
 	void AddMediaListener(RTMPMediaStreamListener* listener);
 	void RemoveMediaListener(RTMPMediaStreamListener* listener);
 	void Stop();
