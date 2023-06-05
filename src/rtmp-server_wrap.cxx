@@ -2517,6 +2517,7 @@ public:
 		
 		//Get cmd name params and extra data
 		std::string name = cmd->GetNameUTF8();
+		double transId = cmd->GetTransId();
 		
 		AMFData* params = cmd->HasParams() ? cmd->GetParams()->Clone() : nullptr;
 		std::vector<AMFData*> extras;
@@ -2535,6 +2536,7 @@ public:
 			argv[i++] = Nan::New<v8::String>(name).ToLocalChecked();
 			argv[i++] = toJson(params); 
 			delete(params);
+			argv[i++] = Nan::New<v8::Number>(transId);
 			for (auto& extra : extras)
 			{
 				argv[i++] = toJson(extra);
@@ -2545,7 +2547,7 @@ public:
 		});
 	}
 	
-	void SendStatus(v8::Local<v8::Object> code,v8::Local<v8::Object> level,v8::Local<v8::Object> desc)
+	void SendStatus(double transId, v8::Local<v8::Object> code,v8::Local<v8::Object> level,v8::Local<v8::Object> desc)
 	{
 
 		UTF8Parser parserCode;
@@ -2554,7 +2556,7 @@ public:
 		parserCode.SetString(*Nan::Utf8String(code));
 		parserLevel.SetString(*Nan::Utf8String(level));
 		parserDesc.SetString(*Nan::Utf8String(desc));
-		fireOnNetStreamStatus({parserCode.GetWChar(),parserLevel.GetWChar()},parserDesc.GetWChar());
+		fireOnNetStreamStatus(transId, {parserCode.GetWChar(),parserLevel.GetWChar()},parserDesc.GetWChar());
 		
 	}
 	
@@ -7225,30 +7227,39 @@ static SwigV8ReturnValue _wrap_RTMPNetStreamImpl_SendStatus(const SwigV8Argument
   
   SWIGV8_VALUE jsresult;
   RTMPNetStreamImpl *arg1 = (RTMPNetStreamImpl *) 0 ;
-  v8::Local< v8::Object > arg2 ;
+  double arg2 ;
   v8::Local< v8::Object > arg3 ;
   v8::Local< v8::Object > arg4 ;
+  v8::Local< v8::Object > arg5 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
+  double val2 ;
+  int ecode2 = 0 ;
   
-  if(args.Length() != 3) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPNetStreamImpl_SendStatus.");
+  if(args.Length() != 4) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPNetStreamImpl_SendStatus.");
   
   res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_RTMPNetStreamImpl, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "RTMPNetStreamImpl_SendStatus" "', argument " "1"" of type '" "RTMPNetStreamImpl *""'"); 
   }
   arg1 = reinterpret_cast< RTMPNetStreamImpl * >(argp1);
-  {
-    arg2 = v8::Local<v8::Object>::Cast(args[0]);
-  }
+  ecode2 = SWIG_AsVal_double(args[0], &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "RTMPNetStreamImpl_SendStatus" "', argument " "2"" of type '" "double""'");
+  } 
+  arg2 = static_cast< double >(val2);
   {
     arg3 = v8::Local<v8::Object>::Cast(args[1]);
   }
   {
     arg4 = v8::Local<v8::Object>::Cast(args[2]);
   }
-  (arg1)->SendStatus(arg2,arg3,arg4);
+  {
+    arg5 = v8::Local<v8::Object>::Cast(args[3]);
+  }
+  (arg1)->SendStatus(arg2,arg3,arg4,arg5);
   jsresult = SWIGV8_UNDEFINED();
+  
   
   
   SWIGV8_RETURN(jsresult);
