@@ -2530,7 +2530,7 @@ public:
 		RTMPServerModule::Async([=,cloned=persistent](){
 			Nan::HandleScope scope;
 			int i = 0;
-			v8::Local<v8::Value> argv[extras.size()+2];
+			v8::Local<v8::Value> argv[extras.size()+3];
 			
 			//Create local args
 			argv[i++] = Nan::New<v8::String>(name).ToLocalChecked();
