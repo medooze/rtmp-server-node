@@ -238,7 +238,18 @@ public:
 			case RTMPMediaFrame::Video:
 			{
 				//Create rtp packets
-				auto videoFrame = avcPacketizer.AddFrame((RTMPVideoFrame*)frame);
+				std::unique_ptr<VideoFrame> videoFrame;
+				
+				auto vframe = static_cast<RTMPVideoFrame*>(frame);
+				if (vframe->GetGenericVideoCodec() == VideoCodec::H265)
+				{
+					videoFrame = hevcPacketizer.AddFrame(vframe);
+				}
+				else
+				{
+				 	videoFrame= avcPacketizer.AddFrame(vframe);
+				}
+				
 				//IF got one
 				if (videoFrame)
 					//Push it
@@ -318,6 +329,7 @@ public:
 private:
 	EventLoop loop;
 	RTMPAVCPacketizer avcPacketizer;
+	RTMPHEVCPacketizer hevcPacketizer;
 	RTMPAACPacketizer aacPacketizer;
 	MediaFrameListenerBridge::shared audio;
 	MediaFrameListenerBridge::shared video;
