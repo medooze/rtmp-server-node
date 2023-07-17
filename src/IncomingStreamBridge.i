@@ -241,13 +241,18 @@ public:
 				std::unique_ptr<VideoFrame> videoFrame;
 				
 				auto vframe = static_cast<RTMPVideoFrame*>(frame);
-				if (vframe->GetGenericVideoCodec() == VideoCodec::H265)
+				auto codec = GetRtmpFrameVideoCodec(*vframe);
+				if (codec == RTMPVideoFrame::HEVC)
 				{
 					videoFrame = hevcPacketizer.AddFrame(vframe);
 				}
-				else
+				else if (codec == RTMPVideoFrame::AVC)
 				{
 				 	videoFrame= avcPacketizer.AddFrame(vframe);
+				}
+				else
+				{
+					// Not supported yet
 				}
 				
 				//IF got one
