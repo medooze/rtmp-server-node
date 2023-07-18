@@ -242,11 +242,11 @@ public:
 				
 				auto vframe = static_cast<RTMPVideoFrame*>(frame);
 				auto codec = GetRtmpFrameVideoCodec(*vframe);
-				if (codec == RTMPVideoFrame::HEVC)
+				if (codec == VideoCodec::H265)
 				{
 					videoFrame = hevcPacketizer.AddFrame(vframe);
 				}
-				else if (codec == RTMPVideoFrame::AVC)
+				else if (codec == VideoCodec::H264)
 				{
 				 	videoFrame= avcPacketizer.AddFrame(vframe);
 				}
