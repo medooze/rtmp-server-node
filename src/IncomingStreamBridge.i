@@ -1,6 +1,7 @@
 %{
 #include "MediaFrameListenerBridge.h"
-
+#include <unordered_map>
+#include <memory>
 
 class IncomingStreamBridge : 
 	public RTMPMediaStream::Listener,
@@ -14,6 +15,12 @@ public:
 		maxLateOffset(maxLateOffset),
 		maxBufferingTime(maxBufferingTime)
 	{
+		videoPacketizers.emplace(VideoCodec::H264, 
+					 std::make_unique<RtmpVideoPacketizer>(VideoCodec::H264, std::make_unique<AVCDescriptor>()));
+		
+		videoPacketizers.emplace(VideoCodec::H265, 
+					 std::make_unique<RtmpVideoPacketizer>(VideoCodec::H265, std::make_unique<HEVCDescriptor>()));
+		
 		//Store event callback object
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
 		//Start time service
@@ -238,17 +245,13 @@ public:
 			case RTMPMediaFrame::Video:
 			{
 				//Create rtp packets
-				std::unique_ptr<VideoFrame> videoFrame;
+				std::unique_ptr<MediaFrame> videoFrame;
 				
 				auto vframe = static_cast<RTMPVideoFrame*>(frame);
-				auto codec = GetRtmpFrameVideoCodec(*vframe);
-				if (codec == VideoCodec::H265)
+				auto codec = RtmpVideoPacketizer::GetRtmpFrameVideoCodec(*vframe);
+				if (videoPacketizers.find(codec) != videoPacketizers.end())
 				{
-					videoFrame = hevcPacketizer.AddFrame(vframe);
-				}
-				else if (codec == VideoCodec::H264)
-				{
-				 	videoFrame= avcPacketizer.AddFrame(vframe);
+					videoFrame = videoPacketizers[codec]->AddFrame(vframe);
 				}
 				else
 				{
@@ -333,8 +336,9 @@ public:
 	
 private:
 	EventLoop loop;
-	RTMPAVCPacketizer avcPacketizer;
-	RTMPHEVCPacketizer hevcPacketizer;
+	
+	std::unordered_map<VideoCodec::Type, std::unique_ptr<RawFrameProcessor>> videoPacketizers;
+	
 	RTMPAACPacketizer aacPacketizer;
 	MediaFrameListenerBridge::shared audio;
 	MediaFrameListenerBridge::shared video;
