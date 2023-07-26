@@ -250,6 +250,10 @@ public:
 				{
 				 	videoFrame= avcPacketizer.AddFrame(vframe);
 				}
+				else if (codec == VideoCodec::AV1)
+				{
+					videoFrame= av1Packetizer.AddFrame(vframe);
+				}
 				else
 				{
 					// Not supported yet
@@ -335,6 +339,9 @@ private:
 	EventLoop loop;
 	RTMPAVCPacketizer avcPacketizer;
 	RTMPHEVCPacketizer hevcPacketizer;
+	
+	RTMPAv1Packetizer av1Packetizer;
+	
 	RTMPAACPacketizer aacPacketizer;
 	MediaFrameListenerBridge::shared audio;
 	MediaFrameListenerBridge::shared video;
