@@ -12,7 +12,7 @@
 			[
 				"-march=native",
 				"-fexceptions",
-				"-O3",
+				"-O0",
 				"-g",
 				"-Wno-unused-function -Wno-comment",
 				#"-O0",
@@ -22,7 +22,7 @@
 			[
 				"-fexceptions",
 				"-std=c++17",
-				"-O3",
+				"-O0",
 				"-g",
 				"-Wno-unused-function",
 				#"-O0",
@@ -58,7 +58,7 @@
 						],
 						"sources": 
 						[
-							"media-server/src/DependencyDescriptorLayerSelector.cpp"							
+							"media-server/src/DependencyDescriptorLayerSelector.cpp",
 							"media-server/src/EventLoop.cpp",
 							"media-server/src/PacketHeader.cpp",
 							"media-server/src/MacAddress.cpp",
@@ -88,6 +88,7 @@
 							"media-server/src/vp8/VP8LayerSelector.cpp",
 							"media-server/src/vp9/VP9LayerSelector.cpp",
 							"media-server/src/av1/AV1CodecConfigurationRecord.cpp",
+							"media-server/src/av1/Obu.cpp",
 						],
   					        "conditions" : [
 								['OS=="mac"', {
