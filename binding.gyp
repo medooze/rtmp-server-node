@@ -82,6 +82,8 @@
 							"media-server/src/rtmp/rtmppacketizer.cpp",
 							"media-server/src/VideoLayerSelector.cpp",
 							"media-server/src/h264/H264LayerSelector.cpp",
+							"media-server/src/h265/HEVCDescriptor.cpp",
+							"media-server/src/h265/h265.cpp",
 							"media-server/src/vp8/VP8LayerSelector.cpp",
 							"media-server/src/vp9/VP9LayerSelector.cpp",	
 						],
