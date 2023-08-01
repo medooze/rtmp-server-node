@@ -16,11 +16,11 @@ struct MediaFrameListenerBridge :
 {
 	MediaFrameListenerBridge(TimeService& timeService, int ssrc);
 
-	DWORD numFrames;
-	DWORD numPackets;
-	DWORD numFramesDelta;
-	DWORD numPacketsDelta;
-	DWORD totalBytes;
+	QWORD numFrames;
+	QWORD numPackets;
+	QWORD numFramesDelta;
+	QWORD numPacketsDelta;
+	QWORD totalBytes;
 	DWORD bitrate;
 	DWORD minWaitedTime;
 	DWORD maxWaitedTime;
