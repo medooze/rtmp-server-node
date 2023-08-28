@@ -2370,7 +2370,23 @@ public:
 			case RTMPMediaFrame::Video:
 			{
 				//Create rtp packets
-				auto videoFrame = avcPacketizer.AddFrame((RTMPVideoFrame*)frame);
+				std::unique_ptr<VideoFrame> videoFrame;
+				
+				auto vframe = static_cast<RTMPVideoFrame*>(frame);
+				auto codec = GetRtmpFrameVideoCodec(*vframe);
+				if (codec == VideoCodec::H265)
+				{
+					videoFrame = hevcPacketizer.AddFrame(vframe);
+				}
+				else if (codec == VideoCodec::H264)
+				{
+				 	videoFrame= avcPacketizer.AddFrame(vframe);
+				}
+				else
+				{
+					// Not supported yet
+				}
+				
 				//IF got one
 				if (videoFrame)
 					//Push it
@@ -2450,6 +2466,7 @@ public:
 private:
 	EventLoop loop;
 	RTMPAVCPacketizer avcPacketizer;
+	RTMPHEVCPacketizer hevcPacketizer;
 	RTMPAACPacketizer aacPacketizer;
 	MediaFrameListenerBridge::shared audio;
 	MediaFrameListenerBridge::shared video;
@@ -2767,6 +2784,8 @@ SWIGINTERN RTMPNetConnectionShared RTMPNetConnectionImplShared_toRTMPNetConnecti
 	return std::static_pointer_cast<RTMPNetConnection>(*self);
 }
 
+#include <arpa/inet.h>
+
 class RTMPApplicationImpl : 
 	public RTMPApplication
 {
@@ -2778,7 +2797,7 @@ public:
 
 	virtual ~RTMPApplicationImpl() = default;
 
-	virtual RTMPNetConnection::shared Connect(const std::wstring& appName,RTMPNetConnection::Listener *listener,std::function<void(bool)> accept) override
+	virtual RTMPNetConnection::shared Connect(const struct sockaddr_in& peername, const std::wstring& appName,RTMPNetConnection::Listener *listener,std::function<void(bool)> accept) override
 	{
 		//Create connection pointer
 		auto connection = std::make_shared<RTMPNetConnectionImpl>(listener,accept);
@@ -2789,17 +2808,22 @@ public:
 			//We create shared pointer for connection pointer
 			auto shared = new std::shared_ptr<RTMPNetConnectionImpl>(connection);
 			//Create local args
+			char peeripBuf [32];
+			auto peerip = Nan::New<v8::String>(inet_ntop(AF_INET, &peername.sin_addr, peeripBuf, sizeof(peeripBuf)));
+			auto peerport = Nan::New<v8::Uint32>(ntohs(peername.sin_port));
 			UTF8Parser parser(appName);
 			auto str	= Nan::New<v8::String>(parser.GetUTF8String());
 			auto object	= SWIG_NewPointerObj(SWIG_as_voidptr(shared), SWIGTYPE_p_RTMPNetConnectionImplShared,SWIG_POINTER_OWN);
 			//Create arguments
-			v8::Local<v8::Value> argv[2] = {
+			v8::Local<v8::Value> argv[4] = {
+				peerip.ToLocalChecked(),
+				peerport,
 				str.ToLocalChecked(),
 				object
 			};
 			
 			//Call object method with arguments
-			MakeCallback(cloned, "onconnect", 2, argv);
+			MakeCallback(cloned, "onconnect", 4, argv);
 		});
 		
 		return connection;
@@ -5884,10 +5908,10 @@ static void _wrap_MediaFrameListenerBridge_numFrames_set(v8::Local<v8::Name> pro
   SWIGV8_HANDLESCOPE();
   
   MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
-  uint32_t arg2 ;
+  uint64_t arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  unsigned int val2 ;
+  unsigned long long val2 ;
   int ecode2 = 0 ;
   
   res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
@@ -5895,11 +5919,11 @@ static void _wrap_MediaFrameListenerBridge_numFrames_set(v8::Local<v8::Name> pro
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numFrames_set" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
   }
   arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
-  ecode2 = SWIG_AsVal_unsigned_SS_int(value, &val2);
+  ecode2 = SWIG_AsVal_unsigned_SS_long_SS_long(value, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_numFrames_set" "', argument " "2"" of type '" "uint32_t""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_numFrames_set" "', argument " "2"" of type '" "uint64_t""'");
   } 
-  arg2 = static_cast< uint32_t >(val2);
+  arg2 = static_cast< uint64_t >(val2);
   if (arg1) (arg1)->numFrames = arg2;
   
   
@@ -5917,15 +5941,15 @@ static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_numFrames_get(v8::Local<
   MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  uint32_t result;
+  uint64_t result;
   
   res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numFrames_get" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
   }
   arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
-  result = (uint32_t) ((arg1)->numFrames);
-  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+  result = (uint64_t) ((arg1)->numFrames);
+  jsresult = SWIG_From_unsigned_SS_long_SS_long(static_cast< unsigned long long >(result));
   
   
   SWIGV8_RETURN_INFO(jsresult, info);
@@ -5940,10 +5964,10 @@ static void _wrap_MediaFrameListenerBridge_numPackets_set(v8::Local<v8::Name> pr
   SWIGV8_HANDLESCOPE();
   
   MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
-  uint32_t arg2 ;
+  uint64_t arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  unsigned int val2 ;
+  unsigned long long val2 ;
   int ecode2 = 0 ;
   
   res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
@@ -5951,11 +5975,11 @@ static void _wrap_MediaFrameListenerBridge_numPackets_set(v8::Local<v8::Name> pr
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numPackets_set" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
   }
   arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
-  ecode2 = SWIG_AsVal_unsigned_SS_int(value, &val2);
+  ecode2 = SWIG_AsVal_unsigned_SS_long_SS_long(value, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_numPackets_set" "', argument " "2"" of type '" "uint32_t""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_numPackets_set" "', argument " "2"" of type '" "uint64_t""'");
   } 
-  arg2 = static_cast< uint32_t >(val2);
+  arg2 = static_cast< uint64_t >(val2);
   if (arg1) (arg1)->numPackets = arg2;
   
   
@@ -5973,15 +5997,15 @@ static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_numPackets_get(v8::Local
   MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  uint32_t result;
+  uint64_t result;
   
   res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numPackets_get" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
   }
   arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
-  result = (uint32_t) ((arg1)->numPackets);
-  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+  result = (uint64_t) ((arg1)->numPackets);
+  jsresult = SWIG_From_unsigned_SS_long_SS_long(static_cast< unsigned long long >(result));
   
   
   SWIGV8_RETURN_INFO(jsresult, info);
@@ -5996,10 +6020,10 @@ static void _wrap_MediaFrameListenerBridge_numFramesDelta_set(v8::Local<v8::Name
   SWIGV8_HANDLESCOPE();
   
   MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
-  uint32_t arg2 ;
+  uint64_t arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  unsigned int val2 ;
+  unsigned long long val2 ;
   int ecode2 = 0 ;
   
   res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
@@ -6007,11 +6031,11 @@ static void _wrap_MediaFrameListenerBridge_numFramesDelta_set(v8::Local<v8::Name
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numFramesDelta_set" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
   }
   arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
-  ecode2 = SWIG_AsVal_unsigned_SS_int(value, &val2);
+  ecode2 = SWIG_AsVal_unsigned_SS_long_SS_long(value, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_numFramesDelta_set" "', argument " "2"" of type '" "uint32_t""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_numFramesDelta_set" "', argument " "2"" of type '" "uint64_t""'");
   } 
-  arg2 = static_cast< uint32_t >(val2);
+  arg2 = static_cast< uint64_t >(val2);
   if (arg1) (arg1)->numFramesDelta = arg2;
   
   
@@ -6029,15 +6053,15 @@ static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_numFramesDelta_get(v8::L
   MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  uint32_t result;
+  uint64_t result;
   
   res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numFramesDelta_get" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
   }
   arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
-  result = (uint32_t) ((arg1)->numFramesDelta);
-  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+  result = (uint64_t) ((arg1)->numFramesDelta);
+  jsresult = SWIG_From_unsigned_SS_long_SS_long(static_cast< unsigned long long >(result));
   
   
   SWIGV8_RETURN_INFO(jsresult, info);
@@ -6052,10 +6076,10 @@ static void _wrap_MediaFrameListenerBridge_numPacketsDelta_set(v8::Local<v8::Nam
   SWIGV8_HANDLESCOPE();
   
   MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
-  uint32_t arg2 ;
+  uint64_t arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  unsigned int val2 ;
+  unsigned long long val2 ;
   int ecode2 = 0 ;
   
   res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
@@ -6063,11 +6087,11 @@ static void _wrap_MediaFrameListenerBridge_numPacketsDelta_set(v8::Local<v8::Nam
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numPacketsDelta_set" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
   }
   arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
-  ecode2 = SWIG_AsVal_unsigned_SS_int(value, &val2);
+  ecode2 = SWIG_AsVal_unsigned_SS_long_SS_long(value, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_numPacketsDelta_set" "', argument " "2"" of type '" "uint32_t""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_numPacketsDelta_set" "', argument " "2"" of type '" "uint64_t""'");
   } 
-  arg2 = static_cast< uint32_t >(val2);
+  arg2 = static_cast< uint64_t >(val2);
   if (arg1) (arg1)->numPacketsDelta = arg2;
   
   
@@ -6085,15 +6109,15 @@ static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_numPacketsDelta_get(v8::
   MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  uint32_t result;
+  uint64_t result;
   
   res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_numPacketsDelta_get" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
   }
   arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
-  result = (uint32_t) ((arg1)->numPacketsDelta);
-  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+  result = (uint64_t) ((arg1)->numPacketsDelta);
+  jsresult = SWIG_From_unsigned_SS_long_SS_long(static_cast< unsigned long long >(result));
   
   
   SWIGV8_RETURN_INFO(jsresult, info);
@@ -6108,10 +6132,10 @@ static void _wrap_MediaFrameListenerBridge_totalBytes_set(v8::Local<v8::Name> pr
   SWIGV8_HANDLESCOPE();
   
   MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
-  uint32_t arg2 ;
+  uint64_t arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  unsigned int val2 ;
+  unsigned long long val2 ;
   int ecode2 = 0 ;
   
   res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
@@ -6119,11 +6143,11 @@ static void _wrap_MediaFrameListenerBridge_totalBytes_set(v8::Local<v8::Name> pr
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_totalBytes_set" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
   }
   arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
-  ecode2 = SWIG_AsVal_unsigned_SS_int(value, &val2);
+  ecode2 = SWIG_AsVal_unsigned_SS_long_SS_long(value, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_totalBytes_set" "', argument " "2"" of type '" "uint32_t""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_totalBytes_set" "', argument " "2"" of type '" "uint64_t""'");
   } 
-  arg2 = static_cast< uint32_t >(val2);
+  arg2 = static_cast< uint64_t >(val2);
   if (arg1) (arg1)->totalBytes = arg2;
   
   
@@ -6141,15 +6165,15 @@ static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_totalBytes_get(v8::Local
   MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  uint32_t result;
+  uint64_t result;
   
   res1 = SWIG_ConvertPtr(info.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_totalBytes_get" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
   }
   arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
-  result = (uint32_t) ((arg1)->totalBytes);
-  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+  result = (uint64_t) ((arg1)->totalBytes);
+  jsresult = SWIG_From_unsigned_SS_long_SS_long(static_cast< unsigned long long >(result));
   
   
   SWIGV8_RETURN_INFO(jsresult, info);
