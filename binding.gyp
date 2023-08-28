@@ -12,7 +12,7 @@
 			[
 				"-march=native",
 				"-fexceptions",
-				"-O0",
+				"-O3",
 				"-g",
 				"-Wno-unused-function -Wno-comment",
 				#"-O0",
@@ -22,7 +22,7 @@
 			[
 				"-fexceptions",
 				"-std=c++17",
-				"-O0",
+				"-O3",
 				"-g",
 				"-Wno-unused-function",
 				#"-O0",
