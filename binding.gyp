@@ -58,6 +58,7 @@
 						],
 						"sources": 
 						[
+							"media-server/src/DependencyDescriptorLayerSelector.cpp",
 							"media-server/src/EventLoop.cpp",
 							"media-server/src/PacketHeader.cpp",
 							"media-server/src/MacAddress.cpp",
@@ -85,7 +86,9 @@
 							"media-server/src/h265/HEVCDescriptor.cpp",
 							"media-server/src/h265/h265.cpp",
 							"media-server/src/vp8/VP8LayerSelector.cpp",
-							"media-server/src/vp9/VP9LayerSelector.cpp",	
+							"media-server/src/vp9/VP9LayerSelector.cpp",
+							"media-server/src/av1/AV1CodecConfigurationRecord.cpp",
+							"media-server/src/av1/Obu.cpp",
 						],
   					        "conditions" : [
 								['OS=="mac"', {
