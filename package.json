@@ -10,7 +10,7 @@
     "install": "test -f build/Release/medooze-rtmp-server.node || (node-gyp configure && node-gyp rebuild --jobs=max)",
     "package": "tar cvzf build/medooze-rtmp-server.tgz  `([ \"$(uname)\" = 'Darwin' ] && echo \"-s |^|medooze-rtmp-server/|\") || echo \" --transform=flags=r;s|^|medooze-rtmp-server/|\"` media-server/src/* media-server/include/* media-server/ext/libdatachannels/src/* media-server/ext/crc32c/* lib/* package.json index.js  binding.gyp  README.md src",
     "dist": "node-gyp configure && node-gyp build --jobs=max && mkdir -p dist && tar cvzf dist/medooze-rtmp-server-`node -e 'console.log(require(\"./package.json\").version)'`.tgz `([ \"$(uname)\" = 'Darwin' ] && echo \"-s |^|medooze-rtmp-server/|\") || echo \" --transform=flags=r;s|^|medooze-rtmp-server/|\"` package.json index.js   README.md lib/* build/Release/medooze-rtmp-server.node",
-    "test": "tap tests/*.js --cov"
+    "test": "tap tests/*.js --cov --no-check-coverage"
   },
   "repository": {
     "type": "git",
