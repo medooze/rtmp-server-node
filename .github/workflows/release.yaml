@@ -1,0 +1,21 @@
+name: rtmp-server-node-test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: 'recursive'
+    - name: Initialize submodules
+      run: git submodule update --init --recursive
+    - name: Install and build
+      run: npm i
+    - name: Run Test
+      run: npm test
