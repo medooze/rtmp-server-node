@@ -17,5 +17,7 @@ jobs:
       run: git submodule update --init --recursive
     - name: Install and build
       run: npm i
+    - name: Install FFMPEG
+      run: apt-get install -y ffmpeg
     - name: Run Test
       run: npm test
