@@ -1,4 +1,7 @@
+[![rtmp-server-node-test](https://github.com/medooze/rtmp-server-node/actions/workflows/release.yaml/badge.svg)](https://github.com/medooze/rtmp-server-node/actions/workflows/release.yaml)
+
 # rtmp-server-node
+
 RTMP server for node
 
 ## Install
