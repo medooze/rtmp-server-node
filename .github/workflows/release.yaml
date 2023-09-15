@@ -18,6 +18,6 @@ jobs:
     - name: Install and build
       run: npm i
     - name: Install FFMPEG
-      run: sudo apt-get install -y ffmpeg
+      run: sudo apt-get update && sudo apt-get install --fix-missing -y ffmpeg
     - name: Run Test
       run: npm test
