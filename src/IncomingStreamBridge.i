@@ -242,21 +242,22 @@ public:
 				
 				auto vframe = static_cast<RTMPVideoFrame*>(frame);
 				auto codec = GetRtmpFrameVideoCodec(*vframe);
-				if (codec == VideoCodec::H265)
+
+				switch(codec)
 				{
-					videoFrame = hevcPacketizer.AddFrame(vframe);
-				}
-				else if (codec == VideoCodec::H264)
-				{
-				 	videoFrame= avcPacketizer.AddFrame(vframe);
-				}
-				else if (codec == VideoCodec::AV1)
-				{
-					videoFrame= av1Packetizer.AddFrame(vframe);
-				}
-				else
-				{
-					// Not supported yet
+					case VideoCodec::H265:
+						videoFrame = hevcPacketizer.AddFrame(vframe);
+						break;
+					case VideoCodec::H264:
+					 	videoFrame= avcPacketizer.AddFrame(vframe);
+						break;
+					case VideoCodec::AV1:
+						videoFrame= av1Packetizer.AddFrame(vframe);
+						break;
+					default:
+						// Not supported yet
+						Warning("-IncomingStreamBridge::onMediaFrame() | Video codec not supported, dropping frame codec:%d\n", codec);
+						return;
 				}
 				
 				//IF got one
