@@ -2403,7 +2403,7 @@ public:
                         }
 
 
-			Log("-IncomingStreamBridge::Enqueue() Frame %s scheduled in %lldms timestamp:%lu time:%llu rel:%llu first:%lu ini:%llu queue:%d\n", 
+			/*Log("-IncomingStreamBridge::Enqueue() Frame %s scheduled in %lldms timestamp:%lu time:%llu rel:%llu first:%lu ini:%llu queue:%d\n", 
 				frame->GetType()== MediaFrame::Video ? "VIDEO": "AUDIO",
 				sched - now,
 				frame->GetTimeStamp(),
@@ -2412,7 +2412,7 @@ public:
 				first,
 				ini,
 				queue.size()
-			);
+			);*/
 			//Enqueue
 			queue.emplace_back(sched,frame);
 
