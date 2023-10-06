@@ -36,6 +36,9 @@ public:
 	static void Terminate()
 	{
 		Log("-RTMPServerModule::Terminate\n");
+		
+		if (!uv_is_active((uv_handle_t *)&async)) return;
+		
 		//Close handle
 		uv_close((uv_handle_t *)&async, NULL);
 		
@@ -94,3 +97,7 @@ public:
 	static void EnableDebug(bool flag);
 	static void EnableUltraDebug(bool flag);
 };
+
+%init %{ 
+	std::atexit(RTMPServerModule::Terminate);
+%}
