@@ -32,6 +32,8 @@ struct MediaFrameListenerBridge :
 	//From MediaFrameProducer
 	void AddMediaListener(const MediaFrameListenerShared& listener);
 	void RemoveMediaListener(const MediaFrameListenerShared& listener);
+
+	void SetTargetBitrateHint(uint32_t targetBitrateHint);
 };
 
 SHARED_PTR_BEGIN(MediaFrameListenerBridge)

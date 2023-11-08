@@ -229,7 +229,55 @@ tap.test("Server", async function (suite)
 		test.end();
 	});
 
-		suite.end();
+	await suite.test("setTargetBitrateHint", async function (test)
+	{
+		test.plan(2);
+
+		//Create server and app
+		const app = RTMPServer.createApplication();
+		const rtmp = RTMPServer.createServer();
+
+		app.on("connect", (client) =>
+		{
+			//Add publish listener
+			client.on("stream", (stream) =>
+			{
+				//Create incoming stream
+				const incomingStream = stream.createIncomingStreamBridge();
+				//Get video track
+				const incomingStreamTrack = incomingStream.getVideoTracks()[0];
+				//Set bitrate hint
+				incomingStreamTrack.setTargetBitrateHint(1000);
+				//No error
+				test.pass();
+			});
+			//Accept client connection by default
+			client.accept();
+		});
+
+		//Start rtmp server
+		rtmp.addApplication("test", app);
+		rtmp.start(1935);
+
+		//Start publishing rtmp
+		const pub = ffmpeg(args("nane","token"));
+
+		test.ok(pub);
+
+		//Wait 5 seconds
+		await sleep(1000);
+
+		//Stop
+		await pub.stop();
+
+		//Stop server
+		rtmp.stop();
+
+		//OK
+		test.end();
+	});
+
+	suite.end();
 
 }).then(() =>
 {
