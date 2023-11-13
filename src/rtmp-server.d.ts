@@ -236,6 +236,14 @@ export  class MediaFrameListenerBridge extends RTPIncomingMediaStream {
   maxWaitedTime: number;
 
   avgWaitedTime: number;
+  
+  width: number;
+  
+  height: number;
+
+  bframes: number;
+  
+  bframesDelta: number;
 
   Update(): void;
 
