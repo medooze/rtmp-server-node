@@ -240,6 +240,10 @@ export  class MediaFrameListenerBridge extends RTPIncomingMediaStream {
   width: number;
   
   height: number;
+  
+  iframes: number;
+  
+  iframesDelta: number;
 
   bframes: number;
   
