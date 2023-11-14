@@ -25,6 +25,13 @@ struct MediaFrameListenerBridge :
 	DWORD minWaitedTime;
 	DWORD maxWaitedTime;
 	DWORD avgWaitedTime;
+	WORD width;
+	WORD height;
+	QWORD iframes;
+	QWORD iframesDelta;
+	QWORD bframes;
+	QWORD bframesDelta;
+	
 	void Update();
 	
 	void Stop();
