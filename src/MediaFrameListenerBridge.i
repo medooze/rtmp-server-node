@@ -31,7 +31,9 @@ struct MediaFrameListenerBridge :
 	QWORD iframesDelta;
 	QWORD bframes;
 	QWORD bframesDelta;
-	
+	QWORD pframes;
+	QWORD pframesDelta;
+
 	void Update();
 	
 	void Stop();
