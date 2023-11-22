@@ -1,5 +1,6 @@
 %{
 #include "MediaFrameListenerBridge.h"
+static const DWORD UNKNOWN_CODEC = 0xFFFFFFFFUL;
 %}
 
 %include "EventLoop.i"
@@ -33,6 +34,8 @@ struct MediaFrameListenerBridge :
 	QWORD bframesDelta;
 	QWORD pframes;
 	QWORD pframesDelta;
+	DWORD audioCodec;
+	DWORD videoCodec;
 
 	void Update();
 	
