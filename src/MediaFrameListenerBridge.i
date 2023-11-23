@@ -34,8 +34,7 @@ struct MediaFrameListenerBridge :
 	QWORD bframesDelta;
 	QWORD pframes;
 	QWORD pframesDelta;
-	DWORD audioCodec;
-	DWORD videoCodec;
+	DWORD codec;
 
 	void Update();
 	

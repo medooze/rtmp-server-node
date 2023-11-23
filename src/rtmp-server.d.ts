@@ -253,9 +253,7 @@ export  class MediaFrameListenerBridge extends RTPIncomingMediaStream {
   
   pframesDelta: number;
   
-  audioCodec: number;
-  
-  videoCodec: number;
+  codec: number;
 
   Update(): void;
 
