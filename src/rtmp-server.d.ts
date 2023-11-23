@@ -308,6 +308,8 @@ export  class IncomingStreamBridge extends RTMPMediaStreamListener {
   GetVideo(): MediaFrameListenerBridgeShared;
 
   Stop(): void;
+  
+  GetRTT(): number;
 }
 
 export  class RTMPNetStream {
