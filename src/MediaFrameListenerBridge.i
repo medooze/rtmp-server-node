@@ -1,6 +1,5 @@
 %{
 #include "MediaFrameListenerBridge.h"
-static const DWORD UNKNOWN_CODEC = 0xFFFFFFFFUL;
 %}
 
 %include "EventLoop.i"
