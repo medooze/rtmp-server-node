@@ -336,8 +336,6 @@ public:
 	MediaFrameListenerBridge::shared& GetAudio()	{ return audio; }
 	MediaFrameListenerBridge::shared& GetVideo()	{ return video; }
 	
-	uint32_t GetRTT() const { return attached != nullptr ? attached->GetRTT() : 0; }
-	
 private:
 	EventLoop loop;
 	RTMPAVCPacketizer avcPacketizer;
@@ -372,5 +370,4 @@ public:
 	MediaFrameListenerBridgeShared GetAudio();
 	MediaFrameListenerBridgeShared GetVideo();
 	void Stop();
-	uint32_t GetRTT() const;
 };
