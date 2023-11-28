@@ -43,7 +43,16 @@ struct MediaFrameListenerBridge :
 	void RemoveMediaListener(const MediaFrameListenerShared& listener);
 
 	void SetTargetBitrateHint(uint32_t targetBitrateHint);
+	%extend
+	{
+		// Note: Extra const on right of pointer to let SWIG know this only wants a get accessor
+		char const * const codec;
+	}
 };
+
+%{
+	char const * const MediaFrameListenerBridge_codec_get(MediaFrameListenerBridge* self)      { return GetNameForCodec(self->type, self->codec); }
+%}
 
 SHARED_PTR_BEGIN(MediaFrameListenerBridge)
 {
