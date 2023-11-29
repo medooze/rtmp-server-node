@@ -277,6 +277,57 @@ tap.test("Server", async function (suite)
 		test.end();
 	});
 
+	await suite.test("stats+getRTT", async function (test)
+	{
+		test.plan(4);
+
+		//Create server and app
+		const app = RTMPServer.createApplication();
+		const rtmp = RTMPServer.createServer();
+
+		app.on("connect", (client) =>
+		{
+			//Add publish listener
+			client.on("stream", (stream) =>
+			{
+				//Create incoming stream
+				const incomingStream = stream.createIncomingStreamBridge();
+				//Get stats
+				const stats = incomingStream.getStats();
+				//Should be present
+				test.ok(stats,"got stats");
+				//Get rtt
+				const rtt = stream.getRTT();
+				//Rtt should be the same
+				test.same(rtt,stats.audio[""].rtt,"rtt is the same for audio");
+				test.same(rtt,stats.video[""].rtt,"rtt is the same dor video");
+			});
+			//Accept client connection by default
+			client.accept();
+		});
+
+		//Start rtmp server
+		rtmp.addApplication("test", app);
+		rtmp.start(1935);
+
+		//Start publishing rtmp
+		const pub = ffmpeg(args("nane","token"));
+
+		test.ok(pub);
+
+		//Wait 5 seconds
+		await sleep(1000);
+
+		//Stop
+		await pub.stop();
+
+		//Stop server
+		rtmp.stop();
+
+		//OK
+		test.end();
+	});
+
 	suite.end();
 
 }).then(() =>
