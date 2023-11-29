@@ -8176,6 +8176,34 @@ fail:
 }
 
 
+static SwigV8ReturnValue _wrap_RTMPNetStreamImpl_GetRTT(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  RTMPNetStreamImpl *arg1 = (RTMPNetStreamImpl *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  uint32_t result;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPNetStreamImpl_GetRTT.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_RTMPNetStreamImpl, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "RTMPNetStreamImpl_GetRTT" "', argument " "1"" of type '" "RTMPNetStreamImpl const *""'"); 
+  }
+  arg1 = reinterpret_cast< RTMPNetStreamImpl * >(argp1);
+  result = (uint32_t)((RTMPNetStreamImpl const *)arg1)->GetRTT();
+  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
 static void _wrap_delete_RTMPNetStreamImpl(const v8::WeakCallbackInfo<SWIGV8_Proxy> &data) {
   SWIGV8_Proxy *proxy = data.GetParameter();
   
@@ -9480,6 +9508,7 @@ SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "SendStatus", _wrap_R
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "AddMediaListener", _wrap_RTMPNetStreamImpl_AddMediaListener);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "RemoveMediaListener", _wrap_RTMPNetStreamImpl_RemoveMediaListener);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "Stop", _wrap_RTMPNetStreamImpl_Stop);
+SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "GetRTT", _wrap_RTMPNetStreamImpl_GetRTT);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImplShared_class, "toRTMPNetStream", _wrap_RTMPNetStreamImplShared_toRTMPNetStream);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImplShared_class, "get", _wrap_RTMPNetStreamImplShared_get);
 SWIGV8_AddMemberFunction(_exports_RTMPNetConnectionShared_class, "get", _wrap_RTMPNetConnectionShared_get);
