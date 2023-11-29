@@ -76,6 +76,8 @@ export  class Properties {
 
   SetProperty(key: string, val: number): void;
 
+  SetProperty(key: string, val: number): void;
+
   SetProperty(key: string, val: string): void;
 
   SetProperty(key: string, val: string): void;
@@ -99,6 +101,10 @@ export  class Properties {
   GetProperty(key: string, defaultValue: string): string;
 
   GetProperty(key: string, defaultValue: string): string;
+
+  GetProperty(key: string, defaultValue: number): number;
+
+  GetProperty(key: string, defaultValue: number): number;
 
   GetProperty(key: string, defaultValue: number): number;
 
@@ -236,24 +242,22 @@ export  class MediaFrameListenerBridge extends RTPIncomingMediaStream {
   maxWaitedTime: number;
 
   avgWaitedTime: number;
-  
+
   width: number;
-  
+
   height: number;
-  
+
   iframes: number;
-  
+
   iframesDelta: number;
 
   bframes: number;
-  
+
   bframesDelta: number;
-  
+
   pframes: number;
-  
+
   pframesDelta: number;
-  
-  codec: string;
 
   Update(): void;
 
@@ -262,6 +266,10 @@ export  class MediaFrameListenerBridge extends RTPIncomingMediaStream {
   AddMediaListener(listener: MediaFrameListenerShared): void;
 
   RemoveMediaListener(listener: MediaFrameListenerShared): void;
+
+  SetTargetBitrateHint(targetBitrateHint: number): void;
+
+  codec: string;
 }
 
 export  class MediaFrameListenerBridgeShared {
@@ -333,7 +341,7 @@ export  class RTMPNetStreamImpl {
   RemoveMediaListener(listener: RTMPMediaStreamListener | IncomingStreamBridge): void;
 
   Stop(): void;
-  
+
   GetRTT(): number;
 }
 
