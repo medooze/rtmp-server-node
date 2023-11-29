@@ -137,6 +137,7 @@ public:
 	void AddMediaListener(RTMPMediaStreamListener* listener);
 	void RemoveMediaListener(RTMPMediaStreamListener* listener);
 	void Stop();
+	DWORD GetRTT() const;
 };
 
 
