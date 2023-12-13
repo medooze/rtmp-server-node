@@ -32,7 +32,7 @@
   "homepage": "https://github.com/medooze/rtmp-server-node#readme",
   "dependencies": {
     "medooze-event-emitter": "^1.0.0",
-    "nan": "^2.12.1",
+    "nan": "^2.18.0",
     "tap": "^16.3.2",
     "uuid": "^3.3.2"
   },
