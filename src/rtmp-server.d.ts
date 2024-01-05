@@ -261,6 +261,8 @@ export  class MediaFrameListenerBridge extends RTPIncomingMediaStream {
 
   Update(): void;
 
+  UpdateAsync(object: any): void;
+
   Stop(): void;
 
   AddMediaListener(listener: MediaFrameListenerShared): void;
