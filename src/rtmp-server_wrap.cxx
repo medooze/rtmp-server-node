@@ -2281,6 +2281,9 @@ public:
 					//Done
 					break;
 				}
+
+				Log("bcost IncomingStreamBridge::Dispatch sending to audio/video stream onMediaFrame %s MediaFrame: %llu (adjusted TRACETS:%llu)\n", frame->GetType() == RTMPMediaFrame::Audio ? "AUDIO" : "VIDEO", frame->GetTimestamp(), frame->GetTimeStamp()*1000/frame->GetClockRate());
+
 				//Log("-IncomingStreamBridge::Dispatch() Dispatched from %llums timestamp:%llu size=%d\n",it->first, frame->GetTimestamp(), queue.size());
 				//Check type
 				if (frame->GetType()==MediaFrame::Audio)
@@ -2375,7 +2378,8 @@ public:
 		loop.Async([=](...) {
 			//Convert timestamp 
 			uint64_t timestamp = frame->GetTimeStamp()*1000/frame->GetClockRate();
-			
+			Log("bcost IncomingStreamBridge::Enqueue (After onMediaFrame de-packetized) %s MediaFrame: %llu (adjusted TRACETS:%llu)\n", frame->GetType() == RTMPMediaFrame::Audio ? "AUDIO" : "VIDEO", frame->GetTimestamp(), timestamp);
+
 			//IF it is first
 			if (first==std::numeric_limits<uint64_t>::max())
 			{
@@ -2398,7 +2402,7 @@ public:
 			//Is this frame too late? (allow 200ms offset)
 			if (sched < now && sched + maxLateOffset > now)
 			{
-				UltraDebug("-IncomingStreamBridge::Enqueue() Got late frame %s timestamp:%lu(%llu) time:%llu(%llu) ini:%llu sched:%llu now:%llu first:%llu queue:%d\n",
+				Debug("bcost -IncomingStreamBridge::Enqueue() Got late frame %s timestamp:%lu(%llu) time:%llu(%llu) ini:%llu sched:%llu now:%llu first:%llu queue:%d\n",
 					frame->GetType() == MediaFrame::Video ? "VIDEO" : "AUDIO",
 					frame->GetTimeStamp(),
 					timestamp,
@@ -2420,7 +2424,7 @@ public:
 					//Send now
 					sched = now;
 
-					Debug("-IncomingStreamBridge::Enqueue() Reseting first frame %s scheduled timestamp:%lu ini:%llu queue:%d\n", 
+					Debug("bcost -IncomingStreamBridge::Enqueue() Reseting first frame %s scheduled timestamp:%lu ini:%llu queue:%d\n", 
 						frame->GetType()== MediaFrame::Video ? "VIDEO": "AUDIO",
 						frame->GetTimeStamp(),
 						ini,
@@ -2444,7 +2448,7 @@ public:
                         }
 
 
-			/*Log("-IncomingStreamBridge::Enqueue() Frame %s scheduled in %lldms timestamp:%lu time:%llu rel:%llu first:%lu ini:%llu queue:%d\n", 
+			Log("bcost -IncomingStreamBridge::Enqueue() Frame %s scheduled in %lldms timestamp:%lu time:%llu rel:%llu first:%lu ini:%llu queue:%d\n", 
 				frame->GetType()== MediaFrame::Video ? "VIDEO": "AUDIO",
 				sched - now,
 				frame->GetTimeStamp(),
@@ -2453,7 +2457,7 @@ public:
 				first,
 				ini,
 				queue.size()
-			);*/
+			);
 			//Enqueue
 			queue.emplace_back(sched,frame);
 
