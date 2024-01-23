@@ -180,6 +180,7 @@ v8::Local<v8::Value> toJson(AMFData* data)
 
 %include "stdint.i"
 %include "std_vector.i"
+%include "std_string.i"
 %include "../media-server/include/config.h"
 
 %typemap(in) v8::Local<v8::Object> {

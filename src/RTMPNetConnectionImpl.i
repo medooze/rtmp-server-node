@@ -115,6 +115,7 @@ public:
 	void Accept(v8::Local<v8::Object> object);
 	void Reject();
 	void Disconnect();
+	bool SetThreadName(const std::string& name);
 };
 
 SHARED_PTR_BEGIN(RTMPNetConnectionImpl)

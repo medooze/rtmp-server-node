@@ -336,6 +336,10 @@ public:
 	MediaFrameListenerBridge::shared& GetAudio()	{ return audio; }
 	MediaFrameListenerBridge::shared& GetVideo()	{ return video; }
 	
+	bool SetAffinity(int cpu)		{ return loop.SetAffinity(cpu);				}
+	bool SetThreadName(const std::string& name) { return loop.SetThreadName(name);			}
+	bool SetPriority(int priority)		{ return loop.SetPriority(priority);			}
+	
 private:
 	EventLoop loop;
 	RTMPAVCPacketizer avcPacketizer;
@@ -370,4 +374,8 @@ public:
 	MediaFrameListenerBridgeShared GetAudio();
 	MediaFrameListenerBridgeShared GetVideo();
 	void Stop();
+
+	bool SetAffinity(int cpu);
+	bool SetThreadName(const std::string& name);
+	bool SetPriority(int priority);
 };

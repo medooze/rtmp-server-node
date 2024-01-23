@@ -320,6 +320,12 @@ export  class IncomingStreamBridge extends RTMPMediaStreamListener {
   GetVideo(): MediaFrameListenerBridgeShared;
 
   Stop(): void;
+
+  SetAffinity(cpu: number): boolean;
+
+  SetThreadName(name: string): boolean;
+
+  SetPriority(priority: number): boolean;
 }
 
 export  class RTMPNetStream {
@@ -369,6 +375,8 @@ export  class RTMPNetConnectionImpl extends RTMPNetConnection {
   Reject(): void;
 
   Disconnect(): void;
+
+  SetThreadName(name: string): boolean;
 }
 
 export  class RTMPNetConnectionImplShared {
