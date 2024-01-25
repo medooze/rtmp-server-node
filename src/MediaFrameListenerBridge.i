@@ -52,9 +52,8 @@ struct MediaFrameListenerBridge :
 
 	void UpdateAsync(v8::Local<v8::Object> object)
 	{
-		auto persistent = std::make_shared<Persistent<v8::Object>>(object);
-		self->UpdateAsync([=](std::chrono::milliseconds){
-			RTMPServerModule::Async([=](){
+		self->UpdateAsync([persistent = RTMPServerModule::MakeSharedPersistent(object)](std::chrono::milliseconds){
+			RTMPServerModule::Async([persistent = std::move(persistent)](){
 				Nan::HandleScope scope;
 				int i = 0;
 				v8::Local<v8::Value> argv[0];
