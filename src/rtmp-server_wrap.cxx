@@ -2088,6 +2088,23 @@ public:
 	{
 		Terminate();
 	}
+
+	/*
+	 * MakeSharedPersistent
+	 *  Creates a shared pointer to a persistent object ensuring it is deleted on the js thread
+	 */
+	static std::shared_ptr<Persistent<v8::Object>> MakeSharedPersistent (v8::Local<v8::Object> &object)
+	{
+		return std::shared_ptr<Persistent<v8::Object>>(new Persistent<v8::Object>(object), [id = std::this_thread::get_id()](Persistent<v8::Object> *object) {
+			//If called in a different thread
+			if (id != std::this_thread::get_id())
+				RTMPServerModule::Async([=](){
+					delete(object);
+				});
+			else 
+				delete(object);
+		});
+	}	
 	
 	/*
 	 * Async
@@ -2191,9 +2208,8 @@ SWIG_From_unsigned_SS_short  (unsigned short value)
 }
 
 SWIGINTERN void MediaFrameListenerBridge_UpdateAsync__SWIG(MediaFrameListenerBridge *self,v8::Local< v8::Object > object){
-		auto persistent = std::make_shared<Persistent<v8::Object>>(object);
-		self->UpdateAsync([=](std::chrono::milliseconds){
-			RTMPServerModule::Async([=](){
+		self->UpdateAsync([persistent = RTMPServerModule::MakeSharedPersistent(object)](std::chrono::milliseconds){
+			RTMPServerModule::Async([persistent = std::move(persistent)](){
 				Nan::HandleScope scope;
 				int i = 0;
 				v8::Local<v8::Value> argv[0];
