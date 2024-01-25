@@ -2281,7 +2281,21 @@ public:
 					//Done
 					break;
 				}
-				//Log("-IncomingStreamBridge::Dispatch() Dispatched from %llums timestamp:%llu size=%d\n",it->first, frame->GetTimestamp(), queue.size());
+
+				int64_t diff = lastConsumed;
+				lastConsumed = frame->GetTimeStamp()*1000/frame->GetClockRate();
+				diff = lastConsumed - diff;
+
+				uint64_t n = getTimeMS();
+				//Log("-IncomingStreamBridge::Dispatch() Dispatched from %llums delayed: %llu timestamp:%llu adjusted: %llu diff:%lld qsize=%d type:%s\n",
+				//	it->first, 
+				//	n - frame->GetTime(), 
+				//	frame->GetTimestamp(), 
+				//	lastConsumed, 
+				//	diff, 
+				//	queue.size(), 
+				//	(frame->GetType() == MediaFrame::Audio ? "AUDIO" : "VIDEO"));
+				
 				//Check type
 				if (frame->GetType()==MediaFrame::Audio)
 					//Dispatch audio
@@ -2371,18 +2385,25 @@ public:
 		//Set current time
 		frame->SetTime(now);
 		
+		void* bridge = this;
 		//Run on thread
 		loop.Async([=](...) {
 			//Convert timestamp 
 			uint64_t timestamp = frame->GetTimeStamp()*1000/frame->GetClockRate();
 			
-			//IF it is first
-			if (first==std::numeric_limits<uint64_t>::max())
+			// @todo This JB implementation wwont cope with random TS resetting on remote end and otehr abnormalities but will make a consistent flow/latency adjustment for this test
+
+			// If it is first OR we got the first timestamp out of order and chose a later one to sync on
+			// I.e. We want to sync on the earliest timestamp to make life easier
+			if (timestamp < first)
 			{
 				//Get timestamp
 				first = timestamp;
 				//Get current time
 				ini = now;
+				lastConsumed = first;
+				iniAdj = 0;
+				maxJitter = 0;
 
 				Debug("-IncomingStreamBridge::Enqueue() First frame %s scheduled timestamp:%lu ini:%llu queue:%d\n", 
 					frame->GetType()== MediaFrame::Video ? "VIDEO": "AUDIO",
@@ -2392,13 +2413,64 @@ public:
 				);
 			}
 
-			//Check when it has to be sent
-			auto sched = ini + (timestamp - first);
+			// @todo Note: We are NOT shrinking this jitter buffer, only expanding it for the moment
 
+			assert(timestamp >= first);
+			auto diff = timestamp - first;
+
+			// Time should only go forwards
+			assert(now >= ini);
+			auto tdiff = now - (ini + iniAdj);
+
+			// Calc if this packet arrived earlier than the anchor expectation
+			if (tdiff < diff)
+			{
+				// Early packet according to current anchor. 
+				// Need to resync anchor to always point to the earliest packet so time diffs are always positive to make life easier
+				auto anchorEarlier = diff - tdiff;
+
+				Debug("-IncomingStreamBridge::Enqueue() Early frame changing anchor (increases jb size) %s adjusted:%llu ini:%llu iniAdj:%lld first:%llu adjusting by: %lld\n", 
+					frame->GetType()== MediaFrame::Video ? "VIDEO": "AUDIO",
+					timestamp,
+					ini,
+					iniAdj,
+					first,
+					anchorEarlier
+				);
+
+				iniAdj -= anchorEarlier;
+				tdiff = diff;
+
+				// @todo In theory increases maxJitter by anchorEarlier as well but wont do that allow it to increase naturally
+			}
+			//else
+			//{
+			//	// On time or late
+			//}
+			auto jitter = tdiff - diff;
+
+			if (jitter > maxJitter)
+			{
+				Debug("-IncomingStreamBridge::Enqueue increase jitter buffer size () %s adjusted:%llu ini:%llu iniAdj:%lld first:%llu jitter: %llu maxjitter:%llu\n", 
+					frame->GetType()== MediaFrame::Video ? "VIDEO": "AUDIO",
+					timestamp,
+					ini,
+					iniAdj,
+					first,
+					jitter,
+					maxJitter
+				);
+			}
+			maxJitter = std::max(maxJitter, jitter);
+
+			// Check when it has to be sent (always ideal time + jitter)
+			auto sched = ini + iniAdj + diff + maxJitter;
+
+			/*
 			//Is this frame too late? (allow 200ms offset)
 			if (sched < now && sched + maxLateOffset > now)
 			{
-				UltraDebug("-IncomingStreamBridge::Enqueue() Got late frame %s timestamp:%lu(%llu) time:%llu(%llu) ini:%llu sched:%llu now:%llu first:%llu queue:%d\n",
+				Debug("-IncomingStreamBridge::Enqueue() Got late frame %s timestamp:%lu(%llu) time:%llu(%llu) ini:%llu sched:%llu now:%llu first:%llu queue:%d\n",
 					frame->GetType() == MediaFrame::Video ? "VIDEO" : "AUDIO",
 					frame->GetTimeStamp(),
 					timestamp,
@@ -2419,6 +2491,7 @@ public:
 					ini = now;
 					//Send now
 					sched = now;
+					lastConsumed = first;
 
 					Debug("-IncomingStreamBridge::Enqueue() Reseting first frame %s scheduled timestamp:%lu ini:%llu queue:%d\n", 
 						frame->GetType()== MediaFrame::Video ? "VIDEO": "AUDIO",
@@ -2441,30 +2514,75 @@ public:
                                 ini = now;
                                 //Send now
                                 sched = now;
+								lastConsumed = first;
                         }
+			*/
 
+			// Find where on queue to put it
+			// Note: We want to order based on timestamp, NOT scheduled
+			// In theory scheduled is in order but not when we do adjustements to it etc
+			auto insertIt = queue.begin();
+			size_t insertIndex = 0;
+			for (; insertIt != queue.end(); ++insertIt, ++insertIndex)
+			{
+				uint64_t ts = insertIt->second->GetTimeStamp()*1000/ insertIt->second->GetClockRate();
+				if (ts > timestamp)
+				{
+					break;
+				}
+			}
 
-			/*Log("-IncomingStreamBridge::Enqueue() Frame %s scheduled in %lldms timestamp:%lu time:%llu rel:%llu first:%lu ini:%llu queue:%d\n", 
+			// @todo wont cope with weirdness in timestamps but sufficient for our test
+			if (timestamp < lastConsumed)
+			{
+				Log("-IncomingStreamBridge::Enqueue later than JB size cant be consumed dropping() %p F:%p Frame %s arrived too late DROPPING as already consumed past its timestamp would be scheduled in %lldms timestamp:%lu adjusted:%llu time:%llu rel:%llu first:%lu ini:%llu queue:%d lastConsumed:%llu maxJitter:%llu, insertIndex:%u\n", 
+					bridge,
+					(void*)frame,
+					frame->GetType()== MediaFrame::Video ? "VIDEO": "AUDIO",
+					sched - now,
+					frame->GetTimeStamp(),
+					timestamp,
+					frame->GetTime()-ini,
+					frame->GetTime()-first,
+					first,
+					ini,
+					queue.size(),
+					lastConsumed,
+					maxJitter,
+					(unsigned int)insertIndex
+				);
+
+				// @todo Are we leaking this frame?
+				return;
+			}
+
+			/*
+			Log("-IncomingStreamBridge::Enqueue() %p F:%p Frame %s scheduled in %lldms timestamp:%lu adjusted:%llu time:%llu rel:%llu first:%lu ini:%llu queue:%d lastConsumed:%llu maxJitter:%llu\n", 
+				bridge,
+				(void*)frame,
 				frame->GetType()== MediaFrame::Video ? "VIDEO": "AUDIO",
 				sched - now,
 				frame->GetTimeStamp(),
+				timestamp,
 				frame->GetTime()-ini,
 				frame->GetTime()-first,
 				first,
 				ini,
-				queue.size()
-			);*/
-			//Enqueue
-			queue.emplace_back(sched,frame);
+				queue.size(),
+				lastConsumed,
+				maxJitter
+			);
+			*/
+			queue.emplace(insertIt, sched,frame);
 
 			//If we need to drain the queue			
 			if (hurryUp) 
 			{
 				//Run now
-                                dispatch->Again(0ms);
-                        } 
+				dispatch->Again(0ms);
+			} 
 			//If queue was empty
-			else if (queue.size()==1)
+			else if (insertIndex == 0)
 			{
 				//Log("-IncomingStreamBridge::Enqueue() Dispatching in %llums size=%u\n",sched > now ? sched - now : 0, queue.size());
 				//Schedule timer for later
@@ -2597,6 +2715,9 @@ private:
 		
 	uint64_t first = std::numeric_limits<uint64_t>::max();
 	uint64_t ini = std::numeric_limits<uint64_t>::max();
+	int64_t iniAdj = 0;
+	uint64_t maxJitter = 0;
+	uint64_t lastConsumed = std::numeric_limits<uint64_t>::max();
 	bool stopped = false;
 	bool hurryUp = false;
 	int maxLateOffset = 200;
