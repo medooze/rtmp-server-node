@@ -2095,13 +2095,16 @@ public:
 	 */
 	static std::shared_ptr<Persistent<v8::Object>> MakeSharedPersistent (v8::Local<v8::Object> &object)
 	{
+		//This MUST be called on the main thread
 		return std::shared_ptr<Persistent<v8::Object>>(new Persistent<v8::Object>(object), [id = std::this_thread::get_id()](Persistent<v8::Object> *object) {
 			//If called in a different thread
 			if (id != std::this_thread::get_id())
+				//delete in main thread
 				RTMPServerModule::Async([=](){
 					delete(object);
 				});
 			else 
+				//We are in the main thread already
 				delete(object);
 		});
 	}	
@@ -2391,7 +2394,7 @@ public:
 		loop.Async([=](...) {
 			//Convert timestamp 
 			uint64_t timestamp = frame->GetTimeStamp()*1000/frame->GetClockRate();
-			
+
 			//IF it is first
 			if (first==std::numeric_limits<uint64_t>::max())
 			{
@@ -2491,6 +2494,11 @@ public:
 	
 	virtual void onMediaFrame(DWORD id,RTMPMediaFrame *frame)
 	{
+		//Update sender time if we have timing ingo
+		if (timingInfo.first && timingInfo.second <= frame->GetTimestamp())
+			//Calculate sender time from timestamp diff
+			frame->SetSenderTime(timingInfo.first + frame->GetTimestamp() - timingInfo.second);
+
 		//Depending on the type
 		switch (frame->GetType())
 		{
@@ -2565,11 +2573,90 @@ public:
 			}
 		}
 	}
-	virtual void onMetaData(DWORD id,RTMPMetaData *meta) {};
-	virtual void onCommand(DWORD id,const wchar_t *name,AMFData* obj) {};
+
+	virtual void onMetaData(DWORD id,RTMPMetaData *meta) 
+	{
+		if (meta->GetParamsLength()<1)
+		{
+			Warning("-IncomingStreamBridge::onMetaData() Not enough params to get name"); 
+			return;
+		}
+
+		//Get command name
+		std::wstring name = *meta->GetParams(0);
+
+		Debug("-IncomingStreamBridge::onMetaData() [streamId:%d,name:%ls]\n", id, name.c_str());
+
+		try {
+			
+
+			if (name.compare(L"onFi")==0 || name.compare(L"onFI")==0)
+			{
+				if (meta->GetParamsLength()<2)
+					return;
+
+				//Get medatada params
+				AMFData* params = meta->GetParams(1);
+
+				//Ensure it is an array
+				if (!params->CheckType(AMFData::EcmaArray))
+				{
+					Warning("-IncomingStreamBridge::onMetaData() onFi second param is not an array\n"); 
+					return;
+				}
+
+				//Get timecode info
+				AMFEcmaArray* timecode = (AMFEcmaArray*)params;
+
+				//Ensure it has sd and st fields
+				if (!timecode->HasProperty(L"sd") || !timecode->HasProperty(L"st"))
+				{
+					Warning("-IncomingStreamBridge::onMetaData() onFi does not contain sd and st params\n"); 
+					return;
+				}
+
+				//Get the date
+				uint32_t year = 0;
+				uint32_t month = 0;
+				uint32_t day = 0;
+				uint32_t hour = 0;
+				uint32_t minute = 0;
+				uint32_t second = 0;
+				uint32_t millisecond = 0;
+
+				std::wstring sd = timecode->GetProperty(L"sd");
+				std::wstring st = timecode->GetProperty(L"st");
+
+				swscanf(sd.c_str(), L"%02u-%02u-%04u", &day, &month, &year);
+				swscanf(st.c_str(), L"%02u:%02u:%02u.%03u", &hour, &minute, &second, &millisecond);
+
+				struct tm timeinfo = {};
+
+				timeinfo.tm_year = year - 1900; // Year - 1900
+				timeinfo.tm_mon = month - 1;	// Month, where 0 = jan
+				timeinfo.tm_mday = day;         // Day of the month
+				timeinfo.tm_hour = hour;
+				timeinfo.tm_min = minute;
+				timeinfo.tm_sec = second;
+				timeinfo.tm_isdst = -1;         // Is DST on? 1 = yes, 0 = no, -1 = unknown
+
+				//Set timing info
+				timingInfo.first  = mktime(&timeinfo) * 1000 + millisecond;
+				timingInfo.second = meta->GetTimestamp();
+			}
+		} catch (...)
+		{
+			Warning("-IncomingStreamBridge::onMetaData() exception parsing metadata\n"); 
+		}
+
+	};
+	virtual void onCommand(DWORD id,const wchar_t *name,AMFData* obj)
+	{
+		Debug("-IncomingStreamBridge::onCommand() [streamId:%d,name:%ls]\n",id,name);
+	};
 	virtual void onStreamBegin(DWORD id)
 	{
-		Log("-IncomingStreamBridge::onStreamBegin() [streamId:%d]\n",id);
+		
 	};
 	virtual void onStreamEnd(DWORD id)
 	{
@@ -2617,6 +2704,7 @@ private:
 	bool hurryUp = false;
 	int maxLateOffset = 200;
 	int maxBufferingTime = 400;
+	std::pair<uint64_t,uint64_t> timingInfo = {};
 };
 
 
