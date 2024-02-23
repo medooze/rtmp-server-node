@@ -2598,51 +2598,84 @@ public:
 				//Get medatada params
 				AMFData* params = meta->GetParams(1);
 
-				//Ensure it is an array
-				if (!params->CheckType(AMFData::EcmaArray))
+				//Check the different variants
+				if (params->CheckType(AMFData::EcmaArray))
 				{
-					Warning("-IncomingStreamBridge::onMetaData() onFi second param is not an array\n"); 
-					return;
+				
+					//Get timecode info
+					AMFEcmaArray* timecode = (AMFEcmaArray*)params;
+
+					//Ensure it has sd and st fields
+					if (!timecode->HasProperty(L"sd") || !timecode->HasProperty(L"st"))
+					{
+						Warning("-IncomingStreamBridge::onMetaData() onFi does not contain sd and st params\n"); 
+						return;
+					}
+
+					//Get the date
+					uint32_t year = 0;
+					uint32_t month = 0;
+					uint32_t day = 0;
+					uint32_t hour = 0;
+					uint32_t minute = 0;
+					uint32_t second = 0;
+					uint32_t millisecond = 0;
+
+					std::wstring sd = timecode->GetProperty(L"sd");
+					std::wstring st = timecode->GetProperty(L"st");
+
+					swscanf(sd.c_str(), L"%02u-%02u-%04u", &day, &month, &year);
+					swscanf(st.c_str(), L"%02u:%02u:%02u.%03u", &hour, &minute, &second, &millisecond);
+
+					struct tm timeinfo = {};
+
+					timeinfo.tm_year = year - 1900; // Year - 1900
+					timeinfo.tm_mon = month - 1;	// Month, where 0 = jan
+					timeinfo.tm_mday = day;         // Day of the month
+					timeinfo.tm_hour = hour;
+					timeinfo.tm_min = minute;
+					timeinfo.tm_sec = second;
+					timeinfo.tm_isdst = -1;         // Is DST on? 1 = yes, 0 = no, -1 = unknown
+
+					//Set timing info
+					timingInfo.first  = mktime(&timeinfo) * 1000 + millisecond;
+					timingInfo.second = meta->GetTimestamp();
+
+				} else if (params->CheckType(AMFData::Object)) {
+				
+					//Get timecode info
+                                        AMFObject* timecode = (AMFObject*)params;
+
+                                        //Check we have the timecode
+                                        if (!timecode->HasProperty(L"tc"))
+                                        {
+                                                Warning("-IncomingStreamBridge::onMetaData() onFi does not contain tc params\n");
+                                                return;
+                                        }
+
+                                        //Get the timestamp
+                                        uint32_t hour = 0;
+                                        uint32_t minute = 0;
+                                        uint32_t second = 0;
+                                        uint32_t millisecond = 0;
+
+                                        std::wstring tc = timecode->GetProperty(L"tc");
+
+                                        swscanf(tc.c_str(), L"%02u:%02u:%02u:%03u", &hour, &minute, &second, &millisecond);
+
+                                        time_t rawtime;
+                                        time (&rawtime);
+                                        tm* timeinfo = localtime (&rawtime);
+
+                                        timeinfo->tm_hour = hour;
+                                        timeinfo->tm_min = minute;
+                                        timeinfo->tm_sec = second;
+                                        timeinfo->tm_isdst = -1;         // Is DST on? 1 = yes, 0 = no, -1 = unknown
+
+                                        //Set timing info
+                                        timingInfo.first  = mktime(timeinfo) * 1000 + millisecond;
+                                        timingInfo.second = meta->GetTimestamp();
 				}
-
-				//Get timecode info
-				AMFEcmaArray* timecode = (AMFEcmaArray*)params;
-
-				//Ensure it has sd and st fields
-				if (!timecode->HasProperty(L"sd") || !timecode->HasProperty(L"st"))
-				{
-					Warning("-IncomingStreamBridge::onMetaData() onFi does not contain sd and st params\n"); 
-					return;
-				}
-
-				//Get the date
-				uint32_t year = 0;
-				uint32_t month = 0;
-				uint32_t day = 0;
-				uint32_t hour = 0;
-				uint32_t minute = 0;
-				uint32_t second = 0;
-				uint32_t millisecond = 0;
-
-				std::wstring sd = timecode->GetProperty(L"sd");
-				std::wstring st = timecode->GetProperty(L"st");
-
-				swscanf(sd.c_str(), L"%02u-%02u-%04u", &day, &month, &year);
-				swscanf(st.c_str(), L"%02u:%02u:%02u.%03u", &hour, &minute, &second, &millisecond);
-
-				struct tm timeinfo = {};
-
-				timeinfo.tm_year = year - 1900; // Year - 1900
-				timeinfo.tm_mon = month - 1;	// Month, where 0 = jan
-				timeinfo.tm_mday = day;         // Day of the month
-				timeinfo.tm_hour = hour;
-				timeinfo.tm_min = minute;
-				timeinfo.tm_sec = second;
-				timeinfo.tm_isdst = -1;         // Is DST on? 1 = yes, 0 = no, -1 = unknown
-
-				//Set timing info
-				timingInfo.first  = mktime(&timeinfo) * 1000 + millisecond;
-				timingInfo.second = meta->GetTimestamp();
 			}
 		} catch (...)
 		{
