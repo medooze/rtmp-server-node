@@ -2263,6 +2263,7 @@ using RTMPMediaStreamListener =  RTMPMediaStream::Listener;
 
 #include "MediaFrameListenerBridge.h"
 
+#include "acumulator.h"
 
 class IncomingStreamBridge : 
 	public RTMPMediaStream::Listener,
@@ -2274,7 +2275,8 @@ public:
 		video(new MediaFrameListenerBridge(loop, 2)),
 		mutex(true),
 		maxLateOffset(maxLateOffset),
-		maxBufferingTime(maxBufferingTime)
+		maxBufferingTime(maxBufferingTime),
+		acumulatorFPS(10E3, 1E3, 1E3)
 	{
 		//Store event callback object
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
@@ -2504,6 +2506,9 @@ public:
 		{
 			case RTMPMediaFrame::Video:
 			{
+				//Update fps acumulator
+				acumulatorFPS.Update(frame->GetTimestamp(), 1);
+
 				//Create rtp packets
 				std::unique_ptr<VideoFrame> videoFrame;
 				
@@ -2643,6 +2648,13 @@ public:
 
 				} else if (params->CheckType(AMFData::Object)) {
 				
+					//If we don't have enought data to calculate the fps
+					if (acumulatorFPS.IsInWindow())
+						//Skip
+						return;
+					//Get calculated fps
+					auto fps = acumulatorFPS.GetInstantAvg();
+
 					//Get timecode info
                                         AMFObject* timecode = (AMFObject*)params;
 
@@ -2657,11 +2669,11 @@ public:
                                         uint32_t hour = 0;
                                         uint32_t minute = 0;
                                         uint32_t second = 0;
-                                        uint32_t millisecond = 0;
+                                        uint32_t frames = 0;
 
                                         std::wstring tc = timecode->GetProperty(L"tc");
 
-                                        swscanf(tc.c_str(), L"%02u:%02u:%02u:%03u", &hour, &minute, &second, &millisecond);
+                                        swscanf(tc.c_str(), L"%02u:%02u:%02u:%02u", &hour, &minute, &second, &frames);
 
                                         time_t rawtime;
                                         time (&rawtime);
@@ -2673,7 +2685,7 @@ public:
                                         timeinfo->tm_isdst = -1;         // Is DST on? 1 = yes, 0 = no, -1 = unknown
 
                                         //Set timing info
-                                        timingInfo.first  = mktime(timeinfo) * 1000 + millisecond;
+                                        timingInfo.first  = mktime(timeinfo) * 1000 + 1000 * frames / fps;
                                         timingInfo.second = meta->GetTimestamp();
 				}
 			}
@@ -2738,6 +2750,8 @@ private:
 	int maxLateOffset = 200;
 	int maxBufferingTime = 400;
 	std::pair<uint64_t,uint64_t> timingInfo = {};
+
+	Acumulator<uint8_t, uint16_t>	acumulatorFPS;
 };
 
 
