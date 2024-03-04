@@ -433,20 +433,38 @@ public:
 				AMFData* params = meta->GetParams(2);
 
 				//Check metadata name and propper data type
-				if (metadata.compare(L"onMetaData")!=0 || !params->CheckType(AMFData::EcmaArray))
+				if (metadata.compare(L"onMetaData")!=0)
 				{
-					Warning("-IncomingStreamBridge::onMetaData() Unknown @setDataFrame name or wrong metatada\n"); 
+					Warning("-IncomingStreamBridge::onMetaData() Unknown @setDataFrame name\n"); 
 					return;
 				}
 				
-				//Get data
-				AMFEcmaArray* data = (AMFEcmaArray*)params;
+				if (params->CheckType(AMFData::EcmaArray))
+				{
 
-				//Get video fps if present
-				if (data->HasProperty(L"videodatarate"))
-					videodatarate = (double)data->GetProperty(L"videodatarate");
-				if (data->HasProperty(L"framerate"))
-					framerate = (double)data->GetProperty(L"framerate");
+					//Get data
+					AMFEcmaArray* data = (AMFEcmaArray*)params;
+
+					//Get video fps if present
+					if (data->HasProperty(L"videodatarate"))
+						videodatarate = (double)data->GetProperty(L"videodatarate");
+					if (data->HasProperty(L"framerate"))
+						framerate = (double)data->GetProperty(L"framerate");
+				}
+				else if (params->CheckType(AMFData::Object))
+				{
+					//Get data
+					AMFObject* data = (AMFObject*)params;
+
+					//Get video fps if present
+					if (data->HasProperty(L"videodatarate"))
+						videodatarate = (double)data->GetProperty(L"videodatarate");
+					if (data->HasProperty(L"framerate"))
+						framerate = (double)data->GetProperty(L"framerate");
+				} else {
+					Warning("-IncomingStreamBridge::onMetaData() Unknown @setDataFrame metatada\n"); 
+					return;
+				}
 			}
 		} catch (...)
 		{
