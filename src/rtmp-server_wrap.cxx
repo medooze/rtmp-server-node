@@ -2263,8 +2263,6 @@ using RTMPMediaStreamListener =  RTMPMediaStream::Listener;
 
 #include "MediaFrameListenerBridge.h"
 
-#include "acumulator.h"
-
 class IncomingStreamBridge : 
 	public RTMPMediaStream::Listener,
 	public RTPReceiver
@@ -2275,8 +2273,7 @@ public:
 		video(new MediaFrameListenerBridge(loop, 2)),
 		mutex(true),
 		maxLateOffset(maxLateOffset),
-		maxBufferingTime(maxBufferingTime),
-		acumulatorFPS(10E3, 1E3, 1E3)
+		maxBufferingTime(maxBufferingTime)
 	{
 		//Store event callback object
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
@@ -2506,9 +2503,6 @@ public:
 		{
 			case RTMPMediaFrame::Video:
 			{
-				//Update fps acumulator
-				acumulatorFPS.Update(frame->GetTimestamp(), 1);
-
 				//Create rtp packets
 				std::unique_ptr<VideoFrame> videoFrame;
 				
@@ -2534,8 +2528,13 @@ public:
 				
 				//IF got one
 				if (videoFrame)
+				{
+					//Set target bitrate if got it from metadata event
+					if (videodatarate)
+						videoFrame->SetTargetBitrate((int)*videodatarate);
 					//Push it
 					Enqueue(videoFrame.release());
+				}
 				break;
 			}
 			case RTMPMediaFrame::Audio:
@@ -2586,15 +2585,13 @@ public:
 			Warning("-IncomingStreamBridge::onMetaData() Not enough params to get name"); 
 			return;
 		}
-
+		
 		//Get command name
 		std::wstring name = *meta->GetParams(0);
 
 		Debug("-IncomingStreamBridge::onMetaData() [streamId:%d,name:%ls]\n", id, name.c_str());
 
 		try {
-			
-
 			if (name.compare(L"onFi")==0 || name.compare(L"onFI")==0)
 			{
 				if (meta->GetParamsLength()<2)
@@ -2648,12 +2645,10 @@ public:
 
 				} else if (params->CheckType(AMFData::Object)) {
 				
-					//If we don't have enought data to calculate the fps
-					if (acumulatorFPS.IsInWindow())
+					//If we don't have the video fps from the metadata event
+					if (!framerate || !*framerate)
 						//Skip
 						return;
-					//Get calculated fps
-					auto fps = acumulatorFPS.GetInstantAvg();
 
 					//Get timecode info
                                         AMFObject* timecode = (AMFObject*)params;
@@ -2685,9 +2680,35 @@ public:
                                         timeinfo->tm_isdst = -1;         // Is DST on? 1 = yes, 0 = no, -1 = unknown
 
                                         //Set timing info
-                                        timingInfo.first  = mktime(timeinfo) * 1000 + 1000 * frames / fps;
+                                        timingInfo.first  = mktime(timeinfo) * 1000 + 1000 * frames / *framerate;
                                         timingInfo.second = meta->GetTimestamp();
 				}
+			} else if (name.compare(L"@setDataFrame")==0) {
+				if (meta->GetParamsLength()<3)
+				{
+					Warning("-IncomingStreamBridge::onMetaData() Not enough params on @setDataFrame\n"); 
+					return;
+				}
+				
+				//Get medatada params
+				std::wstring metadata = *(meta->GetParams(1));
+				AMFData* params = meta->GetParams(2);
+
+				//Check metadata name and propper data type
+				if (metadata.compare(L"onMetaData")!=0 || !params->CheckType(AMFData::EcmaArray))
+				{
+					Warning("-IncomingStreamBridge::onMetaData() Unknown @setDataFrame name or wrong metatada\n"); 
+					return;
+				}
+				
+				//Get data
+				AMFEcmaArray* data = (AMFEcmaArray*)params;
+
+				//Get video fps if present
+				if (data->HasProperty(L"videodatarate"))
+					videodatarate = (double)data->GetProperty(L"videodatarate");
+				if (data->HasProperty(L"framerate"))
+					framerate = (double)data->GetProperty(L"framerate");
 			}
 		} catch (...)
 		{
@@ -2750,8 +2771,9 @@ private:
 	int maxLateOffset = 200;
 	int maxBufferingTime = 400;
 	std::pair<uint64_t,uint64_t> timingInfo = {};
-
-	Acumulator<uint8_t, uint16_t>	acumulatorFPS;
+	std::optional<double> videodatarate;
+	std::optional<double> framerate;
+	
 };
 
 
