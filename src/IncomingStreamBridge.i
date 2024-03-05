@@ -1,7 +1,6 @@
 %{
 #include "MediaFrameListenerBridge.h"
 
-
 class IncomingStreamBridge : 
 	public RTMPMediaStream::Listener,
 	public RTPReceiver
@@ -267,8 +266,13 @@ public:
 				
 				//IF got one
 				if (videoFrame)
+				{
+					//Set target bitrate if got it from metadata event
+					if (videodatarate)
+						videoFrame->SetTargetBitrate((int)*videodatarate);
 					//Push it
 					Enqueue(videoFrame.release());
+				}
 				break;
 			}
 			case RTMPMediaFrame::Audio:
@@ -319,15 +323,13 @@ public:
 			Warning("-IncomingStreamBridge::onMetaData() Not enough params to get name"); 
 			return;
 		}
-
+		
 		//Get command name
 		std::wstring name = *meta->GetParams(0);
 
 		Debug("-IncomingStreamBridge::onMetaData() [streamId:%d,name:%ls]\n", id, name.c_str());
 
 		try {
-			
-
 			if (name.compare(L"onFi")==0 || name.compare(L"onFI")==0)
 			{
 				if (meta->GetParamsLength()<2)
@@ -381,6 +383,11 @@ public:
 
 				} else if (params->CheckType(AMFData::Object)) {
 				
+					//If we don't have the video fps from the metadata event
+					if (!framerate || !*framerate)
+						//Skip
+						return;
+
 					//Get timecode info
                                         AMFObject* timecode = (AMFObject*)params;
 
@@ -395,11 +402,11 @@ public:
                                         uint32_t hour = 0;
                                         uint32_t minute = 0;
                                         uint32_t second = 0;
-                                        uint32_t millisecond = 0;
+                                        uint32_t frames = 0;
 
                                         std::wstring tc = timecode->GetProperty(L"tc");
 
-                                        swscanf(tc.c_str(), L"%02u:%02u:%02u:%03u", &hour, &minute, &second, &millisecond);
+                                        swscanf(tc.c_str(), L"%02u:%02u:%02u:%02u", &hour, &minute, &second, &frames);
 
                                         time_t rawtime;
                                         time (&rawtime);
@@ -411,8 +418,52 @@ public:
                                         timeinfo->tm_isdst = -1;         // Is DST on? 1 = yes, 0 = no, -1 = unknown
 
                                         //Set timing info
-                                        timingInfo.first  = mktime(timeinfo) * 1000 + millisecond;
+                                        timingInfo.first  = mktime(timeinfo) * 1000 + 1000 * frames / *framerate;
                                         timingInfo.second = meta->GetTimestamp();
+				}
+			} else if (name.compare(L"@setDataFrame")==0) {
+				if (meta->GetParamsLength()<3)
+				{
+					Warning("-IncomingStreamBridge::onMetaData() Not enough params on @setDataFrame\n"); 
+					return;
+				}
+				
+				//Get medatada params
+				std::wstring metadata = *(meta->GetParams(1));
+				AMFData* params = meta->GetParams(2);
+
+				//Check metadata name and propper data type
+				if (metadata.compare(L"onMetaData")!=0)
+				{
+					Warning("-IncomingStreamBridge::onMetaData() Unknown @setDataFrame name\n"); 
+					return;
+				}
+				
+				if (params->CheckType(AMFData::EcmaArray))
+				{
+
+					//Get data
+					AMFEcmaArray* data = (AMFEcmaArray*)params;
+
+					//Get video fps if present
+					if (data->HasProperty(L"videodatarate"))
+						videodatarate = (double)data->GetProperty(L"videodatarate");
+					if (data->HasProperty(L"framerate"))
+						framerate = (double)data->GetProperty(L"framerate");
+				}
+				else if (params->CheckType(AMFData::Object))
+				{
+					//Get data
+					AMFObject* data = (AMFObject*)params;
+
+					//Get video fps if present
+					if (data->HasProperty(L"videodatarate"))
+						videodatarate = (double)data->GetProperty(L"videodatarate");
+					if (data->HasProperty(L"framerate"))
+						framerate = (double)data->GetProperty(L"framerate");
+				} else {
+					Warning("-IncomingStreamBridge::onMetaData() Unknown @setDataFrame metatada\n"); 
+					return;
 				}
 			}
 		} catch (...)
@@ -476,6 +527,9 @@ private:
 	int maxLateOffset = 200;
 	int maxBufferingTime = 400;
 	std::pair<uint64_t,uint64_t> timingInfo = {};
+	std::optional<double> videodatarate;
+	std::optional<double> framerate;
+	
 };
 
 %}
