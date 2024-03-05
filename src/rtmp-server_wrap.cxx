@@ -2221,6 +2221,9 @@ SWIGINTERN void MediaFrameListenerBridge_UpdateAsync__SWIG(MediaFrameListenerBri
 			});
 		});
 	}
+SWIGINTERN void MediaFrameListenerBridge_SetMaxDelayMs__SWIG(MediaFrameListenerBridge *self,uint32_t maxDelayMs){
+		self->SetMaxDelayMs(std::chrono::milliseconds(maxDelayMs));
+	}
 
 	char const * const MediaFrameListenerBridge_codec_get(MediaFrameListenerBridge* self)      { return GetNameForCodec(self->type, self->codec); }
 
@@ -7637,6 +7640,42 @@ fail:
 }
 
 
+static SwigV8ReturnValue _wrap_MediaFrameListenerBridge_SetMaxDelayMs(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  MediaFrameListenerBridge *arg1 = (MediaFrameListenerBridge *) 0 ;
+  uint32_t arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  unsigned int val2 ;
+  int ecode2 = 0 ;
+  
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_MediaFrameListenerBridge_SetMaxDelayMs.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_MediaFrameListenerBridge, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "MediaFrameListenerBridge_SetMaxDelayMs" "', argument " "1"" of type '" "MediaFrameListenerBridge *""'"); 
+  }
+  arg1 = reinterpret_cast< MediaFrameListenerBridge * >(argp1);
+  ecode2 = SWIG_AsVal_unsigned_SS_int(args[0], &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "MediaFrameListenerBridge_SetMaxDelayMs" "', argument " "2"" of type '" "uint32_t""'");
+  } 
+  arg2 = static_cast< uint32_t >(val2);
+  MediaFrameListenerBridge_SetMaxDelayMs__SWIG(arg1,arg2);
+  jsresult = SWIGV8_UNDEFINED();
+  
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
 static void _wrap_delete_MediaFrameListenerBridge(const v8::WeakCallbackInfo<SWIGV8_Proxy> &data) {
   SWIGV8_Proxy *proxy = data.GetParameter();
   
@@ -9674,6 +9713,7 @@ SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridge_class, "RemoveMediaLi
 SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridge_class, "SetTargetBitrateHint", _wrap_MediaFrameListenerBridge_SetTargetBitrateHint);
 SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "codec", _wrap_MediaFrameListenerBridge_codec_get, JS_veto_set_variable);
 SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridge_class, "UpdateAsync", _wrap_MediaFrameListenerBridge_UpdateAsync);
+SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridge_class, "SetMaxDelayMs", _wrap_MediaFrameListenerBridge_SetMaxDelayMs);
 SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridgeShared_class, "toRTPIncomingMediaStream", _wrap_MediaFrameListenerBridgeShared_toRTPIncomingMediaStream);
 SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridgeShared_class, "toRTPReceiver", _wrap_MediaFrameListenerBridgeShared_toRTPReceiver);
 SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridgeShared_class, "toMediaFrameListener", _wrap_MediaFrameListenerBridgeShared_toMediaFrameListener);
