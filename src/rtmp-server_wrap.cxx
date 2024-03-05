@@ -2704,7 +2704,7 @@ public:
 					return;
 				}
 				
-				if (!params->CheckType(AMFData::EcmaArray))
+				if (params->CheckType(AMFData::EcmaArray))
 				{
 
 					//Get data
@@ -2716,7 +2716,7 @@ public:
 					if (data->HasProperty(L"framerate"))
 						framerate = (double)data->GetProperty(L"framerate");
 				}
-				else if (!params->CheckType(AMFData::Object))
+				else if (params->CheckType(AMFData::Object))
 				{
 					//Get data
 					AMFObject* data = (AMFObject*)params;
