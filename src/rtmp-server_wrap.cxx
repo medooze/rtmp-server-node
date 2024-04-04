@@ -1347,40 +1347,43 @@ fail: ;
 #define SWIGTYPE_p_MediaFrameListenerShared swig_types[6]
 #define SWIGTYPE_p_MediaFrameProducer swig_types[7]
 #define SWIGTYPE_p_MediaFrameProducerShared swig_types[8]
-#define SWIGTYPE_p_Properties swig_types[9]
-#define SWIGTYPE_p_RTMPApplicationImpl swig_types[10]
-#define SWIGTYPE_p_RTMPMediaStreamListener swig_types[11]
-#define SWIGTYPE_p_RTMPNetConnection swig_types[12]
-#define SWIGTYPE_p_RTMPNetConnectionImpl swig_types[13]
-#define SWIGTYPE_p_RTMPNetConnectionImplShared swig_types[14]
-#define SWIGTYPE_p_RTMPNetConnectionShared swig_types[15]
-#define SWIGTYPE_p_RTMPNetStream swig_types[16]
-#define SWIGTYPE_p_RTMPNetStreamImpl swig_types[17]
-#define SWIGTYPE_p_RTMPNetStreamImplShared swig_types[18]
-#define SWIGTYPE_p_RTMPNetStreamShared swig_types[19]
-#define SWIGTYPE_p_RTMPServerFacade swig_types[20]
-#define SWIGTYPE_p_RTMPServerModule swig_types[21]
-#define SWIGTYPE_p_RTPIncomingMediaStream swig_types[22]
-#define SWIGTYPE_p_RTPIncomingMediaStreamShared swig_types[23]
-#define SWIGTYPE_p_RTPReceiver swig_types[24]
-#define SWIGTYPE_p_RTPReceiverShared swig_types[25]
-#define SWIGTYPE_p_TimeService swig_types[26]
-#define SWIGTYPE_p_VideoOrientation swig_types[27]
-#define SWIGTYPE_p_char swig_types[28]
-#define SWIGTYPE_p_int swig_types[29]
-#define SWIGTYPE_p_long_long swig_types[30]
-#define SWIGTYPE_p_short swig_types[31]
-#define SWIGTYPE_p_signed_char swig_types[32]
-#define SWIGTYPE_p_std__string swig_types[33]
-#define SWIGTYPE_p_std__vectorT_Properties_t swig_types[34]
-#define SWIGTYPE_p_unsigned_char swig_types[35]
-#define SWIGTYPE_p_unsigned_int swig_types[36]
-#define SWIGTYPE_p_unsigned_long_long swig_types[37]
-#define SWIGTYPE_p_unsigned_short swig_types[38]
-#define SWIGTYPE_p_v8__LocalT_v8__Object_t swig_types[39]
-#define SWIGTYPE_p_void swig_types[40]
-static swig_type_info *swig_types[42];
-static swig_module_info swig_module = {swig_types, 41, 0, 0, 0, 0};
+#define SWIGTYPE_p_OutgoingStreamBridge swig_types[9]
+#define SWIGTYPE_p_OutgoingStreamBridgeShared swig_types[10]
+#define SWIGTYPE_p_Properties swig_types[11]
+#define SWIGTYPE_p_RTMPApplicationImpl swig_types[12]
+#define SWIGTYPE_p_RTMPClientConnectionImpl swig_types[13]
+#define SWIGTYPE_p_RTMPMediaStreamListener swig_types[14]
+#define SWIGTYPE_p_RTMPNetConnection swig_types[15]
+#define SWIGTYPE_p_RTMPNetConnectionImpl swig_types[16]
+#define SWIGTYPE_p_RTMPNetConnectionImplShared swig_types[17]
+#define SWIGTYPE_p_RTMPNetConnectionShared swig_types[18]
+#define SWIGTYPE_p_RTMPNetStream swig_types[19]
+#define SWIGTYPE_p_RTMPNetStreamImpl swig_types[20]
+#define SWIGTYPE_p_RTMPNetStreamImplShared swig_types[21]
+#define SWIGTYPE_p_RTMPNetStreamShared swig_types[22]
+#define SWIGTYPE_p_RTMPServerFacade swig_types[23]
+#define SWIGTYPE_p_RTMPServerModule swig_types[24]
+#define SWIGTYPE_p_RTPIncomingMediaStream swig_types[25]
+#define SWIGTYPE_p_RTPIncomingMediaStreamShared swig_types[26]
+#define SWIGTYPE_p_RTPReceiver swig_types[27]
+#define SWIGTYPE_p_RTPReceiverShared swig_types[28]
+#define SWIGTYPE_p_TimeService swig_types[29]
+#define SWIGTYPE_p_VideoOrientation swig_types[30]
+#define SWIGTYPE_p_char swig_types[31]
+#define SWIGTYPE_p_int swig_types[32]
+#define SWIGTYPE_p_long_long swig_types[33]
+#define SWIGTYPE_p_short swig_types[34]
+#define SWIGTYPE_p_signed_char swig_types[35]
+#define SWIGTYPE_p_std__string swig_types[36]
+#define SWIGTYPE_p_std__vectorT_Properties_t swig_types[37]
+#define SWIGTYPE_p_unsigned_char swig_types[38]
+#define SWIGTYPE_p_unsigned_int swig_types[39]
+#define SWIGTYPE_p_unsigned_long_long swig_types[40]
+#define SWIGTYPE_p_unsigned_short swig_types[41]
+#define SWIGTYPE_p_v8__LocalT_v8__Object_t swig_types[42]
+#define SWIGTYPE_p_void swig_types[43]
+static swig_type_info *swig_types[45];
+static swig_module_info swig_module = {swig_types, 44, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -2799,6 +2802,172 @@ private:
 
 
 
+#include "MediaFrameListenerBridge.h"
+
+class OutgoingStreamBridge : 
+	public RTMPMediaStream,
+	public MediaFrame::Listener
+{
+public:
+	OutgoingStreamBridge(DWORD streamId, RTMPMediaStream::Listener* listener) :
+		RTMPMediaStream(streamId)
+	{
+		AddMediaListener(listener);
+		SendStreamBegin();
+	}
+
+	// MediaFrame::Listener interface
+	virtual void onMediaFrame(const MediaFrame& frame) override { onMediaFrame(0, frame); };
+	virtual void onMediaFrame(DWORD ssrc, const MediaFrame& frame)
+	{
+		//Get timestamp at 1khz
+		auto timestamp = frame.GetTimestamp()*1000/frame.GetClockRate();
+
+		switch(frame.GetType())
+		{
+			case MediaFrame::Audio:
+			{
+				//Get audio frame
+				AudioFrame& audio = (AudioFrame&)frame;
+				//Create rtmp frame
+				RTMPAudioFrame frame(timestamp,audio.GetLength());
+				//Check codec
+				switch(audio.GetCodec())
+				{
+					case AudioCodec::AAC:
+					{
+						//Set aac codec
+						frame.SetAudioCodec(RTMPAudioFrame::AAC);
+						//Set type
+						frame.SetAACPacketType(RTMPAudioFrame::AACRaw);
+						//Set Data
+						frame.SetAudioFrame(audio.GetData(),audio.GetLength());
+
+						//Check if we need to send the aac config
+						if (!sentAACSpecificConfig && audio.HasCodecConfig())
+						{
+							//Get aac descriptor
+							AACSpecificConfig desc;
+							if (desc.Decode(audio.GetCodecConfigData(), audio.GetCodecConfigSize()))
+							{
+								//Create the fraame
+								RTMPAudioFrame fdesc(timestamp, desc);
+								//Play it
+								SendMediaFrame(&fdesc);
+								//Sent
+								sentAACSpecificConfig = true;
+							}
+						}
+						break;
+					}
+					default:
+						//Log
+						Warning("-OutgoingStreamBridge::onMediaFrame() Audio codec not supported\n");
+						//Not supported
+						return;
+				}
+				//Send it
+				SendMediaFrame(&frame);
+				break;
+			}
+			case MediaFrame::Video:
+			{
+				//Get video frame
+				VideoFrame& video = (VideoFrame&)frame;
+
+				//Create rtmp frame
+				RTMPVideoFrame frame(timestamp,video.GetLength());
+				//Check codec
+				switch(video.GetCodec())
+				{
+					case VideoCodec::H264:
+					{
+						//Set Codec
+						frame.SetVideoCodec(RTMPVideoFrame::AVC);
+						//If it is intra
+						if (video.IsIntra())
+						{
+							//Set type
+							frame.SetFrameType(RTMPVideoFrame::INTRA);
+							//If we have one
+							if (video.HasCodecConfig())
+							{
+								//Get AVC descroptor
+								AVCDescriptor desc;
+								if (desc.Parse(video.GetCodecConfigData(), video.GetCodecConfigSize()))
+								{
+									//Create the fraame
+									RTMPVideoFrame fdesc(timestamp, desc);
+									//Play it
+									SendMediaFrame(&fdesc);
+								}
+							}
+						} else {
+							//Set type
+							frame.SetFrameType(RTMPVideoFrame::INTER);
+						}
+						//Set NALU type
+						frame.SetAVCType(RTMPVideoFrame::AVCNALU);
+						//Set no delay
+						frame.SetAVCTS(0);
+						//Set Data
+						frame.SetVideoFrame(video.GetData(),video.GetLength());
+						break;
+					}
+					default:
+						//Log
+						Warning("-OutgoingStreamBridge::onMediaFrame() Video codec not supported\n");
+						//Not supported
+						return;
+				}
+				//Send it
+				SendMediaFrame(&frame);
+				break;
+			}
+			default:
+				//Log
+				Warning("-OutgoingStreamBridge::onMediaFrame() Media type not supported\n");
+				//Ignore
+				return;
+		}
+	}
+
+	void Stop()
+	{
+		SendStreamEnd();
+		Reset();
+		RemoveAllMediaListeners();
+	}
+private:
+	bool sentAACSpecificConfig = false;
+};
+
+
+
+using OutgoingStreamBridgeShared = std::shared_ptr<OutgoingStreamBridge>;
+
+static OutgoingStreamBridgeShared OutgoingStreamBridgeShared_null_ptr = {};
+
+OutgoingStreamBridgeShared* OutgoingStreamBridgeShared_from_proxy(const v8::Local<v8::Value> input)
+{
+  void *ptr = nullptr;
+  if (input.IsEmpty() || !input->IsObject()) return &OutgoingStreamBridgeShared_null_ptr;
+  v8::Local<v8::Proxy> proxy = v8::Local<v8::Proxy>::Cast(input);
+  if (proxy.IsEmpty()) return &OutgoingStreamBridgeShared_null_ptr;
+  v8::Local<v8::Value> target = proxy->GetTarget();
+  SWIG_ConvertPtr(target, &ptr, SWIGTYPE_p_OutgoingStreamBridgeShared,  0 );
+  if (!ptr) return &OutgoingStreamBridgeShared_null_ptr;
+  return reinterpret_cast<OutgoingStreamBridgeShared*>(ptr);
+}
+
+
+SWIGINTERN OutgoingStreamBridgeShared *new_OutgoingStreamBridgeShared(uint32_t streamId,RTMPMediaStreamListener *listener){
+		return new std::shared_ptr<OutgoingStreamBridge>(new OutgoingStreamBridge(streamId, listener));
+	}
+SWIGINTERN MediaFrameListenerShared OutgoingStreamBridgeShared_toMediaFrameListener__SWIG(OutgoingStreamBridgeShared *self){
+	return std::static_pointer_cast<MediaFrameListener>(*self);
+}
+
 
 class RTMPNetStreamImpl : 
 	public RTMPNetStream
@@ -3018,7 +3187,7 @@ public:
 
 	virtual void DeleteStream(const RTMPNetStream::shared& stream) override
 	{
-		Log("-RTMPNetConnectionImpl::CreateStream() [streamId:%d]\n",stream->GetStreamId());
+		Log("-RTMPNetConnectionImpl::DeleteStream() [streamId:%d]\n",stream->GetStreamId());
 		
 		//Cast
 		auto impl = std::static_pointer_cast<RTMPNetStreamImpl>(stream);
@@ -3177,6 +3346,106 @@ private:
 
 
 
+
+#include "rtmp/rtmpclientconnection.h"
+
+class RTMPClientConnectionImpl :
+	public RTMPClientConnection,
+	public RTMPClientConnection::Listener
+{
+public:	
+	RTMPClientConnectionImpl(v8::Local<v8::Object> object) :
+		RTMPClientConnection(L"")
+	{
+		//Store event callback object
+		persistent = std::make_shared<Persistent<v8::Object>>(object);
+	}
+	
+	void Connect(const char* server,int port, const char* app)
+	{
+		RTMPClientConnection::Connect(server, port, app, this);
+	}
+
+	void CreateStream(v8::Local<v8::Object> promise)
+	{
+		SendCommand(0,L"createStream",nullptr,nullptr, promise);
+	}
+
+	void DeleteStream(v8::Local<v8::Object> promise)
+	{
+		SendCommand(0,L"deleteStream",nullptr,nullptr, promise);
+	}
+
+	void Publish(DWORD id, v8::Local<v8::Object> url, v8::Local<v8::Object> promise )
+	{
+		UTF8Parser parser;
+		parser.SetString(*Nan::Utf8String(url));
+		SendCommand(id,L"publish",NULL,new AMFString(parser.GetWChar()), promise);
+	}
+
+	void onConnected(RTMPClientConnection* conn) override
+	{
+		Log("-RTMPClientConnectionImpl::onConnected()\n");
+
+		//Run function on main node thread
+		RTMPServerModule::Async([=,cloned=persistent](){
+			Nan::HandleScope scope;
+			//Call object method with arguments
+			MakeCallback(cloned, "onconnected");
+		});
+	}
+
+	void onDisconnected(RTMPClientConnection* conn) override
+	{
+		Log("-RTMPClientConnectionImpl::onDisconnected()\n");
+
+		//Run function on main node thread
+		RTMPServerModule::Async([=,cloned=persistent](){
+			Nan::HandleScope scope;
+			//Call object method with arguments
+			MakeCallback(cloned, "ondisconnected");
+		});
+	}
+
+	void Stop()
+	{
+		Disconnect();
+	}
+private:
+	void SendCommand(DWORD streamId, const wchar_t* name, AMFData* params, AMFData* extra, v8::Local<v8::Object> promise)
+	{
+		RTMPClientConnection::SendCommand(streamId, name, params, extra, [=, persistent=std::make_shared<Persistent<v8::Object>>(promise) ](bool isError,AMFData* params, const std::vector<AMFData*>& extra){
+
+			std::vector<std::shared_ptr<AMFData>> result;
+			result.emplace_back(params->Clone());
+			for (auto& e : extra)
+				result.emplace_back(e->Clone());
+
+			RTMPServerModule::Async([=,cloned=persistent](){
+
+				Nan::HandleScope scope;
+				int i = 0;
+				v8::Local<v8::Value> argv[1] = { Nan::New<v8::Array>(result.size()) };
+				for (auto& r : result)
+					Nan::Set(Nan::To<v8::Object>(argv[0]).ToLocalChecked(), Nan::New<v8::Uint32>(i++), toJson(r.get()));
+
+				if (isError)
+				{
+					//Call object method with arguments
+					MakeCallback(cloned, "reject", 1, argv);
+				} else {
+					//Call object method with arguments
+					MakeCallback(cloned, "resolve", 1, argv);
+				}
+			});
+		});
+	}
+private:
+	std::shared_ptr<Persistent<v8::Object>> persistent;	
+};
+
+
+
 #define SWIGV8_INIT medooze_initialize
 
 
@@ -3198,6 +3467,8 @@ SWIGV8_ClientData _exports_MediaFrameListenerBridge_clientData;
 SWIGV8_ClientData _exports_MediaFrameListenerBridgeShared_clientData;
 SWIGV8_ClientData _exports_RTMPMediaStreamListener_clientData;
 SWIGV8_ClientData _exports_IncomingStreamBridge_clientData;
+SWIGV8_ClientData _exports_OutgoingStreamBridge_clientData;
+SWIGV8_ClientData _exports_OutgoingStreamBridgeShared_clientData;
 SWIGV8_ClientData _exports_RTMPNetStream_clientData;
 SWIGV8_ClientData _exports_RTMPNetStreamShared_clientData;
 SWIGV8_ClientData _exports_RTMPNetStreamImpl_clientData;
@@ -3208,6 +3479,7 @@ SWIGV8_ClientData _exports_RTMPNetConnectionImpl_clientData;
 SWIGV8_ClientData _exports_RTMPNetConnectionImplShared_clientData;
 SWIGV8_ClientData _exports_RTMPApplicationImpl_clientData;
 SWIGV8_ClientData _exports_RTMPServerFacade_clientData;
+SWIGV8_ClientData _exports_RTMPClientConnectionImpl_clientData;
 
 
 static SwigV8ReturnValue _wrap_QCIF(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
@@ -3585,12 +3857,27 @@ fail:
 }
 
 
-static SwigV8ReturnValue _wrap_RTPPAYLOADSIZE(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+static SwigV8ReturnValue _wrap_UDPPAYLOADSIZE(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
   SWIGV8_HANDLESCOPE();
   
   SWIGV8_VALUE jsresult;
   
   jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(1350u));
+  
+  SWIGV8_RETURN_INFO(jsresult, info);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+}
+
+
+static SwigV8ReturnValue _wrap_RTPPAYLOADSIZE(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  
+  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(1200u));
   
   SWIGV8_RETURN_INFO(jsresult, info);
   
@@ -8187,6 +8474,243 @@ static void _wrap_delete_IncomingStreamBridge(const v8::WeakCallbackInfo<SWIGV8_
 }
 
 
+static SwigV8ReturnValue _wrap_new_OutgoingStreamBridge(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_OBJECT self = args.Holder();
+  uint32_t arg1 ;
+  RTMPMediaStreamListener *arg2 = (RTMPMediaStreamListener *) 0 ;
+  unsigned int val1 ;
+  int ecode1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  OutgoingStreamBridge *result;
+  if(self->InternalFieldCount() < 1) SWIG_exception_fail(SWIG_ERROR, "Illegal call of constructor _wrap_new_OutgoingStreamBridge.");
+  if(args.Length() != 2) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_OutgoingStreamBridge.");
+  ecode1 = SWIG_AsVal_unsigned_SS_int(args[0], &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_OutgoingStreamBridge" "', argument " "1"" of type '" "uint32_t""'");
+  } 
+  arg1 = static_cast< uint32_t >(val1);
+  res2 = SWIG_ConvertPtr(args[1], &argp2,SWIGTYPE_p_RTMPMediaStreamListener, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_OutgoingStreamBridge" "', argument " "2"" of type '" "RTMPMediaStreamListener *""'"); 
+  }
+  arg2 = reinterpret_cast< RTMPMediaStreamListener * >(argp2);
+  result = (OutgoingStreamBridge *)new OutgoingStreamBridge(arg1,arg2);
+  
+  
+  
+  
+  
+  SWIGV8_SetPrivateData(self, result, SWIGTYPE_p_OutgoingStreamBridge, SWIG_POINTER_OWN);
+  SWIGV8_RETURN(self);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_OutgoingStreamBridge_GetStreamId(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  OutgoingStreamBridge *arg1 = (OutgoingStreamBridge *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  uint32_t result;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_OutgoingStreamBridge_GetStreamId.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_OutgoingStreamBridge, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "OutgoingStreamBridge_GetStreamId" "', argument " "1"" of type '" "OutgoingStreamBridge const *""'"); 
+  }
+  arg1 = reinterpret_cast< OutgoingStreamBridge * >(argp1);
+  result = (uint32_t)((OutgoingStreamBridge const *)arg1)->GetStreamId();
+  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_OutgoingStreamBridge_GetRTT(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  OutgoingStreamBridge *arg1 = (OutgoingStreamBridge *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  uint32_t result;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_OutgoingStreamBridge_GetRTT.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_OutgoingStreamBridge, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "OutgoingStreamBridge_GetRTT" "', argument " "1"" of type '" "OutgoingStreamBridge const *""'"); 
+  }
+  arg1 = reinterpret_cast< OutgoingStreamBridge * >(argp1);
+  result = (uint32_t)((OutgoingStreamBridge const *)arg1)->GetRTT();
+  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(result));
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_OutgoingStreamBridge_Stop(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  OutgoingStreamBridge *arg1 = (OutgoingStreamBridge *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_OutgoingStreamBridge_Stop.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_OutgoingStreamBridge, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "OutgoingStreamBridge_Stop" "', argument " "1"" of type '" "OutgoingStreamBridge *""'"); 
+  }
+  arg1 = reinterpret_cast< OutgoingStreamBridge * >(argp1);
+  (arg1)->Stop();
+  jsresult = SWIGV8_UNDEFINED();
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static void _wrap_delete_OutgoingStreamBridge(const v8::WeakCallbackInfo<SWIGV8_Proxy> &data) {
+  SWIGV8_Proxy *proxy = data.GetParameter();
+  
+  if(proxy->swigCMemOwn && proxy->swigCObject) {
+    OutgoingStreamBridge * arg1 = (OutgoingStreamBridge *)proxy->swigCObject;
+    delete arg1;
+  }
+  delete proxy;
+}
+
+
+static SwigV8ReturnValue _wrap_new_OutgoingStreamBridgeShared(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_OBJECT self = args.Holder();
+  uint32_t arg1 ;
+  RTMPMediaStreamListener *arg2 = (RTMPMediaStreamListener *) 0 ;
+  unsigned int val1 ;
+  int ecode1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  OutgoingStreamBridgeShared *result;
+  if(self->InternalFieldCount() < 1) SWIG_exception_fail(SWIG_ERROR, "Illegal call of constructor _wrap_new_OutgoingStreamBridgeShared.");
+  if(args.Length() != 2) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_OutgoingStreamBridgeShared.");
+  ecode1 = SWIG_AsVal_unsigned_SS_int(args[0], &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_OutgoingStreamBridgeShared" "', argument " "1"" of type '" "uint32_t""'");
+  } 
+  arg1 = static_cast< uint32_t >(val1);
+  res2 = SWIG_ConvertPtr(args[1], &argp2,SWIGTYPE_p_RTMPMediaStreamListener, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_OutgoingStreamBridgeShared" "', argument " "2"" of type '" "RTMPMediaStreamListener *""'"); 
+  }
+  arg2 = reinterpret_cast< RTMPMediaStreamListener * >(argp2);
+  result = (OutgoingStreamBridgeShared *)new_OutgoingStreamBridgeShared(arg1,arg2);
+  
+  
+  
+  
+  
+  SWIGV8_SetPrivateData(self, result, SWIGTYPE_p_OutgoingStreamBridgeShared, SWIG_POINTER_OWN);
+  SWIGV8_RETURN(self);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_OutgoingStreamBridgeShared_toMediaFrameListener(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  OutgoingStreamBridgeShared *arg1 = (OutgoingStreamBridgeShared *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  MediaFrameListenerShared result;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_OutgoingStreamBridgeShared_toMediaFrameListener.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_OutgoingStreamBridgeShared, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "OutgoingStreamBridgeShared_toMediaFrameListener" "', argument " "1"" of type '" "OutgoingStreamBridgeShared *""'"); 
+  }
+  arg1 = reinterpret_cast< OutgoingStreamBridgeShared * >(argp1);
+  result = OutgoingStreamBridgeShared_toMediaFrameListener__SWIG(arg1);
+  jsresult = SWIG_NewPointerObj((new MediaFrameListenerShared(static_cast< const MediaFrameListenerShared& >(result))), SWIGTYPE_p_MediaFrameListenerShared, SWIG_POINTER_OWN |  0 );
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_OutgoingStreamBridgeShared_get(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  OutgoingStreamBridgeShared *arg1 = (OutgoingStreamBridgeShared *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  OutgoingStreamBridge *result = 0 ;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_OutgoingStreamBridgeShared_get.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_OutgoingStreamBridgeShared, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "OutgoingStreamBridgeShared_get" "', argument " "1"" of type '" "OutgoingStreamBridgeShared *""'"); 
+  }
+  arg1 = reinterpret_cast< OutgoingStreamBridgeShared * >(argp1);
+  result = (OutgoingStreamBridge *)(arg1)->get();
+  jsresult = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_OutgoingStreamBridge, 0 |  0 );
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static void _wrap_delete_OutgoingStreamBridgeShared(const v8::WeakCallbackInfo<SWIGV8_Proxy> &data) {
+  SWIGV8_Proxy *proxy = data.GetParameter();
+  
+  if(proxy->swigCMemOwn && proxy->swigCObject) {
+    OutgoingStreamBridgeShared * arg1 = (OutgoingStreamBridgeShared *)proxy->swigCObject;
+    delete arg1;
+  }
+  delete proxy;
+}
+
+
 static SwigV8ReturnValue _wrap_new_veto_RTMPNetStream(const SwigV8Arguments &args) {
   SWIGV8_HANDLESCOPE();
   
@@ -8984,6 +9508,230 @@ static void _wrap_delete_RTMPServerFacade(const v8::WeakCallbackInfo<SWIGV8_Prox
 }
 
 
+static SwigV8ReturnValue _wrap_new_RTMPClientConnectionImpl(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_OBJECT self = args.Holder();
+  v8::Local< v8::Object > arg1 ;
+  RTMPClientConnectionImpl *result;
+  if(self->InternalFieldCount() < 1) SWIG_exception_fail(SWIG_ERROR, "Illegal call of constructor _wrap_new_RTMPClientConnectionImpl.");
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_RTMPClientConnectionImpl.");
+  {
+    arg1 = v8::Local<v8::Object>::Cast(args[0]);
+  }
+  result = (RTMPClientConnectionImpl *)new RTMPClientConnectionImpl(arg1);
+  
+  
+  
+  SWIGV8_SetPrivateData(self, result, SWIGTYPE_p_RTMPClientConnectionImpl, SWIG_POINTER_OWN);
+  SWIGV8_RETURN(self);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnectionImpl_Connect(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  RTMPClientConnectionImpl *arg1 = (RTMPClientConnectionImpl *) 0 ;
+  char *arg2 = (char *) 0 ;
+  int arg3 ;
+  char *arg4 = (char *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 ;
+  char *buf2 = 0 ;
+  int alloc2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  int res4 ;
+  char *buf4 = 0 ;
+  int alloc4 = 0 ;
+  
+  if(args.Length() != 3) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPClientConnectionImpl_Connect.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_RTMPClientConnectionImpl, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "RTMPClientConnectionImpl_Connect" "', argument " "1"" of type '" "RTMPClientConnectionImpl *""'"); 
+  }
+  arg1 = reinterpret_cast< RTMPClientConnectionImpl * >(argp1);
+  res2 = SWIG_AsCharPtrAndSize(args[0], &buf2, NULL, &alloc2);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "RTMPClientConnectionImpl_Connect" "', argument " "2"" of type '" "char const *""'");
+  }
+  arg2 = reinterpret_cast< char * >(buf2);
+  ecode3 = SWIG_AsVal_int(args[1], &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "RTMPClientConnectionImpl_Connect" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  res4 = SWIG_AsCharPtrAndSize(args[2], &buf4, NULL, &alloc4);
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "RTMPClientConnectionImpl_Connect" "', argument " "4"" of type '" "char const *""'");
+  }
+  arg4 = reinterpret_cast< char * >(buf4);
+  (arg1)->Connect((char const *)arg2,arg3,(char const *)arg4);
+  jsresult = SWIGV8_UNDEFINED();
+  
+  if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
+  
+  if (alloc4 == SWIG_NEWOBJ) delete[] buf4;
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnectionImpl_CreateStream(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  RTMPClientConnectionImpl *arg1 = (RTMPClientConnectionImpl *) 0 ;
+  v8::Local< v8::Object > arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPClientConnectionImpl_CreateStream.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_RTMPClientConnectionImpl, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "RTMPClientConnectionImpl_CreateStream" "', argument " "1"" of type '" "RTMPClientConnectionImpl *""'"); 
+  }
+  arg1 = reinterpret_cast< RTMPClientConnectionImpl * >(argp1);
+  {
+    arg2 = v8::Local<v8::Object>::Cast(args[0]);
+  }
+  (arg1)->CreateStream(arg2);
+  jsresult = SWIGV8_UNDEFINED();
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnectionImpl_Publish(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  RTMPClientConnectionImpl *arg1 = (RTMPClientConnectionImpl *) 0 ;
+  uint32_t arg2 ;
+  v8::Local< v8::Object > arg3 ;
+  v8::Local< v8::Object > arg4 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  unsigned int val2 ;
+  int ecode2 = 0 ;
+  
+  if(args.Length() != 3) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPClientConnectionImpl_Publish.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_RTMPClientConnectionImpl, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "RTMPClientConnectionImpl_Publish" "', argument " "1"" of type '" "RTMPClientConnectionImpl *""'"); 
+  }
+  arg1 = reinterpret_cast< RTMPClientConnectionImpl * >(argp1);
+  ecode2 = SWIG_AsVal_unsigned_SS_int(args[0], &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "RTMPClientConnectionImpl_Publish" "', argument " "2"" of type '" "uint32_t""'");
+  } 
+  arg2 = static_cast< uint32_t >(val2);
+  {
+    arg3 = v8::Local<v8::Object>::Cast(args[1]);
+  }
+  {
+    arg4 = v8::Local<v8::Object>::Cast(args[2]);
+  }
+  (arg1)->Publish(arg2,arg3,arg4);
+  jsresult = SWIGV8_UNDEFINED();
+  
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnectionImpl_DeleteStream(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  RTMPClientConnectionImpl *arg1 = (RTMPClientConnectionImpl *) 0 ;
+  v8::Local< v8::Object > arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPClientConnectionImpl_DeleteStream.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_RTMPClientConnectionImpl, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "RTMPClientConnectionImpl_DeleteStream" "', argument " "1"" of type '" "RTMPClientConnectionImpl *""'"); 
+  }
+  arg1 = reinterpret_cast< RTMPClientConnectionImpl * >(argp1);
+  {
+    arg2 = v8::Local<v8::Object>::Cast(args[0]);
+  }
+  (arg1)->DeleteStream(arg2);
+  jsresult = SWIGV8_UNDEFINED();
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnectionImpl_Stop(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  RTMPClientConnectionImpl *arg1 = (RTMPClientConnectionImpl *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPClientConnectionImpl_Stop.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_RTMPClientConnectionImpl, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "RTMPClientConnectionImpl_Stop" "', argument " "1"" of type '" "RTMPClientConnectionImpl *""'"); 
+  }
+  arg1 = reinterpret_cast< RTMPClientConnectionImpl * >(argp1);
+  (arg1)->Stop();
+  jsresult = SWIGV8_UNDEFINED();
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static void _wrap_delete_RTMPClientConnectionImpl(const v8::WeakCallbackInfo<SWIGV8_Proxy> &data) {
+  SWIGV8_Proxy *proxy = data.GetParameter();
+  
+  if(proxy->swigCMemOwn && proxy->swigCObject) {
+    RTMPClientConnectionImpl * arg1 = (RTMPClientConnectionImpl *)proxy->swigCObject;
+    delete arg1;
+  }
+  delete proxy;
+}
+
+
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
 static void *_p_MediaFrameListenerBridgeTo_p_MediaFrameProducer(void *x, int *SWIGUNUSEDPARM(newmemory)) {
@@ -9001,6 +9749,9 @@ static void *_p_RTMPNetConnectionImplTo_p_RTMPNetConnection(void *x, int *SWIGUN
 static void *_p_MediaFrameListenerBridgeTo_p_RTPReceiver(void *x, int *SWIGUNUSEDPARM(newmemory)) {
     return (void *)((RTPReceiver *)  ((MediaFrameListenerBridge *) x));
 }
+static void *_p_RTMPClientConnectionImplTo_p_RTMPMediaStreamListener(void *x, int *SWIGUNUSEDPARM(newmemory)) {
+    return (void *)((RTMPMediaStreamListener *)  ((RTMPClientConnectionImpl *) x));
+}
 static void *_p_IncomingStreamBridgeTo_p_RTMPMediaStreamListener(void *x, int *SWIGUNUSEDPARM(newmemory)) {
     return (void *)((RTMPMediaStreamListener *)  ((IncomingStreamBridge *) x));
 }
@@ -9016,8 +9767,11 @@ static swig_type_info _swigt__p_MediaFrameListenerBridgeShared = {"_p_MediaFrame
 static swig_type_info _swigt__p_MediaFrameListenerShared = {"_p_MediaFrameListenerShared", "p_MediaFrameListenerShared|MediaFrameListenerShared *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_MediaFrameProducer = {"_p_MediaFrameProducer", "MediaFrameProducer *|p_MediaFrameProducer", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_MediaFrameProducerShared = {"_p_MediaFrameProducerShared", "p_MediaFrameProducerShared|MediaFrameProducerShared *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_OutgoingStreamBridge = {"_p_OutgoingStreamBridge", "OutgoingStreamBridge *|p_OutgoingStreamBridge", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_OutgoingStreamBridgeShared = {"_p_OutgoingStreamBridgeShared", "p_OutgoingStreamBridgeShared|OutgoingStreamBridgeShared *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Properties = {"_p_Properties", "Properties *|p_Properties", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPApplicationImpl = {"_p_RTMPApplicationImpl", "RTMPApplicationImpl *|p_RTMPApplicationImpl", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_RTMPClientConnectionImpl = {"_p_RTMPClientConnectionImpl", "RTMPClientConnectionImpl *|p_RTMPClientConnectionImpl", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPMediaStreamListener = {"_p_RTMPMediaStreamListener", "p_RTMPMediaStreamListener|RTMPMediaStreamListener *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPNetConnection = {"_p_RTMPNetConnection", "RTMPNetConnection *|p_RTMPNetConnection", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPNetConnectionImpl = {"_p_RTMPNetConnectionImpl", "RTMPNetConnectionImpl *|p_RTMPNetConnectionImpl", 0, 0, (void*)0, 0};
@@ -9059,8 +9813,11 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_MediaFrameListenerShared,
   &_swigt__p_MediaFrameProducer,
   &_swigt__p_MediaFrameProducerShared,
+  &_swigt__p_OutgoingStreamBridge,
+  &_swigt__p_OutgoingStreamBridgeShared,
   &_swigt__p_Properties,
   &_swigt__p_RTMPApplicationImpl,
+  &_swigt__p_RTMPClientConnectionImpl,
   &_swigt__p_RTMPMediaStreamListener,
   &_swigt__p_RTMPNetConnection,
   &_swigt__p_RTMPNetConnectionImpl,
@@ -9102,9 +9859,12 @@ static swig_cast_info _swigc__p_MediaFrameListenerBridgeShared[] = {  {&_swigt__
 static swig_cast_info _swigc__p_MediaFrameListenerShared[] = {  {&_swigt__p_MediaFrameListenerShared, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_MediaFrameProducer[] = {  {&_swigt__p_MediaFrameProducer, 0, 0, 0},  {&_swigt__p_MediaFrameListenerBridge, _p_MediaFrameListenerBridgeTo_p_MediaFrameProducer, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_MediaFrameProducerShared[] = {  {&_swigt__p_MediaFrameProducerShared, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_OutgoingStreamBridge[] = {  {&_swigt__p_OutgoingStreamBridge, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_OutgoingStreamBridgeShared[] = {  {&_swigt__p_OutgoingStreamBridgeShared, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Properties[] = {  {&_swigt__p_Properties, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPApplicationImpl[] = {  {&_swigt__p_RTMPApplicationImpl, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_RTMPMediaStreamListener[] = {  {&_swigt__p_RTMPMediaStreamListener, 0, 0, 0},  {&_swigt__p_IncomingStreamBridge, _p_IncomingStreamBridgeTo_p_RTMPMediaStreamListener, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_RTMPClientConnectionImpl[] = {  {&_swigt__p_RTMPClientConnectionImpl, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_RTMPMediaStreamListener[] = {  {&_swigt__p_RTMPClientConnectionImpl, _p_RTMPClientConnectionImplTo_p_RTMPMediaStreamListener, 0, 0},  {&_swigt__p_RTMPMediaStreamListener, 0, 0, 0},  {&_swigt__p_IncomingStreamBridge, _p_IncomingStreamBridgeTo_p_RTMPMediaStreamListener, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPNetConnection[] = {  {&_swigt__p_RTMPNetConnectionImpl, _p_RTMPNetConnectionImplTo_p_RTMPNetConnection, 0, 0},  {&_swigt__p_RTMPNetConnection, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPNetConnectionImpl[] = {  {&_swigt__p_RTMPNetConnectionImpl, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPNetConnectionImplShared[] = {  {&_swigt__p_RTMPNetConnectionImplShared, 0, 0, 0},{0, 0, 0, 0}};
@@ -9145,8 +9905,11 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_MediaFrameListenerShared,
   _swigc__p_MediaFrameProducer,
   _swigc__p_MediaFrameProducerShared,
+  _swigc__p_OutgoingStreamBridge,
+  _swigc__p_OutgoingStreamBridgeShared,
   _swigc__p_Properties,
   _swigc__p_RTMPApplicationImpl,
+  _swigc__p_RTMPClientConnectionImpl,
   _swigc__p_RTMPMediaStreamListener,
   _swigc__p_RTMPNetConnection,
   _swigc__p_RTMPNetConnectionImpl,
@@ -9615,6 +10378,20 @@ _exports_IncomingStreamBridge_clientData.dtor = _wrap_delete_IncomingStreamBridg
 if (SWIGTYPE_p_IncomingStreamBridge->clientdata == 0) {
   SWIGTYPE_p_IncomingStreamBridge->clientdata = &_exports_IncomingStreamBridge_clientData;
 }
+/* Name: _exports_OutgoingStreamBridge, Type: p_OutgoingStreamBridge, Dtor: _wrap_delete_OutgoingStreamBridge */
+SWIGV8_FUNCTION_TEMPLATE _exports_OutgoingStreamBridge_class = SWIGV8_CreateClassTemplate("_exports_OutgoingStreamBridge");
+SWIGV8_SET_CLASS_TEMPL(_exports_OutgoingStreamBridge_clientData.class_templ, _exports_OutgoingStreamBridge_class);
+_exports_OutgoingStreamBridge_clientData.dtor = _wrap_delete_OutgoingStreamBridge;
+if (SWIGTYPE_p_OutgoingStreamBridge->clientdata == 0) {
+  SWIGTYPE_p_OutgoingStreamBridge->clientdata = &_exports_OutgoingStreamBridge_clientData;
+}
+/* Name: _exports_OutgoingStreamBridgeShared, Type: p_OutgoingStreamBridgeShared, Dtor: _wrap_delete_OutgoingStreamBridgeShared */
+SWIGV8_FUNCTION_TEMPLATE _exports_OutgoingStreamBridgeShared_class = SWIGV8_CreateClassTemplate("_exports_OutgoingStreamBridgeShared");
+SWIGV8_SET_CLASS_TEMPL(_exports_OutgoingStreamBridgeShared_clientData.class_templ, _exports_OutgoingStreamBridgeShared_class);
+_exports_OutgoingStreamBridgeShared_clientData.dtor = _wrap_delete_OutgoingStreamBridgeShared;
+if (SWIGTYPE_p_OutgoingStreamBridgeShared->clientdata == 0) {
+  SWIGTYPE_p_OutgoingStreamBridgeShared->clientdata = &_exports_OutgoingStreamBridgeShared_clientData;
+}
 /* Name: _exports_RTMPNetStream, Type: p_RTMPNetStream, Dtor: 0 */
 SWIGV8_FUNCTION_TEMPLATE _exports_RTMPNetStream_class = SWIGV8_CreateClassTemplate("_exports_RTMPNetStream");
 SWIGV8_SET_CLASS_TEMPL(_exports_RTMPNetStream_clientData.class_templ, _exports_RTMPNetStream_class);
@@ -9685,6 +10462,13 @@ _exports_RTMPServerFacade_clientData.dtor = _wrap_delete_RTMPServerFacade;
 if (SWIGTYPE_p_RTMPServerFacade->clientdata == 0) {
   SWIGTYPE_p_RTMPServerFacade->clientdata = &_exports_RTMPServerFacade_clientData;
 }
+/* Name: _exports_RTMPClientConnectionImpl, Type: p_RTMPClientConnectionImpl, Dtor: _wrap_delete_RTMPClientConnectionImpl */
+SWIGV8_FUNCTION_TEMPLATE _exports_RTMPClientConnectionImpl_class = SWIGV8_CreateClassTemplate("_exports_RTMPClientConnectionImpl");
+SWIGV8_SET_CLASS_TEMPL(_exports_RTMPClientConnectionImpl_clientData.class_templ, _exports_RTMPClientConnectionImpl_class);
+_exports_RTMPClientConnectionImpl_clientData.dtor = _wrap_delete_RTMPClientConnectionImpl;
+if (SWIGTYPE_p_RTMPClientConnectionImpl->clientdata == 0) {
+  SWIGTYPE_p_RTMPClientConnectionImpl->clientdata = &_exports_RTMPClientConnectionImpl_clientData;
+}
 
 
   /* register wrapper functions */
@@ -9713,6 +10497,7 @@ SWIGV8_AddStaticVariable(exports_obj, "SCIF", _wrap_SCIF, JS_veto_set_variable, 
 SWIGV8_AddStaticVariable(exports_obj, "HD1080P", _wrap_HD1080P, JS_veto_set_variable, context);
 SWIGV8_AddStaticVariable(exports_obj, "UW720P", _wrap_UW720P, JS_veto_set_variable, context);
 SWIGV8_AddStaticVariable(exports_obj, "MTU", _wrap_MTU, JS_veto_set_variable, context);
+SWIGV8_AddStaticVariable(exports_obj, "UDPPAYLOADSIZE", _wrap_UDPPAYLOADSIZE, JS_veto_set_variable, context);
 SWIGV8_AddStaticVariable(exports_obj, "RTPPAYLOADSIZE", _wrap_RTPPAYLOADSIZE, JS_veto_set_variable, context);
 SWIGV8_AddStaticVariable(exports_obj, "MAXKBITS", _wrap_MAXKBITS, JS_veto_set_variable, context);
 SWIGV8_AddMemberFunction(_exports_Properties_class, "HasProperty", _wrap_Properties_HasProperty);
@@ -9776,6 +10561,11 @@ SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridgeShared_class, "get", _
 SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetAudio", _wrap_IncomingStreamBridge_GetAudio);
 SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetVideo", _wrap_IncomingStreamBridge_GetVideo);
 SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "Stop", _wrap_IncomingStreamBridge_Stop);
+SWIGV8_AddMemberFunction(_exports_OutgoingStreamBridge_class, "GetStreamId", _wrap_OutgoingStreamBridge_GetStreamId);
+SWIGV8_AddMemberFunction(_exports_OutgoingStreamBridge_class, "GetRTT", _wrap_OutgoingStreamBridge_GetRTT);
+SWIGV8_AddMemberFunction(_exports_OutgoingStreamBridge_class, "Stop", _wrap_OutgoingStreamBridge_Stop);
+SWIGV8_AddMemberFunction(_exports_OutgoingStreamBridgeShared_class, "toMediaFrameListener", _wrap_OutgoingStreamBridgeShared_toMediaFrameListener);
+SWIGV8_AddMemberFunction(_exports_OutgoingStreamBridgeShared_class, "get", _wrap_OutgoingStreamBridgeShared_get);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamShared_class, "get", _wrap_RTMPNetStreamShared_get);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "SetListener", _wrap_RTMPNetStreamImpl_SetListener);
 SWIGV8_AddMemberFunction(_exports_RTMPNetStreamImpl_class, "ResetListener", _wrap_RTMPNetStreamImpl_ResetListener);
@@ -9795,6 +10585,11 @@ SWIGV8_AddMemberFunction(_exports_RTMPNetConnectionImplShared_class, "get", _wra
 SWIGV8_AddMemberFunction(_exports_RTMPServerFacade_class, "Start", _wrap_RTMPServerFacade_Start);
 SWIGV8_AddMemberFunction(_exports_RTMPServerFacade_class, "AddApplication", _wrap_RTMPServerFacade_AddApplication);
 SWIGV8_AddMemberFunction(_exports_RTMPServerFacade_class, "Stop", _wrap_RTMPServerFacade_Stop);
+SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "Connect", _wrap_RTMPClientConnectionImpl_Connect);
+SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "CreateStream", _wrap_RTMPClientConnectionImpl_CreateStream);
+SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "Publish", _wrap_RTMPClientConnectionImpl_Publish);
+SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "DeleteStream", _wrap_RTMPClientConnectionImpl_DeleteStream);
+SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "Stop", _wrap_RTMPClientConnectionImpl_Stop);
 
 
   /* setup inheritances */
@@ -9860,6 +10655,22 @@ if (SWIGTYPE_p_RTMPNetConnection->clientdata && !(static_cast<SWIGV8_ClientData 
 } else {
 #ifdef SWIGRUNTIME_DEBUG
   printf("Unable to inherit baseclass, it didn't exist _exports_RTMPNetConnectionImpl _RTMPNetConnection\n");
+#endif
+}
+if (SWIGTYPE_p_RTMPMediaStreamListener->clientdata && !(static_cast<SWIGV8_ClientData *>(SWIGTYPE_p_RTMPMediaStreamListener->clientdata)->class_templ.IsEmpty()))
+{
+  _exports_RTMPClientConnectionImpl_class->Inherit(
+    v8::Local<v8::FunctionTemplate>::New(
+      v8::Isolate::GetCurrent(),
+      static_cast<SWIGV8_ClientData *>(SWIGTYPE_p_RTMPMediaStreamListener->clientdata)->class_templ)
+    );
+  
+#ifdef SWIGRUNTIME_DEBUG
+  printf("Inheritance successful _exports_RTMPClientConnectionImpl _RTMPMediaStreamListener\n");
+#endif
+} else {
+#ifdef SWIGRUNTIME_DEBUG
+  printf("Unable to inherit baseclass, it didn't exist _exports_RTMPClientConnectionImpl _RTMPMediaStreamListener\n");
 #endif
 }
 
@@ -10045,6 +10856,26 @@ v8::Local<v8::Object> _exports_IncomingStreamBridge_obj = _exports_IncomingStrea
 #else
 v8::Local<v8::Object> _exports_IncomingStreamBridge_obj = _exports_IncomingStreamBridge_class_0->GetFunction(context).ToLocalChecked();
 #endif
+/* Class: OutgoingStreamBridge (_exports_OutgoingStreamBridge) */
+SWIGV8_FUNCTION_TEMPLATE _exports_OutgoingStreamBridge_class_0 = SWIGV8_CreateClassTemplate("OutgoingStreamBridge");
+_exports_OutgoingStreamBridge_class_0->SetCallHandler(_wrap_new_OutgoingStreamBridge);
+_exports_OutgoingStreamBridge_class_0->Inherit(_exports_OutgoingStreamBridge_class);
+#if (SWIG_V8_VERSION < 0x0704)
+_exports_OutgoingStreamBridge_class_0->SetHiddenPrototype(true);
+v8::Local<v8::Object> _exports_OutgoingStreamBridge_obj = _exports_OutgoingStreamBridge_class_0->GetFunction();
+#else
+v8::Local<v8::Object> _exports_OutgoingStreamBridge_obj = _exports_OutgoingStreamBridge_class_0->GetFunction(context).ToLocalChecked();
+#endif
+/* Class: OutgoingStreamBridgeShared (_exports_OutgoingStreamBridgeShared) */
+SWIGV8_FUNCTION_TEMPLATE _exports_OutgoingStreamBridgeShared_class_0 = SWIGV8_CreateClassTemplate("OutgoingStreamBridgeShared");
+_exports_OutgoingStreamBridgeShared_class_0->SetCallHandler(_wrap_new_OutgoingStreamBridgeShared);
+_exports_OutgoingStreamBridgeShared_class_0->Inherit(_exports_OutgoingStreamBridgeShared_class);
+#if (SWIG_V8_VERSION < 0x0704)
+_exports_OutgoingStreamBridgeShared_class_0->SetHiddenPrototype(true);
+v8::Local<v8::Object> _exports_OutgoingStreamBridgeShared_obj = _exports_OutgoingStreamBridgeShared_class_0->GetFunction();
+#else
+v8::Local<v8::Object> _exports_OutgoingStreamBridgeShared_obj = _exports_OutgoingStreamBridgeShared_class_0->GetFunction(context).ToLocalChecked();
+#endif
 /* Class: RTMPNetStream (_exports_RTMPNetStream) */
 SWIGV8_FUNCTION_TEMPLATE _exports_RTMPNetStream_class_0 = SWIGV8_CreateClassTemplate("RTMPNetStream");
 _exports_RTMPNetStream_class_0->SetCallHandler(_wrap_new_veto_RTMPNetStream);
@@ -10145,6 +10976,16 @@ v8::Local<v8::Object> _exports_RTMPServerFacade_obj = _exports_RTMPServerFacade_
 #else
 v8::Local<v8::Object> _exports_RTMPServerFacade_obj = _exports_RTMPServerFacade_class_0->GetFunction(context).ToLocalChecked();
 #endif
+/* Class: RTMPClientConnectionImpl (_exports_RTMPClientConnectionImpl) */
+SWIGV8_FUNCTION_TEMPLATE _exports_RTMPClientConnectionImpl_class_0 = SWIGV8_CreateClassTemplate("RTMPClientConnectionImpl");
+_exports_RTMPClientConnectionImpl_class_0->SetCallHandler(_wrap_new_RTMPClientConnectionImpl);
+_exports_RTMPClientConnectionImpl_class_0->Inherit(_exports_RTMPClientConnectionImpl_class);
+#if (SWIG_V8_VERSION < 0x0704)
+_exports_RTMPClientConnectionImpl_class_0->SetHiddenPrototype(true);
+v8::Local<v8::Object> _exports_RTMPClientConnectionImpl_obj = _exports_RTMPClientConnectionImpl_class_0->GetFunction();
+#else
+v8::Local<v8::Object> _exports_RTMPClientConnectionImpl_obj = _exports_RTMPClientConnectionImpl_class_0->GetFunction(context).ToLocalChecked();
+#endif
 
 
   /* add static class functions and variables */
@@ -10177,6 +11018,8 @@ SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("MediaFrameListen
 SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("MediaFrameListenerBridgeShared"), _exports_MediaFrameListenerBridgeShared_obj));
 SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPMediaStreamListener"), _exports_RTMPMediaStreamListener_obj));
 SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("IncomingStreamBridge"), _exports_IncomingStreamBridge_obj));
+SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("OutgoingStreamBridge"), _exports_OutgoingStreamBridge_obj));
+SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("OutgoingStreamBridgeShared"), _exports_OutgoingStreamBridgeShared_obj));
 SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPNetStream"), _exports_RTMPNetStream_obj));
 SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPNetStreamShared"), _exports_RTMPNetStreamShared_obj));
 SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPNetStreamImpl"), _exports_RTMPNetStreamImpl_obj));
@@ -10187,6 +11030,7 @@ SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPNetConnectio
 SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPNetConnectionImplShared"), _exports_RTMPNetConnectionImplShared_obj));
 SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPApplicationImpl"), _exports_RTMPApplicationImpl_obj));
 SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPServerFacade"), _exports_RTMPServerFacade_obj));
+SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPClientConnectionImpl"), _exports_RTMPClientConnectionImpl_obj));
 
 
   /* create and register namespace objects */

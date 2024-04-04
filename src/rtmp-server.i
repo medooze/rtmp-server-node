@@ -192,11 +192,14 @@ v8::Local<v8::Value> toJson(AMFData* data)
 %include "RTPIncomingMediaStream.i"
 %include "RTMPMediaStream.i"
 
+
 %include "RTMPServerModule.i"
 
 %include "IncomingStreamBridge.i"
+%include "OutgoingStreamBridge.i"
 %include "RTMPApplicationImpl.i"
 %include "RTMPNetStreamImpl.i"
 %include "RTMPMediaStream.i"
 %include "RTMPServerFacade.i"
 %include "RTMPNetConnectionImpl.i"
+%include "RTMPClientConnectionImpl.i"
