@@ -67,6 +67,12 @@ public:
 		while(queue.try_dequeue(func)){}
 	}
 	
+	static void EnableWarning(bool flag)
+	{
+		//Enable log
+		Logger::EnableWarning(flag);
+	}
+	
 	static void EnableLog(bool flag)
 	{
 		//Enable log
@@ -113,6 +119,7 @@ class RTMPServerModule
 public:
 	static void Initialize();
 	static void Terminate();
+	static void EnableWarning(bool flag);
 	static void EnableLog(bool flag);
 	static void EnableDebug(bool flag);
 	static void EnableUltraDebug(bool flag);
