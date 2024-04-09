@@ -60,7 +60,7 @@ public:
 
 	virtual void DeleteStream(const RTMPNetStream::shared& stream) override
 	{
-		Log("-RTMPNetConnectionImpl::CreateStream() [streamId:%d]\n",stream->GetStreamId());
+		Log("-RTMPNetConnectionImpl::DeleteStream() [streamId:%d]\n",stream->GetStreamId());
 		
 		//Cast
 		auto impl = std::static_pointer_cast<RTMPNetStreamImpl>(stream);
