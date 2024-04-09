@@ -298,6 +298,8 @@ export  class RTMPServerModule {
 
  static Terminate(): void;
 
+ static EnableWarning(flag: boolean): void;
+
  static EnableLog(flag: boolean): void;
 
  static EnableDebug(flag: boolean): void;

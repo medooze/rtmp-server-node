@@ -2146,6 +2146,12 @@ public:
 		while(queue.try_dequeue(func)){}
 	}
 	
+	static void EnableWarning(bool flag)
+	{
+		//Enable log
+		Logger::EnableWarning(flag);
+	}
+	
 	static void EnableLog(bool flag)
 	{
 		//Enable log
@@ -3585,12 +3591,27 @@ fail:
 }
 
 
-static SwigV8ReturnValue _wrap_RTPPAYLOADSIZE(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+static SwigV8ReturnValue _wrap_UDPPAYLOADSIZE(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
   SWIGV8_HANDLESCOPE();
   
   SWIGV8_VALUE jsresult;
   
   jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(1350u));
+  
+  SWIGV8_RETURN_INFO(jsresult, info);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+}
+
+
+static SwigV8ReturnValue _wrap_RTPPAYLOADSIZE(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  
+  jsresult = SWIG_From_unsigned_SS_int(static_cast< unsigned int >(1200u));
   
   SWIGV8_RETURN_INFO(jsresult, info);
   
@@ -6369,6 +6390,33 @@ static SwigV8ReturnValue _wrap_RTMPServerModule_Terminate(const SwigV8Arguments 
   
   RTMPServerModule::Terminate();
   jsresult = SWIGV8_UNDEFINED();
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPServerModule_EnableWarning(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  bool arg1 ;
+  bool val1 ;
+  int ecode1 = 0 ;
+  
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPServerModule_EnableWarning.");
+  
+  ecode1 = SWIG_AsVal_bool(args[0], &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "RTMPServerModule_EnableWarning" "', argument " "1"" of type '" "bool""'");
+  } 
+  arg1 = static_cast< bool >(val1);
+  RTMPServerModule::EnableWarning(arg1);
+  jsresult = SWIGV8_UNDEFINED();
+  
   
   SWIGV8_RETURN(jsresult);
   
@@ -9713,6 +9761,7 @@ SWIGV8_AddStaticVariable(exports_obj, "SCIF", _wrap_SCIF, JS_veto_set_variable, 
 SWIGV8_AddStaticVariable(exports_obj, "HD1080P", _wrap_HD1080P, JS_veto_set_variable, context);
 SWIGV8_AddStaticVariable(exports_obj, "UW720P", _wrap_UW720P, JS_veto_set_variable, context);
 SWIGV8_AddStaticVariable(exports_obj, "MTU", _wrap_MTU, JS_veto_set_variable, context);
+SWIGV8_AddStaticVariable(exports_obj, "UDPPAYLOADSIZE", _wrap_UDPPAYLOADSIZE, JS_veto_set_variable, context);
 SWIGV8_AddStaticVariable(exports_obj, "RTPPAYLOADSIZE", _wrap_RTPPAYLOADSIZE, JS_veto_set_variable, context);
 SWIGV8_AddStaticVariable(exports_obj, "MAXKBITS", _wrap_MAXKBITS, JS_veto_set_variable, context);
 SWIGV8_AddMemberFunction(_exports_Properties_class, "HasProperty", _wrap_Properties_HasProperty);
@@ -10153,6 +10202,7 @@ SWIGV8_AddStaticFunction(exports_obj, "GetHeight", _wrap_GetHeight, context);
 SWIGV8_AddStaticFunction(exports_obj, "malloc32", _wrap_malloc32, context);
 SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "Initialize", _wrap_RTMPServerModule_Initialize, context);
 SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "Terminate", _wrap_RTMPServerModule_Terminate, context);
+SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "EnableWarning", _wrap_RTMPServerModule_EnableWarning, context);
 SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "EnableLog", _wrap_RTMPServerModule_EnableLog, context);
 SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "EnableDebug", _wrap_RTMPServerModule_EnableDebug, context);
 SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "EnableUltraDebug", _wrap_RTMPServerModule_EnableUltraDebug, context);
