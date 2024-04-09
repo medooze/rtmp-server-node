@@ -24,16 +24,16 @@ public:
 		SendCommand(0,L"createStream",nullptr,nullptr, promise);
 	}
 
-	void DeleteStream(v8::Local<v8::Object> promise)
+	void DeleteStream(DWORD streamId, v8::Local<v8::Object> promise)
 	{
-		SendCommand(0,L"deleteStream",nullptr,nullptr, promise);
+		SendCommand(streamId,L"deleteStream",nullptr,nullptr, promise);
 	}
 
-	void Publish(DWORD id, v8::Local<v8::Object> url, v8::Local<v8::Object> promise )
+	void Publish(DWORD id, v8::Local<v8::Object> url)
 	{
 		UTF8Parser parser;
 		parser.SetString(*Nan::Utf8String(url));
-		SendCommand(id,L"publish",NULL,new AMFString(parser.GetWChar()), promise);
+		RTMPClientConnection::SendCommand(id, L"publish", nullptr, new AMFString(parser.GetWChar()));
 	}
 
 	void onConnected(RTMPClientConnection* conn) override
@@ -57,6 +57,33 @@ public:
 			Nan::HandleScope scope;
 			//Call object method with arguments
 			MakeCallback(cloned, "ondisconnected");
+		});
+	}
+
+	void onCommand(RTMPClientConnection* conn, DWORD streamId, const wchar_t* name, AMFData* params, const std::vector<AMFData*>& extra) override
+	{
+		Log("-RTMPClientConnectionImpl::onCommand()\n");
+
+		std::vector<std::shared_ptr<AMFData>> result;
+		result.emplace_back(params->Clone());
+		for (auto& e : extra)
+			result.emplace_back(e->Clone());
+
+		UTF8Parser parser(name);
+
+		//Run function on main node thread
+		RTMPServerModule::Async([=, name = parser.GetUTF8String(), cloned=persistent](){
+			Nan::HandleScope scope;
+			int i = 0;
+			v8::Local<v8::Value> argv[3] = { 
+				Nan::New<v8::Number>(streamId),
+				Nan::New<v8::String>(name.c_str()).ToLocalChecked(),
+				Nan::New<v8::Array>(result.size())
+			};
+			for (auto& r : result)
+				Nan::Set(Nan::To<v8::Object>(argv[2]).ToLocalChecked(), Nan::New<v8::Uint32>(i++), toJson(r.get()));
+			//Call object method with arguments
+			MakeCallback(cloned, "oncmd", 3, argv);
 		});
 	}
 
@@ -107,7 +134,7 @@ public:
 	RTMPClientConnectionImpl(v8::Local<v8::Object> object);
 	void Connect(const char* server,int port, const char* app);
 	void CreateStream(v8::Local<v8::Object> object);
-	void Publish(DWORD streamId,v8::Local<v8::Object> url, v8::Local<v8::Object> promise);
-	void DeleteStream(v8::Local<v8::Object> object);
+	void Publish(DWORD streamId,v8::Local<v8::Object> url);
+	void DeleteStream(DWORD streamId, v8::Local<v8::Object> object);
 	void Stop();
 };

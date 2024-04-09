@@ -27,7 +27,7 @@ tap.test("Server", async function (suite)
 
 	await suite.test("publish+unpublish", async function (test)
 	{
-		test.plan(5);
+		test.plan(6);
 
 		let incomingStream,outgoingStream;
 		//Create server and app
@@ -74,6 +74,13 @@ tap.test("Server", async function (suite)
 			outgoingStream = await connection.publish("test");
 
 			test.ok(outgoingStream, "got stream on client");
+
+			outgoingStream.on("cmd", (stream, name, cmd)=>{
+				//Got publishing command
+				test.same(cmd[1].code, RTMPServer.NetStream.Publish.Start.code)
+			});
+
+			
 		});
 
 		//Connect
@@ -92,7 +99,6 @@ tap.test("Server", async function (suite)
 		//Stop
 		connection.stop();
 
-
 		//Wait 1 seconds
 		await sleep(1000);
 
@@ -102,7 +108,22 @@ tap.test("Server", async function (suite)
 		//OK
 		test.end();
 	});
-	
+
+	await suite.test("failed", async function (test)
+	{
+		//Create client connection
+		const connection = RTMPServer.createClientConnection();
+
+		connection.on("disconnected",()=>{
+			test.pass("client disconnected");
+		});
+
+		//Connect
+		connection.connect("127.0.0.1", 1936, "test");
+		
+		//Wait 1 seconds
+		await sleep(1000);
+	});
 	suite.end();
 
 }).then(() =>

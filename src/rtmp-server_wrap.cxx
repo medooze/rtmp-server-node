@@ -3371,16 +3371,16 @@ public:
 		SendCommand(0,L"createStream",nullptr,nullptr, promise);
 	}
 
-	void DeleteStream(v8::Local<v8::Object> promise)
+	void DeleteStream(DWORD streamId, v8::Local<v8::Object> promise)
 	{
-		SendCommand(0,L"deleteStream",nullptr,nullptr, promise);
+		SendCommand(streamId,L"deleteStream",nullptr,nullptr, promise);
 	}
 
-	void Publish(DWORD id, v8::Local<v8::Object> url, v8::Local<v8::Object> promise )
+	void Publish(DWORD id, v8::Local<v8::Object> url)
 	{
 		UTF8Parser parser;
 		parser.SetString(*Nan::Utf8String(url));
-		SendCommand(id,L"publish",NULL,new AMFString(parser.GetWChar()), promise);
+		RTMPClientConnection::SendCommand(id, L"publish", nullptr, new AMFString(parser.GetWChar()));
 	}
 
 	void onConnected(RTMPClientConnection* conn) override
@@ -3404,6 +3404,33 @@ public:
 			Nan::HandleScope scope;
 			//Call object method with arguments
 			MakeCallback(cloned, "ondisconnected");
+		});
+	}
+
+	void onCommand(RTMPClientConnection* conn, DWORD streamId, const wchar_t* name, AMFData* params, const std::vector<AMFData*>& extra) override
+	{
+		Log("-RTMPClientConnectionImpl::onCommand()\n");
+
+		std::vector<std::shared_ptr<AMFData>> result;
+		result.emplace_back(params->Clone());
+		for (auto& e : extra)
+			result.emplace_back(e->Clone());
+
+		UTF8Parser parser(name);
+
+		//Run function on main node thread
+		RTMPServerModule::Async([=, name = parser.GetUTF8String(), cloned=persistent](){
+			Nan::HandleScope scope;
+			int i = 0;
+			v8::Local<v8::Value> argv[3] = { 
+				Nan::New<v8::Number>(streamId),
+				Nan::New<v8::String>(name.c_str()).ToLocalChecked(),
+				Nan::New<v8::Array>(result.size())
+			};
+			for (auto& r : result)
+				Nan::Set(Nan::To<v8::Object>(argv[2]).ToLocalChecked(), Nan::New<v8::Uint32>(i++), toJson(r.get()));
+			//Call object method with arguments
+			MakeCallback(cloned, "oncmd", 3, argv);
 		});
 	}
 
@@ -9626,13 +9653,12 @@ static SwigV8ReturnValue _wrap_RTMPClientConnectionImpl_Publish(const SwigV8Argu
   RTMPClientConnectionImpl *arg1 = (RTMPClientConnectionImpl *) 0 ;
   uint32_t arg2 ;
   v8::Local< v8::Object > arg3 ;
-  v8::Local< v8::Object > arg4 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   unsigned int val2 ;
   int ecode2 = 0 ;
   
-  if(args.Length() != 3) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPClientConnectionImpl_Publish.");
+  if(args.Length() != 2) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPClientConnectionImpl_Publish.");
   
   res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_RTMPClientConnectionImpl, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
@@ -9647,10 +9673,7 @@ static SwigV8ReturnValue _wrap_RTMPClientConnectionImpl_Publish(const SwigV8Argu
   {
     arg3 = v8::Local<v8::Object>::Cast(args[1]);
   }
-  {
-    arg4 = v8::Local<v8::Object>::Cast(args[2]);
-  }
-  (arg1)->Publish(arg2,arg3,arg4);
+  (arg1)->Publish(arg2,arg3);
   jsresult = SWIGV8_UNDEFINED();
   
   
@@ -9668,22 +9691,31 @@ static SwigV8ReturnValue _wrap_RTMPClientConnectionImpl_DeleteStream(const SwigV
   
   SWIGV8_VALUE jsresult;
   RTMPClientConnectionImpl *arg1 = (RTMPClientConnectionImpl *) 0 ;
-  v8::Local< v8::Object > arg2 ;
+  uint32_t arg2 ;
+  v8::Local< v8::Object > arg3 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
+  unsigned int val2 ;
+  int ecode2 = 0 ;
   
-  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPClientConnectionImpl_DeleteStream.");
+  if(args.Length() != 2) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPClientConnectionImpl_DeleteStream.");
   
   res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_RTMPClientConnectionImpl, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "RTMPClientConnectionImpl_DeleteStream" "', argument " "1"" of type '" "RTMPClientConnectionImpl *""'"); 
   }
   arg1 = reinterpret_cast< RTMPClientConnectionImpl * >(argp1);
+  ecode2 = SWIG_AsVal_unsigned_SS_int(args[0], &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "RTMPClientConnectionImpl_DeleteStream" "', argument " "2"" of type '" "uint32_t""'");
+  } 
+  arg2 = static_cast< uint32_t >(val2);
   {
-    arg2 = v8::Local<v8::Object>::Cast(args[0]);
+    arg3 = v8::Local<v8::Object>::Cast(args[1]);
   }
-  (arg1)->DeleteStream(arg2);
+  (arg1)->DeleteStream(arg2,arg3);
   jsresult = SWIGV8_UNDEFINED();
+  
   
   
   SWIGV8_RETURN(jsresult);
