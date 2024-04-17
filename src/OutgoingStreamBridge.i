@@ -10,7 +10,6 @@ public:
 		RTMPMediaStream(streamId)
 	{
 		AddMediaListener(listener);
-		SendStreamBegin();
 	}
 
 	// MediaFrame::Listener interface
@@ -24,6 +23,9 @@ public:
 		{
 			case MediaFrame::Audio:
 			{
+				//Make timestamp relative
+				timestamp -= firstTimestamp;
+
 				//Get audio frame
 				AudioFrame& audio = (AudioFrame&)frame;
 				//Create rtmp frame
@@ -41,18 +43,25 @@ public:
 						frame.SetAudioFrame(audio.GetData(),audio.GetLength());
 
 						//Check if we need to send the aac config
-						if (!sentAACSpecificConfig && audio.HasCodecConfig())
+						if (!gotAACSpecificConfig && audio.HasCodecConfig())
 						{
+							Dump(audio.GetCodecConfigData(), audio.GetCodecConfigSize());
 							//Get aac descriptor
-							AACSpecificConfig desc;
-							if (desc.Decode(audio.GetCodecConfigData(), audio.GetCodecConfigSize()))
+							if (aacSpecificConfig.Decode(audio.GetCodecConfigData(), audio.GetCodecConfigSize()))
 							{
-								//Create the fraame
-								RTMPAudioFrame fdesc(timestamp, desc);
-								//Play it
-								SendMediaFrame(&fdesc);
-								//Sent
-								sentAACSpecificConfig = true;
+								//Got valid descriptor
+								gotAACSpecificConfig = true;
+
+								//If we have sent video before
+								if (first)
+								{
+									//Send metadata
+									GenerateMetadata(timestamp);
+									//Create the frame
+									RTMPAudioFrame fdesc(timestamp, aacSpecificConfig);
+									//Play it
+									SendMediaFrame(&fdesc);
+								}
 							}
 						}
 						break;
@@ -63,14 +72,30 @@ public:
 						//Not supported
 						return;
 				}
+				//Wait for intra
+				if (!first)
+					return;
 				//Send it
 				SendMediaFrame(&frame);
 				break;
 			}
 			case MediaFrame::Video:
 			{
+			
 				//Get video frame
 				VideoFrame& video = (VideoFrame&)frame;
+
+				if (!first)
+				{
+					if (!video.IsIntra())
+						return;
+					//Got first frame after key frame
+					first = true;
+					firstTimestamp = timestamp;
+				}
+				
+				//Make timestamp relative
+				timestamp -= firstTimestamp;
 
 				//Create rtmp frame
 				RTMPVideoFrame frame(timestamp,video.GetLength());
@@ -84,19 +109,32 @@ public:
 						//If it is intra
 						if (video.IsIntra())
 						{
+							//Get video properties
+							if (video.GetWidth())
+								width = video.GetWidth();
+							if (video.GetHeight())
+								height = video.GetHeight();
+							if (video.GetTargetFps())
+								targetFps = video.GetTargetFps();
+							if (video.GetTargetBitrate())
+								targetBitrate = video.GetTargetBitrate();
 							//Set type
 							frame.SetFrameType(RTMPVideoFrame::INTRA);
 							//If we have one
-							if (video.HasCodecConfig())
+							if (!gotAVCDescriptor && video.HasCodecConfig())
 							{
 								//Get AVC descroptor
-								AVCDescriptor desc;
-								if (desc.Parse(video.GetCodecConfigData(), video.GetCodecConfigSize()))
+								if (avcDescriptor.Parse(video.GetCodecConfigData(), video.GetCodecConfigSize()))
 								{
+									//Got valid descriptor
+									gotAVCDescriptor = true;
+									//Send metadata
+									GenerateMetadata(timestamp);
 									//Create the fraame
-									RTMPVideoFrame fdesc(timestamp, desc);
+									RTMPVideoFrame fdesc(timestamp, avcDescriptor);
 									//Play it
 									SendMediaFrame(&fdesc);
+									
 								}
 							}
 						} else {
@@ -129,14 +167,71 @@ public:
 		}
 	}
 
+	void GenerateMetadata(QWORD timestamp)
+	{
+		//Create metadata object
+		RTMPMetaData *meta = new RTMPMetaData(timestamp);
+
+		//Set cmd
+		meta->AddParam(new AMFString(L"@setDataFrame"));
+
+		//Set name
+		meta->AddParam(new AMFString(L"onMetaData"));
+
+		//Create properties string
+		AMFEcmaArray *prop = new AMFEcmaArray();
+
+		if (gotAACSpecificConfig)
+		{
+			
+			prop->AddProperty(L"stereo"		, new AMFBoolean(aacSpecificConfig.GetChannels() == 2)	);	// Boolean Indicating stereo audio
+			prop->AddProperty(L"audiochannels"	, (double)aacSpecificConfig.GetChannels()		);	
+			prop->AddProperty(L"audiodatarate"	, 64.0							);	
+			prop->AddProperty(L"audiodelay"		, 0.0							);	// Number Delay introduced by the audio codec in seconds
+			prop->AddProperty(L"audiosamplerate"	, (double)aacSpecificConfig.GetRate()			);	// Number Frequency at which the audio stream is replayed
+			prop->AddProperty(L"audiosamplesize"	, 160.0							);	// Number Resolution of a single audio sample
+			prop->AddProperty(L"audiocodecid"	, (double)RTMPAudioFrame::AAC							);	// Number Audio codec ID used in the file (see E.4.3.1 for available CodecID values)
+		}
+
+		if (gotAVCDescriptor)
+		{
+			prop->AddProperty(L"videocodecid"	, (double)RTMPVideoFrame::AVC				);	// Number Video codec ID used in the file (see E.4.3.1 for available CodecID values)
+			if (targetFps)
+				prop->AddProperty(L"framerate"	, (double)targetFps.value()				);	// Number Number of frames per second
+			if (height)
+				prop->AddProperty(L"height"	, (double)height.value()				);	// Number Height of the video in pixels
+			if (targetBitrate)
+				prop->AddProperty(L"videodatarate"	, (double)targetBitrate.value()			);			// Number Video bit rate in kilobits per second
+			if (width)
+				prop->AddProperty(L"width"	, (double)width.value()					);	// Number Width of the video in pixels
+			prop->AddProperty(L"canSeekToEnd"	,0.0							);	// Boolean Indicating the last video frame is a key frame
+			prop->AddProperty(L"duration"		,0.0							);	// Number Total duration of the file in seconds
+		}
+
+				
+		//Add param
+		meta->AddParam(prop);
+
+		//Send metadata
+		SendMetaData(meta);
+	}
+
 	void Stop()
 	{
-		SendStreamEnd();
 		Reset();
 		RemoveAllMediaListeners();
 	}
 private:
-	bool sentAACSpecificConfig = false;
+	AACSpecificConfig aacSpecificConfig;
+	AVCDescriptor avcDescriptor;
+	bool gotAACSpecificConfig = false;
+	bool gotAVCDescriptor = false;
+	bool first = false;
+	QWORD firstTimestamp = 0;
+	std::optional<uint32_t> width;
+	std::optional<uint32_t> height;
+	std::optional<uint32_t> targetBitrate;
+	std::optional<uint32_t> targetFps;
 };
 
 %}
