@@ -269,7 +269,10 @@ public:
 				{
 					//Set target bitrate if got it from metadata event
 					if (videodatarate)
-						videoFrame->SetTargetBitrate((int)*videodatarate);
+						videoFrame->SetTargetBitrate((uint32_t)videodatarate.value());
+					//Set frame rate too
+					if (framerate)
+						videoFrame->SetTargetFps((uint32_t)framerate.value());
 					//Push it
 					Enqueue(videoFrame.release());
 				}
