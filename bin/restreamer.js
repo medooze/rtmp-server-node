@@ -52,13 +52,21 @@ app.on("connect", (client) =>
 				//Start restreaming when connected
 				connection.on("connected",async ()=>{
 					console.log("restreamer connection connected, publishing");
-
 					const outgoingStream = await connection.publish(key);
-
-					outgoingStream.attachTo(incomingStream);
-
 					console.log("restreamer connection connected");
+
+					outgoingStream.on("cmd", async(stream, name,cmd)=>{
+						console.log("got stream comand", name);
+						console.dir(cmd);
+						//if (name=="onStatus" && cmd[1].code == RTMPServer.NetStream.Publish.Start)
+						{
+							console.log("stream started");
+							outgoingStream.attachTo(incomingStream);
+						}
+					});
 				});
+
+				
 			
 				//Connect to restream server
 				connection.connect(server, port, appName);
@@ -79,6 +87,6 @@ app.on("connect", (client) =>
 
 //Start rtmp server
 rtmp.addApplication("restream", app);
-rtmp.start(1936);
+rtmp.start(1935);
 	
 
