@@ -21,7 +21,9 @@ public:
 
 	void CreateStream(v8::Local<v8::Object> promise)
 	{
-		SendCommand(0,L"createStream",nullptr,nullptr, promise);
+		RTMPClientConnection::SendCommand(0, L"releaseStream", new AMFNumber(0), nullptr);
+		RTMPClientConnection::SendCommand(0, L"FCPublish", nullptr, nullptr);
+		SendCommand(0, L"createStream", nullptr, nullptr, promise);
 	}
 
 	void DeleteStream(DWORD streamId, v8::Local<v8::Object> promise)
