@@ -2853,7 +2853,8 @@ public:
 						frame.SetAACPacketType(RTMPAudioFrame::AACRaw);
 						//Set Data
 						frame.SetAudioFrame(audio.GetData(),audio.GetLength());
-
+						//16 bits
+						frame.SetSamples16Bits(true);
 						//Check if we need to send the aac config
 						if (!gotAACSpecificConfig && audio.HasCodecConfig())
 						{
@@ -2875,6 +2876,10 @@ public:
 									SendMediaFrame(&fdesc);
 								}
 							}
+						}
+						if (gotAACSpecificConfig)
+						{
+							frame.SetStereo(aacSpecificConfig.GetChannels()==2);
 						}
 						break;
 					}
