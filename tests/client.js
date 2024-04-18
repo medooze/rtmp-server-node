@@ -1,9 +1,9 @@
 const tap			= require("tap");
 const RTMPServer		= require("../index.js");
 
-RTMPServer.enableLog(true);
-RTMPServer.enableDebug(true);
-RTMPServer.enableUltraDebug(true);
+RTMPServer.enableLog(false);
+RTMPServer.enableDebug(false);
+RTMPServer.enableUltraDebug(false);
 
 //Try to clean up on exit
 const onExit = (e) =>
@@ -62,7 +62,7 @@ tap.test("Server", async function (suite)
 
 		//Start rtmp server
 		rtmp.addApplication("test", app);
-		rtmp.start(1935);
+		rtmp.start(1936);
 
 		//Create client connection
 		const connection = RTMPServer.createClientConnection();
@@ -84,7 +84,7 @@ tap.test("Server", async function (suite)
 		});
 
 		//Connect
-		connection.connect("127.0.0.1", 1935, "test");
+		connection.connect("127.0.0.1", 1936, "test");
 
 		//Wait 1 seconds
 		await sleep(1000);
@@ -119,7 +119,7 @@ tap.test("Server", async function (suite)
 		});
 
 		//Connect
-		connection.connect("127.0.0.1", 1936, "test");
+		connection.connect("127.0.0.1", 1937, "test");
 		
 		//Wait 1 seconds
 		await sleep(1000);
