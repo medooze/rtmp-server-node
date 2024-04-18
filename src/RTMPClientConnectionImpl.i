@@ -138,5 +138,7 @@ public:
 	void CreateStream(v8::Local<v8::Object> object);
 	void Publish(DWORD streamId,v8::Local<v8::Object> url);
 	void DeleteStream(DWORD streamId, v8::Local<v8::Object> object);
+	QWORD GetInBytes() const;
+	QWORD GetOutBytes() const;
 	void Stop();
 };

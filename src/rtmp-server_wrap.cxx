@@ -9863,6 +9863,62 @@ fail:
 }
 
 
+static SwigV8ReturnValue _wrap_RTMPClientConnectionImpl_GetInBytes(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  RTMPClientConnectionImpl *arg1 = (RTMPClientConnectionImpl *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  uint64_t result;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPClientConnectionImpl_GetInBytes.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_RTMPClientConnectionImpl, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "RTMPClientConnectionImpl_GetInBytes" "', argument " "1"" of type '" "RTMPClientConnectionImpl const *""'"); 
+  }
+  arg1 = reinterpret_cast< RTMPClientConnectionImpl * >(argp1);
+  result = (uint64_t)((RTMPClientConnectionImpl const *)arg1)->GetInBytes();
+  jsresult = SWIG_From_unsigned_SS_long_SS_long(static_cast< unsigned long long >(result));
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnectionImpl_GetOutBytes(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  RTMPClientConnectionImpl *arg1 = (RTMPClientConnectionImpl *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  uint64_t result;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPClientConnectionImpl_GetOutBytes.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_RTMPClientConnectionImpl, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "RTMPClientConnectionImpl_GetOutBytes" "', argument " "1"" of type '" "RTMPClientConnectionImpl const *""'"); 
+  }
+  arg1 = reinterpret_cast< RTMPClientConnectionImpl * >(argp1);
+  result = (uint64_t)((RTMPClientConnectionImpl const *)arg1)->GetOutBytes();
+  jsresult = SWIG_From_unsigned_SS_long_SS_long(static_cast< unsigned long long >(result));
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
 static SwigV8ReturnValue _wrap_RTMPClientConnectionImpl_Stop(const SwigV8Arguments &args) {
   SWIGV8_HANDLESCOPE();
   
@@ -10758,6 +10814,8 @@ SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "Connect", _wr
 SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "CreateStream", _wrap_RTMPClientConnectionImpl_CreateStream);
 SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "Publish", _wrap_RTMPClientConnectionImpl_Publish);
 SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "DeleteStream", _wrap_RTMPClientConnectionImpl_DeleteStream);
+SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "GetInBytes", _wrap_RTMPClientConnectionImpl_GetInBytes);
+SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "GetOutBytes", _wrap_RTMPClientConnectionImpl_GetOutBytes);
 SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "Stop", _wrap_RTMPClientConnectionImpl_Stop);
 
 

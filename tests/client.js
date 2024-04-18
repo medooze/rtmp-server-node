@@ -27,7 +27,7 @@ tap.test("Server", async function (suite)
 
 	await suite.test("publish+unpublish", async function (test)
 	{
-		test.plan(6);
+		test.plan(7);
 
 		let incomingStream,outgoingStream;
 		//Create server and app
@@ -78,6 +78,8 @@ tap.test("Server", async function (suite)
 			outgoingStream.on("cmd", (stream, name, cmd)=>{
 				//Got publishing command
 				test.same(cmd[1].code, RTMPServer.NetStream.Publish.Start.code)
+				//Attach streams
+				outgoingStream.attachTo(incomingStream);
 			});
 
 			
@@ -89,8 +91,8 @@ tap.test("Server", async function (suite)
 		//Wait 1 seconds
 		await sleep(1000);
 
-		//Attach streams
-		outgoingStream.attachTo(incomingStream);
+		//Check we have stats
+		test.ok(connection.getStats());
 
 		connection.on("disconnected",()=>{
 			test.pass("client disconnected");
