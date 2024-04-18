@@ -2858,7 +2858,6 @@ public:
 						//Check if we need to send the aac config
 						if (!gotAACSpecificConfig && audio.HasCodecConfig())
 						{
-							Dump(audio.GetCodecConfigData(), audio.GetCodecConfigSize());
 							//Get aac descriptor
 							if (aacSpecificConfig.Decode(audio.GetCodecConfigData(), audio.GetCodecConfigSize()))
 							{
