@@ -2554,36 +2554,60 @@ public:
 			}
 			case RTMPMediaFrame::Audio:
 			{
-				//Check if it is the aac config
-				if (((RTMPAudioFrame*)frame)->GetAudioCodec()==RTMPAudioFrame::AAC && ((RTMPAudioFrame*)frame)->GetAACPacketType()==RTMPAudioFrame::AACSequenceHeader)
-				{
-					//Create condig
-					char aux[3];
-					std::string config;
-					
-					//Encode config
-					for (size_t i=0; i<frame->GetMediaSize();++i)
-					{
-						//Convert to hex
-						snprintf(aux, 3, "%.2x", frame->GetMediaData()[i]);
-						//Append
-						config += aux;
-					}
-					
-					//Run function on main node thread
-					RTMPServerModule::Async([=,cloned=persistent](){
-						Nan::HandleScope scope;
-						int i = 0;
-						v8::Local<v8::Value> argv[1];
-						//Create local args
-						argv[i++] = Nan::New<v8::String>(config).ToLocalChecked();
-						//Call object method with arguments
-						MakeCallback(cloned, "onaacconfig", i, argv);
-					});
-				}
-
 				//Create rtp packets
-				auto audioFrame = aacPacketizer.AddFrame((RTMPAudioFrame*)frame);
+				std::unique_ptr<AudioFrame> audioFrame;
+				
+				auto aframe = static_cast<RTMPAudioFrame*>(frame);
+				auto codec = aframe->GetAudioCodec();
+
+				switch(codec)
+				{
+					case RTMPAudioFrame::AAC:
+						//Check if it is the aac config
+						if (aframe->GetAACPacketType()==RTMPAudioFrame::AACSequenceHeader)
+						{
+							//Create condig
+							char aux[3];
+							std::string config;
+					
+							//Encode config
+							for (size_t i=0; i<frame->GetMediaSize();++i)
+							{
+								//Convert to hex
+								snprintf(aux, 3, "%.2x", frame->GetMediaData()[i]);
+								//Append
+								config += aux;
+							}
+					
+							//Run function on main node thread
+							RTMPServerModule::Async([=,cloned=persistent](){
+								Nan::HandleScope scope;
+								int i = 0;
+								v8::Local<v8::Value> argv[1];
+								//Create local args
+								argv[i++] = Nan::New<v8::String>(config).ToLocalChecked();
+								//Call object method with arguments
+								MakeCallback(cloned, "onaacconfig", i, argv);
+							});
+						}
+
+						//Create rtp packets
+						audioFrame = aacPacketizer.AddFrame((RTMPAudioFrame*)frame);
+
+						break;
+					case RTMPAudioFrame::G711A:
+						//Create rtp packets
+						audioFrame = aacPacketizer.AddFrame((RTMPAudioFrame*)frame);
+						break;
+					case RTMPAudioFrame::G711U:
+						//Create rtp packets
+						audioFrame = aacPacketizer.AddFrame((RTMPAudioFrame*)frame);
+						break;
+					default:
+						// Not supported yet
+						Warning("-IncomingStreamBridge::onMediaFrame() | Audio codec not supported, dropping frame codec:%d\n", codec);
+						return;
+				}
 				//IF got one
 				if (audioFrame)
 					//Push it
@@ -2742,6 +2766,37 @@ public:
 					Warning("-IncomingStreamBridge::onMetaData() Unknown @setDataFrame metatada\n"); 
 					return;
 				}
+			} else if (name.compare(L"onTextData")==0) {
+				if (meta->GetParamsLength()<2)
+					return;
+
+				//Get medatada params
+				AMFData* params = meta->GetParams(1);
+
+				//Check the different variants
+				if (params->CheckType(AMFData::EcmaArray))
+				{
+
+					//Get timecode info
+					AMFObject* timecode = (AMFObject*)params;
+
+					//Check we have the timecode
+					if (!timecode->HasProperty(L"ts"))
+					{
+						Warning("-IncomingStreamBridge::onMetaData() onTextData does not contain ts param\n");
+						return;
+					}
+
+					//Get the timestamp
+					std::wstring ts = timecode->GetProperty(L"ts");
+
+                                        wchar_t* end;
+					unsigned long time = std::wcstoul(ts.c_str(), &end, 10);
+
+					//Set timing info
+					timingInfo.first  = time;
+					timingInfo.second = meta->GetTimestamp();
+				}
 			}
 		} catch (...)
 		{
@@ -2789,6 +2844,8 @@ private:
 	RTMPAv1Packetizer av1Packetizer;
 	
 	RTMPAACPacketizer aacPacketizer;
+	RTMPG711APacketizer g711aPacketizer;
+	RTMPG711UPacketizer g711UPacketizer;
 	MediaFrameListenerBridge::shared audio;
 	MediaFrameListenerBridge::shared video;
 	Mutex mutex;
