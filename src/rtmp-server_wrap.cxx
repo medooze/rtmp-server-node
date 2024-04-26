@@ -3532,8 +3532,6 @@ public:
 
 	void CreateStream(v8::Local<v8::Object> promise)
 	{
-		RTMPClientConnection::SendCommand(0, L"releaseStream", new AMFNumber(0), nullptr);
-		RTMPClientConnection::SendCommand(0, L"FCPublish", nullptr, nullptr);
 		SendCommand(0, L"createStream", nullptr, nullptr, promise);
 	}
 
