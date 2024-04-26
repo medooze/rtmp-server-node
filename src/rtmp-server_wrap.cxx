@@ -2592,16 +2592,15 @@ public:
 						}
 
 						//Create rtp packets
-						audioFrame = aacPacketizer.AddFrame((RTMPAudioFrame*)frame);
-
+						audioFrame = aacPacketizer.AddFrame(aframe);
 						break;
 					case RTMPAudioFrame::G711A:
 						//Create rtp packets
-						audioFrame = aacPacketizer.AddFrame((RTMPAudioFrame*)frame);
+						audioFrame = g711aPacketizer.AddFrame(aframe);
 						break;
 					case RTMPAudioFrame::G711U:
 						//Create rtp packets
-						audioFrame = aacPacketizer.AddFrame((RTMPAudioFrame*)frame);
+						audioFrame = g711uPacketizer.AddFrame(aframe);
 						break;
 					default:
 						// Not supported yet
@@ -2845,7 +2844,7 @@ private:
 	
 	RTMPAACPacketizer aacPacketizer;
 	RTMPG711APacketizer g711aPacketizer;
-	RTMPG711UPacketizer g711UPacketizer;
+	RTMPG711UPacketizer g711uPacketizer;
 	MediaFrameListenerBridge::shared audio;
 	MediaFrameListenerBridge::shared video;
 	Mutex mutex;
