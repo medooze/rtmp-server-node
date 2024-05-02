@@ -89,6 +89,7 @@
 							"media-server/src/vp8/VP8LayerSelector.cpp",
 							"media-server/src/vp9/VP9LayerSelector.cpp",
 							"media-server/src/av1/AV1CodecConfigurationRecord.cpp",
+							"media-server/src/av1/AV1LayerSelector.cpp",
 							"media-server/src/av1/Obu.cpp",
 						],
   					        "conditions" : [
