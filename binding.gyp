@@ -12,7 +12,7 @@
 			[
 				"-march=native",
 				"-fexceptions",
-				"-O3",
+				"-O0",
 				"-g",
 				"-Wno-unused-function -Wno-comment",
 				#"-O0",
@@ -22,7 +22,7 @@
 			[
 				"-fexceptions",
 				"-std=c++17",
-				"-O3",
+				"-O0",
 				"-g",
 				"-Wno-unused-function",
 				#"-O0",
@@ -66,6 +66,8 @@
 							"media-server/src/utf8.cpp",
 							"media-server/src/avcdescriptor.cpp",
 							"media-server/src/MediaFrameListenerBridge.cpp",
+							"media-server/src/FrameDelayCalculator.cpp",
+							"media-server/src/FrameDispatchCoordinator.cpp",
 							"media-server/src/rtp/LayerInfo.cpp",
 							"media-server/src/rtp/RTPPacket.cpp",
 							"media-server/src/rtp/RTPPayload.cpp",

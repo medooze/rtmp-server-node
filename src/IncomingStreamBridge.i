@@ -561,6 +561,8 @@ public:
 	MediaFrameListenerBridge::shared& GetAudio()	{ return audio; }
 	MediaFrameListenerBridge::shared& GetVideo()	{ return video; }
 	
+	TimeService& GetTimeService() { return loop; }
+	
 private:
 	EventLoop loop;
 	RTMPAVCPacketizer avcPacketizer;
@@ -600,5 +602,6 @@ public:
 	IncomingStreamBridge(v8::Local<v8::Object> object, int maxLateOffset = 200, int maxBufferingTime = 400);
 	MediaFrameListenerBridgeShared GetAudio();
 	MediaFrameListenerBridgeShared GetVideo();
+	TimeService& GetTimeService();
 	void Stop();
 };

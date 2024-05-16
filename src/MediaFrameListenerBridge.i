@@ -7,6 +7,7 @@
 %include "RTPReceiver.i"
 %include "MediaFrame.i"
 %include "RTMPServerModule.i"
+%include "FrameDispatchCoordinator.i"
 
 %nodefaultctor MediaFrameListenerBridge;
 struct MediaFrameListenerBridge : 
@@ -16,7 +17,7 @@ struct MediaFrameListenerBridge :
 	public MediaFrameProducer
 {
 	MediaFrameListenerBridge(TimeService& timeService, int ssrc);
-
+	
 	QWORD numFrames;
 	QWORD numPackets;
 	QWORD numFramesDelta;
@@ -44,6 +45,8 @@ struct MediaFrameListenerBridge :
 	void RemoveMediaListener(const MediaFrameListenerShared& listener);
 
 	void SetTargetBitrateHint(uint32_t targetBitrateHint);
+	
+	void SetFrameDispatchCoordinator(const FrameDispatchCoordinatorShared& coordinator);
 
 %extend 
 {

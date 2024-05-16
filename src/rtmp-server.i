@@ -203,3 +203,4 @@ v8::Local<v8::Value> toJson(AMFData* data)
 %include "RTMPServerFacade.i"
 %include "RTMPNetConnectionImpl.i"
 %include "RTMPClientConnectionImpl.i"
+%include "FrameDispatchCoordinator.i"
