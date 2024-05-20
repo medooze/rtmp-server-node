@@ -1,3 +1,0 @@
-[submodule "media-server"]
-	path = media-server
-	url = https://github.com/medooze/media-server
