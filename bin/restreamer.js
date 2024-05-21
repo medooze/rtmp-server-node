@@ -58,7 +58,7 @@ app.on("connect", (client) =>
 					outgoingStream.on("cmd", async(stream, name,cmd)=>{
 						console.log("got stream comand", name);
 						console.dir(cmd);
-						//if (name=="onStatus" && cmd[1].code == RTMPServer.NetStream.Publish.Start)
+						if (name=="onStatus" && cmd[1].code == RTMPServer.NetStream.Publish.Start.code)
 						{
 							console.log("stream started");
 							outgoingStream.attachTo(incomingStream);
