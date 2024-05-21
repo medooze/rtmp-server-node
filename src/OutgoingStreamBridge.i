@@ -57,11 +57,11 @@ public:
 								{
 									//Send metadata
 									GenerateMetadata(timestamp);
-									//Create the frame
-									RTMPAudioFrame fdesc(timestamp, aacSpecificConfig);
-									//Play it
-									SendMediaFrame(&fdesc);
 								}
+								//Create the AAC description frame
+								RTMPAudioFrame fdesc(timestamp, aacSpecificConfig);
+								//Play it
+								SendMediaFrame(&fdesc);
 							}
 						}
 						if (gotAACSpecificConfig)
