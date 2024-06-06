@@ -33,7 +33,13 @@ public:
 	{
 		UTF8Parser parser;
 		parser.SetString(*Nan::Utf8String(url));
-		RTMPClientConnection::SendCommand(id, L"publish", nullptr, new AMFString(parser.GetWChar()));
+		RTMPClientConnection::SendCommand(id, L"publish", nullptr, new AMFString(parser.GetWChar()), 
+			[=](bool isError, AMFData* params, const std::vector<AMFData*>& extra) {
+				if (isError)
+				{
+					onError(this, ErrorCode::PublishCommandFailed);
+				}
+			});
 	}
 
 	void onConnected(RTMPClientConnection* conn) override
@@ -57,6 +63,21 @@ public:
 			Nan::HandleScope scope;
 			//Call object method with arguments
 			MakeCallback(cloned, "ondisconnected");
+		});
+	}
+
+	void onError(RTMPClientConnection* conn, ErrorCode code) override
+	{
+		Log("-RTMPClientConnectionImpl::onError()\n");
+
+		//Run function on main node thread
+		RTMPServerModule::Async([=,cloned=persistent](){
+			Nan::HandleScope scope;
+			//Call object method with arguments
+			v8::Local<v8::Value> argv[1];
+			argv[0] = Nan::New<v8::Int32>(static_cast<int32_t>(code));
+			
+			MakeCallback(cloned, "onerror", 1, argv);
 		});
 	}
 
