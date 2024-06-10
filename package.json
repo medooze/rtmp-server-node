@@ -1,6 +1,6 @@
 {
   "name": "medooze-rtmp-server",
-  "version": "0.22.9",
+  "version": "0.23.0",
   "description": "RTMP Server by Medooze",
   "main": "index.js",
   "scripts": {
@@ -35,16 +35,15 @@
     "tap": "^16.3.2",
     "uuid": "^3.3.2"
   },
+  "peerDependencies": {
+    "medooze-media-server-src": "^1.0.0"
+  },
   "devDependencies": {
     "@types/node": "^20.8.6",
     "@types/uuid": "^9.0.5",
     "typescript": "^5.2.2"
   },
   "files": [
-    "media-server/src/*",
-    "media-server/include/*",
-    "media-server/ext/libdatachannels/src/*",
-    "media-server/ext/crc32c/*",
     "lib/*",
     "package.json",
     "index.js",
