@@ -92,6 +92,7 @@
 							"<(medooze_media_server_src)/src/av1/AV1CodecConfigurationRecord.cpp",
 							"<(medooze_media_server_src)/src/av1/AV1LayerSelector.cpp",
 							"<(medooze_media_server_src)/src/av1/Obu.cpp",
+							"<(medooze_media_server_src)/src/TlsClient.cpp",
 						],
   					        "conditions" : [
 								['OS=="mac"', {
