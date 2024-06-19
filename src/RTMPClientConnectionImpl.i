@@ -7,8 +7,8 @@ class RTMPClientConnectionImpl :
 	public RTMPClientConnection::Listener
 {
 public:	
-	RTMPClientConnectionImpl(v8::Local<v8::Object> object) :
-		RTMPClientConnection(L"")
+	RTMPClientConnectionImpl(bool secure, v8::Local<v8::Object> object) :
+		RTMPClientConnection(secure, L"")
 	{
 		//Store event callback object
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
@@ -155,7 +155,7 @@ class RTMPClientConnectionImpl :
 	public RTMPMediaStreamListener
 {
 public:
-	RTMPClientConnectionImpl(v8::Local<v8::Object> object);
+	RTMPClientConnectionImpl(bool secure, v8::Local<v8::Object> object);
 	RTMPClientConnection::ErrorCode Connect(const char* server,int port, const char* app);
 	void CreateStream(v8::Local<v8::Object> object);
 	void Publish(DWORD streamId,v8::Local<v8::Object> url);

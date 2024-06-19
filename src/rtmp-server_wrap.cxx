@@ -3519,8 +3519,8 @@ class RTMPClientConnectionImpl :
 	public RTMPClientConnection::Listener
 {
 public:	
-	RTMPClientConnectionImpl(v8::Local<v8::Object> object) :
-		RTMPClientConnection(L"")
+	RTMPClientConnectionImpl(bool secure, v8::Local<v8::Object> object) :
+		RTMPClientConnection(secure, L"")
 	{
 		//Store event callback object
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
@@ -9906,14 +9906,23 @@ static SwigV8ReturnValue _wrap_new_RTMPClientConnectionImpl(const SwigV8Argument
   SWIGV8_HANDLESCOPE();
   
   SWIGV8_OBJECT self = args.Holder();
-  v8::Local< v8::Object > arg1 ;
+  bool arg1 ;
+  v8::Local< v8::Object > arg2 ;
+  bool val1 ;
+  int ecode1 = 0 ;
   RTMPClientConnectionImpl *result;
   if(self->InternalFieldCount() < 1) SWIG_exception_fail(SWIG_ERROR, "Illegal call of constructor _wrap_new_RTMPClientConnectionImpl.");
-  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_RTMPClientConnectionImpl.");
+  if(args.Length() != 2) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_RTMPClientConnectionImpl.");
+  ecode1 = SWIG_AsVal_bool(args[0], &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_RTMPClientConnectionImpl" "', argument " "1"" of type '" "bool""'");
+  } 
+  arg1 = static_cast< bool >(val1);
   {
-    arg1 = v8::Local<v8::Object>::Cast(args[0]);
+    arg2 = v8::Local<v8::Object>::Cast(args[1]);
   }
-  result = (RTMPClientConnectionImpl *)new RTMPClientConnectionImpl(arg1);
+  result = (RTMPClientConnectionImpl *)new RTMPClientConnectionImpl(arg1,arg2);
+  
   
   
   
