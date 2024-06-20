@@ -14,9 +14,9 @@ public:
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
 	}
 	
-	void Connect(const char* server,int port, const char* app)
+	RTMPClientConnection::ErrorCode Connect(const char* server,int port, const char* app)
 	{
-		RTMPClientConnection::Connect(server, port, app, this);
+		return RTMPClientConnection::Connect(server, port, app, this);
 	}
 
 	void CreateStream(v8::Local<v8::Object> promise)
@@ -36,6 +36,7 @@ public:
 		RTMPClientConnection::SendCommand(id, L"publish", nullptr, new AMFString(parser.GetWChar()));
 	}
 
+
 	void onConnected(RTMPClientConnection* conn) override
 	{
 		Log("-RTMPClientConnectionImpl::onConnected()\n");
@@ -48,7 +49,7 @@ public:
 		});
 	}
 
-	void onDisconnected(RTMPClientConnection* conn) override
+	void onDisconnected(RTMPClientConnection* conn, ErrorCode code) override
 	{
 		Log("-RTMPClientConnectionImpl::onDisconnected()\n");
 
@@ -56,7 +57,10 @@ public:
 		RTMPServerModule::Async([=,cloned=persistent](){
 			Nan::HandleScope scope;
 			//Call object method with arguments
-			MakeCallback(cloned, "ondisconnected");
+			v8::Local<v8::Value> argv[1];
+			argv[0] = Nan::New<v8::Int32>(static_cast<int32_t>(code));
+			
+			MakeCallback(cloned, "ondisconnected", 1, argv);
 		});
 	}
 
@@ -126,13 +130,33 @@ private:
 
 %}
 
+%nodefaultctor RTMPClientConnection;
+class RTMPClientConnection
+{
+public:
+	enum class ErrorCode
+	{
+		NoError = 0,
+		Generic = 1,
+		FailedToResolveURL = 2,
+		GetSockOptError = 3,
+		FailedToConnectSocket = 4,
+		ConnectCommandFailed = 5,
+		FailedToParseData = 6,
+		PeerClosed = 7,
+		ReadError = 8,
+		PollError = 9
+	};
+};
+
+
 %nodefaultctor RTMPClientConnectionImpl;
 class RTMPClientConnectionImpl :
 	public RTMPMediaStreamListener
 {
 public:
 	RTMPClientConnectionImpl(v8::Local<v8::Object> object);
-	void Connect(const char* server,int port, const char* app);
+	RTMPClientConnection::ErrorCode Connect(const char* server,int port, const char* app);
 	void CreateStream(v8::Local<v8::Object> object);
 	void Publish(DWORD streamId,v8::Local<v8::Object> url);
 	void DeleteStream(DWORD streamId, v8::Local<v8::Object> object);

@@ -1351,39 +1351,40 @@ fail: ;
 #define SWIGTYPE_p_OutgoingStreamBridgeShared swig_types[10]
 #define SWIGTYPE_p_Properties swig_types[11]
 #define SWIGTYPE_p_RTMPApplicationImpl swig_types[12]
-#define SWIGTYPE_p_RTMPClientConnectionImpl swig_types[13]
-#define SWIGTYPE_p_RTMPMediaStreamListener swig_types[14]
-#define SWIGTYPE_p_RTMPNetConnection swig_types[15]
-#define SWIGTYPE_p_RTMPNetConnectionImpl swig_types[16]
-#define SWIGTYPE_p_RTMPNetConnectionImplShared swig_types[17]
-#define SWIGTYPE_p_RTMPNetConnectionShared swig_types[18]
-#define SWIGTYPE_p_RTMPNetStream swig_types[19]
-#define SWIGTYPE_p_RTMPNetStreamImpl swig_types[20]
-#define SWIGTYPE_p_RTMPNetStreamImplShared swig_types[21]
-#define SWIGTYPE_p_RTMPNetStreamShared swig_types[22]
-#define SWIGTYPE_p_RTMPServerFacade swig_types[23]
-#define SWIGTYPE_p_RTMPServerModule swig_types[24]
-#define SWIGTYPE_p_RTPIncomingMediaStream swig_types[25]
-#define SWIGTYPE_p_RTPIncomingMediaStreamShared swig_types[26]
-#define SWIGTYPE_p_RTPReceiver swig_types[27]
-#define SWIGTYPE_p_RTPReceiverShared swig_types[28]
-#define SWIGTYPE_p_TimeService swig_types[29]
-#define SWIGTYPE_p_VideoOrientation swig_types[30]
-#define SWIGTYPE_p_char swig_types[31]
-#define SWIGTYPE_p_int swig_types[32]
-#define SWIGTYPE_p_long_long swig_types[33]
-#define SWIGTYPE_p_short swig_types[34]
-#define SWIGTYPE_p_signed_char swig_types[35]
-#define SWIGTYPE_p_std__string swig_types[36]
-#define SWIGTYPE_p_std__vectorT_Properties_t swig_types[37]
-#define SWIGTYPE_p_unsigned_char swig_types[38]
-#define SWIGTYPE_p_unsigned_int swig_types[39]
-#define SWIGTYPE_p_unsigned_long_long swig_types[40]
-#define SWIGTYPE_p_unsigned_short swig_types[41]
-#define SWIGTYPE_p_v8__LocalT_v8__Object_t swig_types[42]
-#define SWIGTYPE_p_void swig_types[43]
-static swig_type_info *swig_types[45];
-static swig_module_info swig_module = {swig_types, 44, 0, 0, 0, 0};
+#define SWIGTYPE_p_RTMPClientConnection swig_types[13]
+#define SWIGTYPE_p_RTMPClientConnectionImpl swig_types[14]
+#define SWIGTYPE_p_RTMPMediaStreamListener swig_types[15]
+#define SWIGTYPE_p_RTMPNetConnection swig_types[16]
+#define SWIGTYPE_p_RTMPNetConnectionImpl swig_types[17]
+#define SWIGTYPE_p_RTMPNetConnectionImplShared swig_types[18]
+#define SWIGTYPE_p_RTMPNetConnectionShared swig_types[19]
+#define SWIGTYPE_p_RTMPNetStream swig_types[20]
+#define SWIGTYPE_p_RTMPNetStreamImpl swig_types[21]
+#define SWIGTYPE_p_RTMPNetStreamImplShared swig_types[22]
+#define SWIGTYPE_p_RTMPNetStreamShared swig_types[23]
+#define SWIGTYPE_p_RTMPServerFacade swig_types[24]
+#define SWIGTYPE_p_RTMPServerModule swig_types[25]
+#define SWIGTYPE_p_RTPIncomingMediaStream swig_types[26]
+#define SWIGTYPE_p_RTPIncomingMediaStreamShared swig_types[27]
+#define SWIGTYPE_p_RTPReceiver swig_types[28]
+#define SWIGTYPE_p_RTPReceiverShared swig_types[29]
+#define SWIGTYPE_p_TimeService swig_types[30]
+#define SWIGTYPE_p_VideoOrientation swig_types[31]
+#define SWIGTYPE_p_char swig_types[32]
+#define SWIGTYPE_p_int swig_types[33]
+#define SWIGTYPE_p_long_long swig_types[34]
+#define SWIGTYPE_p_short swig_types[35]
+#define SWIGTYPE_p_signed_char swig_types[36]
+#define SWIGTYPE_p_std__string swig_types[37]
+#define SWIGTYPE_p_std__vectorT_Properties_t swig_types[38]
+#define SWIGTYPE_p_unsigned_char swig_types[39]
+#define SWIGTYPE_p_unsigned_int swig_types[40]
+#define SWIGTYPE_p_unsigned_long_long swig_types[41]
+#define SWIGTYPE_p_unsigned_short swig_types[42]
+#define SWIGTYPE_p_v8__LocalT_v8__Object_t swig_types[43]
+#define SWIGTYPE_p_void swig_types[44]
+static swig_type_info *swig_types[46];
+static swig_module_info swig_module = {swig_types, 45, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3525,9 +3526,9 @@ public:
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
 	}
 	
-	void Connect(const char* server,int port, const char* app)
+	RTMPClientConnection::ErrorCode Connect(const char* server,int port, const char* app)
 	{
-		RTMPClientConnection::Connect(server, port, app, this);
+		return RTMPClientConnection::Connect(server, port, app, this);
 	}
 
 	void CreateStream(v8::Local<v8::Object> promise)
@@ -3547,6 +3548,7 @@ public:
 		RTMPClientConnection::SendCommand(id, L"publish", nullptr, new AMFString(parser.GetWChar()));
 	}
 
+
 	void onConnected(RTMPClientConnection* conn) override
 	{
 		Log("-RTMPClientConnectionImpl::onConnected()\n");
@@ -3559,7 +3561,7 @@ public:
 		});
 	}
 
-	void onDisconnected(RTMPClientConnection* conn) override
+	void onDisconnected(RTMPClientConnection* conn, ErrorCode code) override
 	{
 		Log("-RTMPClientConnectionImpl::onDisconnected()\n");
 
@@ -3567,7 +3569,10 @@ public:
 		RTMPServerModule::Async([=,cloned=persistent](){
 			Nan::HandleScope scope;
 			//Call object method with arguments
-			MakeCallback(cloned, "ondisconnected");
+			v8::Local<v8::Value> argv[1];
+			argv[0] = Nan::New<v8::Int32>(static_cast<int32_t>(code));
+			
+			MakeCallback(cloned, "ondisconnected", 1, argv);
 		});
 	}
 
@@ -3670,6 +3675,7 @@ SWIGV8_ClientData _exports_RTMPNetConnectionImpl_clientData;
 SWIGV8_ClientData _exports_RTMPNetConnectionImplShared_clientData;
 SWIGV8_ClientData _exports_RTMPApplicationImpl_clientData;
 SWIGV8_ClientData _exports_RTMPServerFacade_clientData;
+SWIGV8_ClientData _exports_RTMPClientConnection_clientData;
 SWIGV8_ClientData _exports_RTMPClientConnectionImpl_clientData;
 
 
@@ -9726,6 +9732,176 @@ static void _wrap_delete_RTMPServerFacade(const v8::WeakCallbackInfo<SWIGV8_Prox
 }
 
 
+static SwigV8ReturnValue _wrap_RTMPClientConnection_ErrorCode_NoError(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  
+  jsresult = SWIG_From_int(static_cast< int >(RTMPClientConnection::ErrorCode::NoError));
+  
+  SWIGV8_RETURN_INFO(jsresult, info);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnection_ErrorCode_Generic(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  
+  jsresult = SWIG_From_int(static_cast< int >(RTMPClientConnection::ErrorCode::Generic));
+  
+  SWIGV8_RETURN_INFO(jsresult, info);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnection_ErrorCode_FailedToResolveURL(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  
+  jsresult = SWIG_From_int(static_cast< int >(RTMPClientConnection::ErrorCode::FailedToResolveURL));
+  
+  SWIGV8_RETURN_INFO(jsresult, info);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnection_ErrorCode_GetSockOptError(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  
+  jsresult = SWIG_From_int(static_cast< int >(RTMPClientConnection::ErrorCode::GetSockOptError));
+  
+  SWIGV8_RETURN_INFO(jsresult, info);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnection_ErrorCode_FailedToConnectSocket(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  
+  jsresult = SWIG_From_int(static_cast< int >(RTMPClientConnection::ErrorCode::FailedToConnectSocket));
+  
+  SWIGV8_RETURN_INFO(jsresult, info);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnection_ErrorCode_ConnectCommandFailed(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  
+  jsresult = SWIG_From_int(static_cast< int >(RTMPClientConnection::ErrorCode::ConnectCommandFailed));
+  
+  SWIGV8_RETURN_INFO(jsresult, info);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnection_ErrorCode_FailedToParseData(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  
+  jsresult = SWIG_From_int(static_cast< int >(RTMPClientConnection::ErrorCode::FailedToParseData));
+  
+  SWIGV8_RETURN_INFO(jsresult, info);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnection_ErrorCode_PeerClosed(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  
+  jsresult = SWIG_From_int(static_cast< int >(RTMPClientConnection::ErrorCode::PeerClosed));
+  
+  SWIGV8_RETURN_INFO(jsresult, info);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnection_ErrorCode_ReadError(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  
+  jsresult = SWIG_From_int(static_cast< int >(RTMPClientConnection::ErrorCode::ReadError));
+  
+  SWIGV8_RETURN_INFO(jsresult, info);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+}
+
+
+static SwigV8ReturnValue _wrap_RTMPClientConnection_ErrorCode_PollError(v8::Local<v8::Name> property, const SwigV8PropertyCallbackInfo &info) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  
+  jsresult = SWIG_From_int(static_cast< int >(RTMPClientConnection::ErrorCode::PollError));
+  
+  SWIGV8_RETURN_INFO(jsresult, info);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN_INFO(SWIGV8_UNDEFINED(), info);
+}
+
+
+static void _wrap_delete_RTMPClientConnection(const v8::WeakCallbackInfo<SWIGV8_Proxy> &data) {
+  SWIGV8_Proxy *proxy = data.GetParameter();
+  
+  if(proxy->swigCMemOwn && proxy->swigCObject) {
+    RTMPClientConnection * arg1 = (RTMPClientConnection *)proxy->swigCObject;
+    delete arg1;
+  }
+  delete proxy;
+}
+
+
+static SwigV8ReturnValue _wrap_new_veto_RTMPClientConnection(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIG_exception(SWIG_ERROR, "Class RTMPClientConnection can not be instantiated");
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
 static SwigV8ReturnValue _wrap_new_RTMPClientConnectionImpl(const SwigV8Arguments &args) {
   SWIGV8_HANDLESCOPE();
   
@@ -9768,6 +9944,7 @@ static SwigV8ReturnValue _wrap_RTMPClientConnectionImpl_Connect(const SwigV8Argu
   int res4 ;
   char *buf4 = 0 ;
   int alloc4 = 0 ;
+  RTMPClientConnection::ErrorCode result;
   
   if(args.Length() != 3) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPClientConnectionImpl_Connect.");
   
@@ -9791,8 +9968,8 @@ static SwigV8ReturnValue _wrap_RTMPClientConnectionImpl_Connect(const SwigV8Argu
     SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "RTMPClientConnectionImpl_Connect" "', argument " "4"" of type '" "char const *""'");
   }
   arg4 = reinterpret_cast< char * >(buf4);
-  (arg1)->Connect((char const *)arg2,arg3,(char const *)arg4);
-  jsresult = SWIGV8_UNDEFINED();
+  result = (RTMPClientConnection::ErrorCode)(arg1)->Connect((char const *)arg2,arg3,(char const *)arg4);
+  jsresult = SWIG_From_int(static_cast< int >(result));
   
   if (alloc2 == SWIG_NEWOBJ) delete[] buf2;
   
@@ -10050,6 +10227,7 @@ static swig_type_info _swigt__p_OutgoingStreamBridge = {"_p_OutgoingStreamBridge
 static swig_type_info _swigt__p_OutgoingStreamBridgeShared = {"_p_OutgoingStreamBridgeShared", "p_OutgoingStreamBridgeShared|OutgoingStreamBridgeShared *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Properties = {"_p_Properties", "Properties *|p_Properties", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPApplicationImpl = {"_p_RTMPApplicationImpl", "RTMPApplicationImpl *|p_RTMPApplicationImpl", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_RTMPClientConnection = {"_p_RTMPClientConnection", "p_RTMPClientConnection", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPClientConnectionImpl = {"_p_RTMPClientConnectionImpl", "RTMPClientConnectionImpl *|p_RTMPClientConnectionImpl", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPMediaStreamListener = {"_p_RTMPMediaStreamListener", "p_RTMPMediaStreamListener|RTMPMediaStreamListener *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_RTMPNetConnection = {"_p_RTMPNetConnection", "RTMPNetConnection *|p_RTMPNetConnection", 0, 0, (void*)0, 0};
@@ -10096,6 +10274,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_OutgoingStreamBridgeShared,
   &_swigt__p_Properties,
   &_swigt__p_RTMPApplicationImpl,
+  &_swigt__p_RTMPClientConnection,
   &_swigt__p_RTMPClientConnectionImpl,
   &_swigt__p_RTMPMediaStreamListener,
   &_swigt__p_RTMPNetConnection,
@@ -10142,6 +10321,7 @@ static swig_cast_info _swigc__p_OutgoingStreamBridge[] = {  {&_swigt__p_Outgoing
 static swig_cast_info _swigc__p_OutgoingStreamBridgeShared[] = {  {&_swigt__p_OutgoingStreamBridgeShared, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Properties[] = {  {&_swigt__p_Properties, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPApplicationImpl[] = {  {&_swigt__p_RTMPApplicationImpl, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_RTMPClientConnection[] = {  {&_swigt__p_RTMPClientConnection, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPClientConnectionImpl[] = {  {&_swigt__p_RTMPClientConnectionImpl, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPMediaStreamListener[] = {  {&_swigt__p_RTMPClientConnectionImpl, _p_RTMPClientConnectionImplTo_p_RTMPMediaStreamListener, 0, 0},  {&_swigt__p_RTMPMediaStreamListener, 0, 0, 0},  {&_swigt__p_IncomingStreamBridge, _p_IncomingStreamBridgeTo_p_RTMPMediaStreamListener, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_RTMPNetConnection[] = {  {&_swigt__p_RTMPNetConnectionImpl, _p_RTMPNetConnectionImplTo_p_RTMPNetConnection, 0, 0},  {&_swigt__p_RTMPNetConnection, 0, 0, 0},{0, 0, 0, 0}};
@@ -10188,6 +10368,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_OutgoingStreamBridgeShared,
   _swigc__p_Properties,
   _swigc__p_RTMPApplicationImpl,
+  _swigc__p_RTMPClientConnection,
   _swigc__p_RTMPClientConnectionImpl,
   _swigc__p_RTMPMediaStreamListener,
   _swigc__p_RTMPNetConnection,
@@ -10741,6 +10922,13 @@ _exports_RTMPServerFacade_clientData.dtor = _wrap_delete_RTMPServerFacade;
 if (SWIGTYPE_p_RTMPServerFacade->clientdata == 0) {
   SWIGTYPE_p_RTMPServerFacade->clientdata = &_exports_RTMPServerFacade_clientData;
 }
+/* Name: _exports_RTMPClientConnection, Type: p_RTMPClientConnection, Dtor: _wrap_delete_RTMPClientConnection */
+SWIGV8_FUNCTION_TEMPLATE _exports_RTMPClientConnection_class = SWIGV8_CreateClassTemplate("_exports_RTMPClientConnection");
+SWIGV8_SET_CLASS_TEMPL(_exports_RTMPClientConnection_clientData.class_templ, _exports_RTMPClientConnection_class);
+_exports_RTMPClientConnection_clientData.dtor = _wrap_delete_RTMPClientConnection;
+if (SWIGTYPE_p_RTMPClientConnection->clientdata == 0) {
+  SWIGTYPE_p_RTMPClientConnection->clientdata = &_exports_RTMPClientConnection_clientData;
+}
 /* Name: _exports_RTMPClientConnectionImpl, Type: p_RTMPClientConnectionImpl, Dtor: _wrap_delete_RTMPClientConnectionImpl */
 SWIGV8_FUNCTION_TEMPLATE _exports_RTMPClientConnectionImpl_class = SWIGV8_CreateClassTemplate("_exports_RTMPClientConnectionImpl");
 SWIGV8_SET_CLASS_TEMPL(_exports_RTMPClientConnectionImpl_clientData.class_templ, _exports_RTMPClientConnectionImpl_class);
@@ -11257,6 +11445,16 @@ v8::Local<v8::Object> _exports_RTMPServerFacade_obj = _exports_RTMPServerFacade_
 #else
 v8::Local<v8::Object> _exports_RTMPServerFacade_obj = _exports_RTMPServerFacade_class_0->GetFunction(context).ToLocalChecked();
 #endif
+/* Class: RTMPClientConnection (_exports_RTMPClientConnection) */
+SWIGV8_FUNCTION_TEMPLATE _exports_RTMPClientConnection_class_0 = SWIGV8_CreateClassTemplate("RTMPClientConnection");
+_exports_RTMPClientConnection_class_0->SetCallHandler(_wrap_new_veto_RTMPClientConnection);
+_exports_RTMPClientConnection_class_0->Inherit(_exports_RTMPClientConnection_class);
+#if (SWIG_V8_VERSION < 0x0704)
+_exports_RTMPClientConnection_class_0->SetHiddenPrototype(true);
+v8::Local<v8::Object> _exports_RTMPClientConnection_obj = _exports_RTMPClientConnection_class_0->GetFunction();
+#else
+v8::Local<v8::Object> _exports_RTMPClientConnection_obj = _exports_RTMPClientConnection_class_0->GetFunction(context).ToLocalChecked();
+#endif
 /* Class: RTMPClientConnectionImpl (_exports_RTMPClientConnectionImpl) */
 SWIGV8_FUNCTION_TEMPLATE _exports_RTMPClientConnectionImpl_class_0 = SWIGV8_CreateClassTemplate("RTMPClientConnectionImpl");
 _exports_RTMPClientConnectionImpl_class_0->SetCallHandler(_wrap_new_RTMPClientConnectionImpl);
@@ -11279,6 +11477,16 @@ SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "EnableWarning", _wrap_R
 SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "EnableLog", _wrap_RTMPServerModule_EnableLog, context);
 SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "EnableDebug", _wrap_RTMPServerModule_EnableDebug, context);
 SWIGV8_AddStaticFunction(_exports_RTMPServerModule_obj, "EnableUltraDebug", _wrap_RTMPServerModule_EnableUltraDebug, context);
+SWIGV8_AddStaticVariable(_exports_RTMPClientConnection_obj, "ErrorCode_NoError", _wrap_RTMPClientConnection_ErrorCode_NoError, JS_veto_set_variable, context);
+SWIGV8_AddStaticVariable(_exports_RTMPClientConnection_obj, "ErrorCode_Generic", _wrap_RTMPClientConnection_ErrorCode_Generic, JS_veto_set_variable, context);
+SWIGV8_AddStaticVariable(_exports_RTMPClientConnection_obj, "ErrorCode_FailedToResolveURL", _wrap_RTMPClientConnection_ErrorCode_FailedToResolveURL, JS_veto_set_variable, context);
+SWIGV8_AddStaticVariable(_exports_RTMPClientConnection_obj, "ErrorCode_GetSockOptError", _wrap_RTMPClientConnection_ErrorCode_GetSockOptError, JS_veto_set_variable, context);
+SWIGV8_AddStaticVariable(_exports_RTMPClientConnection_obj, "ErrorCode_FailedToConnectSocket", _wrap_RTMPClientConnection_ErrorCode_FailedToConnectSocket, JS_veto_set_variable, context);
+SWIGV8_AddStaticVariable(_exports_RTMPClientConnection_obj, "ErrorCode_ConnectCommandFailed", _wrap_RTMPClientConnection_ErrorCode_ConnectCommandFailed, JS_veto_set_variable, context);
+SWIGV8_AddStaticVariable(_exports_RTMPClientConnection_obj, "ErrorCode_FailedToParseData", _wrap_RTMPClientConnection_ErrorCode_FailedToParseData, JS_veto_set_variable, context);
+SWIGV8_AddStaticVariable(_exports_RTMPClientConnection_obj, "ErrorCode_PeerClosed", _wrap_RTMPClientConnection_ErrorCode_PeerClosed, JS_veto_set_variable, context);
+SWIGV8_AddStaticVariable(_exports_RTMPClientConnection_obj, "ErrorCode_ReadError", _wrap_RTMPClientConnection_ErrorCode_ReadError, JS_veto_set_variable, context);
+SWIGV8_AddStaticVariable(_exports_RTMPClientConnection_obj, "ErrorCode_PollError", _wrap_RTMPClientConnection_ErrorCode_PollError, JS_veto_set_variable, context);
 
 
   /* register classes */
@@ -11312,6 +11520,7 @@ SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPNetConnectio
 SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPNetConnectionImplShared"), _exports_RTMPNetConnectionImplShared_obj));
 SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPApplicationImpl"), _exports_RTMPApplicationImpl_obj));
 SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPServerFacade"), _exports_RTMPServerFacade_obj));
+SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPClientConnection"), _exports_RTMPClientConnection_obj));
 SWIGV8_MAYBE_CHECK(exports_obj->Set(context, SWIGV8_SYMBOL_NEW("RTMPClientConnectionImpl"), _exports_RTMPClientConnectionImpl_obj));
 
 

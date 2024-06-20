@@ -424,7 +424,7 @@ export  class RTMPClientConnectionImpl extends RTMPMediaStreamListener {
 
   constructor(object: any);
 
-  Connect(server: string, port: number, app: string): void;
+  Connect(server: string, port: number, app: string): number;
 
   CreateStream(object: any): void;
 
