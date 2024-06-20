@@ -94,8 +94,8 @@ tap.test("Server", async function (suite)
 		//Check we have stats
 		test.ok(connection.getStats());
 
-		connection.on("disconnected",()=>{
-			test.pass("client disconnected");
+		connection.on("disconnected",(conn, errorCode)=>{
+			test.equal(errorCode, RTMPServer.NetConnectionErrorCode.NoError);
 		});
 
 		//Stop
@@ -111,21 +111,71 @@ tap.test("Server", async function (suite)
 		test.end();
 	});
 
-	await suite.test("failed", async function (test)
+	await suite.test("incorrectport", async function (test)
 	{
 		//Create client connection
 		const connection = RTMPServer.createClientConnection();
 
-		connection.on("disconnected",()=>{
-			test.pass("client disconnected");
+		connection.on("disconnected", (conn, errorCode)=>{
+			test.equal(errorCode, RTMPServer.NetConnectionErrorCode.GetSockOptError);
 		});
 
-		//Connect
-		connection.connect("127.0.0.1", 1937, "test");
+		//Connect. Note the connect wouldn't fail immediately.
+		let errorCode = connection.connect("127.0.0.1", 1937, "test");
+		test.equal(errorCode, RTMPServer.NetConnectionErrorCode.NoError);
 		
 		//Wait 1 seconds
 		await sleep(1000);
 	});
+	
+	await suite.test("invalidurl", async function (test)
+	{
+		//Create client connection
+		const connection = RTMPServer.createClientConnection();
+
+		//Connect
+		let errorCode = connection.connect("invalid.url", 1937, "test");
+		test.equal(errorCode, RTMPServer.NetConnectionErrorCode.FailedToResolveURL);
+	});
+	
+	await suite.test("peerclosed", async function (test)
+	{
+		test.plan(2);
+		
+		//Create server and app
+		const app = RTMPServer.createApplication();
+		const rtmp = RTMPServer.createServer();
+		
+		app.on("connect", (client) =>
+		{
+			// Close the connection
+			client.reject();
+		});
+		
+		//Start rtmp server
+		rtmp.addApplication("test", app);
+		rtmp.start(1936);
+				
+		//Create client connection
+		const connection = RTMPServer.createClientConnection();
+
+		//Connect
+		let errorCode = connection.connect("127.0.0.1", 1936, "test");
+		test.equal(errorCode, RTMPServer.NetConnectionErrorCode.NoError);
+		
+		connection.on("disconnected", (conn, errorCode)=>{
+			test.equal(errorCode, RTMPServer.NetConnectionErrorCode.PeerClosed);
+		});
+		
+		//Wait 1 seconds
+		await sleep(1000);
+		
+		//Stop server
+		rtmp.stop();
+		
+		test.end();
+	});
+	
 	suite.end();
 
 }).then(() =>
