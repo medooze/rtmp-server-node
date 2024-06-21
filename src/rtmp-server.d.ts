@@ -58,6 +58,8 @@ export const UW720P: number;
 
 export const MTU: number;
 
+export const UDPPAYLOADSIZE: number;
+
 export const RTPPAYLOADSIZE: number;
 
 export const MAXKBITS: number;
@@ -221,6 +223,23 @@ export  class RTPReceiverShared {
   get(): RTPReceiver;
 }
 
+export  class RTMPServerModule {
+
+ static Initialize(): void;
+
+ static Terminate(): void;
+
+ static EnableWarning(flag: boolean): void;
+
+ static EnableLog(flag: boolean): void;
+
+ static EnableDebug(flag: boolean): void;
+
+ static EnableUltraDebug(flag: boolean): void;
+
+  constructor();
+}
+
 export  class MediaFrameListenerBridge extends RTPIncomingMediaStream {
 
   constructor(timeService: TimeService | EventLoop, ssrc: number);
@@ -261,8 +280,6 @@ export  class MediaFrameListenerBridge extends RTPIncomingMediaStream {
 
   Update(): void;
 
-  UpdateAsync(object: any): void;
-
   Stop(): void;
 
   AddMediaListener(listener: MediaFrameListenerShared): void;
@@ -272,6 +289,10 @@ export  class MediaFrameListenerBridge extends RTPIncomingMediaStream {
   SetTargetBitrateHint(targetBitrateHint: number): void;
 
   codec: string;
+
+  UpdateAsync(object: any): void;
+
+  SetMaxDelayMs(maxDelayMs: number): void;
 }
 
 export  class MediaFrameListenerBridgeShared {
@@ -292,23 +313,6 @@ export  class MediaFrameListenerBridgeShared {
 export  class RTMPMediaStreamListener {
 }
 
-export  class RTMPServerModule {
-
- static Initialize(): void;
-
- static Terminate(): void;
-
- static EnableWarning(flag: boolean): void;
-
- static EnableLog(flag: boolean): void;
-
- static EnableDebug(flag: boolean): void;
-
- static EnableUltraDebug(flag: boolean): void;
-
-  constructor();
-}
-
 export  class IncomingStreamBridge extends RTMPMediaStreamListener {
 
   constructor(object: any, maxLateOffset: number, maxBufferingTime: number);
@@ -322,6 +326,26 @@ export  class IncomingStreamBridge extends RTMPMediaStreamListener {
   GetVideo(): MediaFrameListenerBridgeShared;
 
   Stop(): void;
+}
+
+export  class OutgoingStreamBridge {
+
+  constructor(streamId: number, listener: RTMPMediaStreamListener | IncomingStreamBridge);
+
+  GetStreamId(): number;
+
+  GetRTT(): number;
+
+  Stop(): void;
+}
+
+export  class OutgoingStreamBridgeShared {
+
+  constructor(streamId: number, listener: RTMPMediaStreamListener | IncomingStreamBridge);
+
+  toMediaFrameListener(): MediaFrameListenerShared;
+
+  get(): OutgoingStreamBridge;
 }
 
 export  class RTMPNetStream {
@@ -392,6 +416,25 @@ export  class RTMPServerFacade {
   Start(port: number): void;
 
   AddApplication(name: any, app: RTMPApplicationImpl): void;
+
+  Stop(): void;
+}
+
+export  class RTMPClientConnectionImpl extends RTMPMediaStreamListener {
+
+  constructor(object: any);
+
+  Connect(server: string, port: number, app: string): number;
+
+  CreateStream(object: any): void;
+
+  Publish(streamId: number, url: any): void;
+
+  DeleteStream(streamId: number, object: any): void;
+
+  GetInBytes(): number;
+
+  GetOutBytes(): number;
 
   Stop(): void;
 }
