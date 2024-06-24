@@ -68,6 +68,8 @@
 							"<(medooze_media_server_src)/src/avcdescriptor.cpp",
 							"<(medooze_media_server_src)/src/MediaFrameListenerBridge.cpp",
 							"<(medooze_media_server_src)/src/rtp/LayerInfo.cpp",
+							"<(medooze_media_server_src)/src/FrameDelayCalculator.cpp",
+							"<(medooze_media_server_src)/src/FrameDispatchCoordinator.cpp",
 							"<(medooze_media_server_src)/src/rtp/RTPPacket.cpp",
 							"<(medooze_media_server_src)/src/rtp/RTPPayload.cpp",
 							"<(medooze_media_server_src)/src/rtp/RTPHeader.cpp",
