@@ -308,8 +308,6 @@ export  class MediaFrameListenerBridge extends RTPIncomingMediaStream {
   UpdateAsync(object: any): void;
 
   SetMaxDelayMs(maxDelayMs: number): void;
-  
-  SetFrameDispatchCoordinator(coordinator: FrameDispatchCoordinatorShared): void;
 }
 
 export  class MediaFrameListenerBridgeShared {
