@@ -240,6 +240,19 @@ export  class RTMPServerModule {
   constructor();
 }
 
+
+export class FrameDispatchCoordinator {
+  
+}
+
+export  class FrameDispatchCoordinatorShared {
+  
+  constructor();
+  
+  get(): FrameDispatchCoordinator;
+}
+
+
 export  class MediaFrameListenerBridge extends RTPIncomingMediaStream {
 
   constructor(timeService: TimeService | EventLoop, ssrc: number);
@@ -287,12 +300,16 @@ export  class MediaFrameListenerBridge extends RTPIncomingMediaStream {
   RemoveMediaListener(listener: MediaFrameListenerShared): void;
 
   SetTargetBitrateHint(targetBitrateHint: number): void;
+  
+  SetFrameDispatchCoordinator(coordinator: FrameDispatchCoordinatorShared): void;
 
   codec: string;
 
   UpdateAsync(object: any): void;
 
   SetMaxDelayMs(maxDelayMs: number): void;
+  
+  SetFrameDispatchCoordinator(coordinator: FrameDispatchCoordinatorShared): void;
 }
 
 export  class MediaFrameListenerBridgeShared {
