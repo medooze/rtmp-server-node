@@ -2202,6 +2202,9 @@ moodycamel::ConcurrentQueue<std::function<void()>>  RTMPServerModule::queue;
 
 #include "FrameDispatchCoordinator.h"
 
+SWIGINTERN void FrameDispatchCoordinator_SetMaxDelayMs__SWIG(FrameDispatchCoordinator *self,uint32_t maxDelayMs){
+		self->SetMaxDelayMs(std::chrono::milliseconds(maxDelayMs));
+	}
 
 using FrameDispatchCoordinatorShared = std::shared_ptr<FrameDispatchCoordinator>;
 
@@ -7034,6 +7037,42 @@ static void _wrap_delete_RTMPServerModule(const v8::WeakCallbackInfo<SWIGV8_Prox
 }
 
 
+static SwigV8ReturnValue _wrap_FrameDispatchCoordinator_SetMaxDelayMs(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  FrameDispatchCoordinator *arg1 = (FrameDispatchCoordinator *) 0 ;
+  uint32_t arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  unsigned int val2 ;
+  int ecode2 = 0 ;
+  
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_FrameDispatchCoordinator_SetMaxDelayMs.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_FrameDispatchCoordinator, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "FrameDispatchCoordinator_SetMaxDelayMs" "', argument " "1"" of type '" "FrameDispatchCoordinator *""'"); 
+  }
+  arg1 = reinterpret_cast< FrameDispatchCoordinator * >(argp1);
+  ecode2 = SWIG_AsVal_unsigned_SS_int(args[0], &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "FrameDispatchCoordinator_SetMaxDelayMs" "', argument " "2"" of type '" "uint32_t""'");
+  } 
+  arg2 = static_cast< uint32_t >(val2);
+  FrameDispatchCoordinator_SetMaxDelayMs__SWIG(arg1,arg2);
+  jsresult = SWIGV8_UNDEFINED();
+  
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
 static SwigV8ReturnValue _wrap_new_FrameDispatchCoordinator(const SwigV8Arguments &args) {
   SWIGV8_HANDLESCOPE();
   
@@ -11243,6 +11282,7 @@ SWIGV8_AddMemberFunction(_exports_RTPIncomingMediaStreamShared_class, "get", _wr
 SWIGV8_AddMemberFunction(_exports_RTPReceiver_class, "SendPLI", _wrap_RTPReceiver_SendPLI);
 SWIGV8_AddMemberFunction(_exports_RTPReceiver_class, "Reset", _wrap_RTPReceiver_Reset);
 SWIGV8_AddMemberFunction(_exports_RTPReceiverShared_class, "get", _wrap_RTPReceiverShared_get);
+SWIGV8_AddMemberFunction(_exports_FrameDispatchCoordinator_class, "SetMaxDelayMs", _wrap_FrameDispatchCoordinator_SetMaxDelayMs);
 SWIGV8_AddMemberFunction(_exports_FrameDispatchCoordinatorShared_class, "get", _wrap_FrameDispatchCoordinatorShared_get);
 SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "numFrames", _wrap_MediaFrameListenerBridge_numFrames_get, _wrap_MediaFrameListenerBridge_numFrames_set);
 SWIGV8_AddMemberVariable(_exports_MediaFrameListenerBridge_class, "numPackets", _wrap_MediaFrameListenerBridge_numPackets_get, _wrap_MediaFrameListenerBridge_numPackets_set);
