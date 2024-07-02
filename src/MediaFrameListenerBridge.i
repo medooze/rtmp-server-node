@@ -7,6 +7,7 @@
 %include "RTPReceiver.i"
 %include "MediaFrame.i"
 %include "RTMPServerModule.i"
+%include "FrameDispatchCoordinator.i"
 
 %nodefaultctor MediaFrameListenerBridge;
 struct MediaFrameListenerBridge : 
@@ -45,6 +46,7 @@ struct MediaFrameListenerBridge :
 
 	void SetTargetBitrateHint(uint32_t targetBitrateHint);
 
+	void SetFrameDispatchCoordinator(const FrameDispatchCoordinatorShared& coordinator);
 %extend 
 {
 	// Note: Extra const on right of pointer to let SWIG know this only wants a get accessor
