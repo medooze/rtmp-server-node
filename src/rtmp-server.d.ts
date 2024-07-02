@@ -242,7 +242,7 @@ export  class RTMPServerModule {
 
 
 export class FrameDispatchCoordinator {
-  
+    SetMaxDelayMs(maxDelayMs: number): void;
 }
 
 export  class FrameDispatchCoordinatorShared {
