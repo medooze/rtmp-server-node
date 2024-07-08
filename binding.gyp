@@ -67,6 +67,8 @@
 							"<(medooze_media_server_src)/src/utf8.cpp",
 							"<(medooze_media_server_src)/src/avcdescriptor.cpp",
 							"<(medooze_media_server_src)/src/MediaFrameListenerBridge.cpp",
+							"<(medooze_media_server_src)/src/OpenSSL.cpp",
+							"<(medooze_media_server_src)/src/TlsClient.cpp",
 							"<(medooze_media_server_src)/src/rtp/LayerInfo.cpp",
 							"<(medooze_media_server_src)/src/FrameDelayCalculator.cpp",
 							"<(medooze_media_server_src)/src/FrameDispatchCoordinator.cpp",
