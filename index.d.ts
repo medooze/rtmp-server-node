@@ -5,6 +5,7 @@ export type Application = import("./build/types/Application");
 export type Client = import("./build/types/Client");
 export type Stream = import("./build/types/Stream");
 export type ClientConnection = import("./build/types/ClientConnection");
+export type CommandError = import("./build/types/CommandError");
 export type OutgoingStreamBridge = import("./build/types/OutgoingStreamBridge");
 export type OutgoingStreamTrackBridge = import("./build/types/OutgoingStreamTrackBridge");
 export type IncomingStreamBridge = import("./build/types/IncomingStreamBridge");
