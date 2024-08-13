@@ -7,8 +7,8 @@ class IncomingStreamBridge :
 {
 public:
 	IncomingStreamBridge(v8::Local<v8::Object> object, int maxLateOffset = 200, int maxBufferingTime = 400) :
-		audio(new MediaFrameListenerBridge(loop, 1)),
-		video(new MediaFrameListenerBridge(loop, 2)),
+		audio(new MediaFrameListenerBridge(loop, 1, false, true)),
+		video(new MediaFrameListenerBridge(loop, 2, false, true)),
 		mutex(true),
 		maxLateOffset(maxLateOffset),
 		maxBufferingTime(maxBufferingTime)
