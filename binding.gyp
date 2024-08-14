@@ -31,7 +31,6 @@
 			],
 			"include_dirs" : 
 			[
-				'/usr/include/nodejs/',
 				"<!(node -e \"require('nan')\")"
 			],
 			"ldflags" : [" -lpthread -lresolv"],
@@ -70,6 +69,8 @@
 							"<(medooze_media_server_src)/src/OpenSSL.cpp",
 							"<(medooze_media_server_src)/src/TlsClient.cpp",
 							"<(medooze_media_server_src)/src/rtp/LayerInfo.cpp",
+							"<(medooze_media_server_src)/src/FrameDelayCalculator.cpp",
+							"<(medooze_media_server_src)/src/FrameDispatchCoordinator.cpp",
 							"<(medooze_media_server_src)/src/rtp/RTPPacket.cpp",
 							"<(medooze_media_server_src)/src/rtp/RTPPayload.cpp",
 							"<(medooze_media_server_src)/src/rtp/RTPHeader.cpp",

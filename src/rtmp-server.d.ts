@@ -240,6 +240,22 @@ export  class RTMPServerModule {
   constructor();
 }
 
+export  class FrameDispatchCoordinator {
+
+  SetMaxDelayMs(maxDelayMs: number): void;
+
+  constructor();
+}
+
+export  class FrameDispatchCoordinatorShared {
+
+  constructor(aUpdateRefsPacketLateThresholdMs: number, aUpdateRefsStepPacketEarlyMs: number);
+
+  constructor();
+
+  get(): FrameDispatchCoordinator;
+}
+
 export  class MediaFrameListenerBridge extends RTPIncomingMediaStream {
 
   constructor(timeService: TimeService | EventLoop, ssrc: number);
@@ -287,6 +303,8 @@ export  class MediaFrameListenerBridge extends RTPIncomingMediaStream {
   RemoveMediaListener(listener: MediaFrameListenerShared): void;
 
   SetTargetBitrateHint(targetBitrateHint: number): void;
+
+  SetFrameDispatchCoordinator(coordinator: FrameDispatchCoordinatorShared): void;
 
   codec: string;
 
@@ -420,11 +438,36 @@ export  class RTMPServerFacade {
   Stop(): void;
 }
 
+export type RTMPClientConnection_ErrorCode = number & { readonly [_SWIG_enum_tag]: 'RTMPClientConnection_ErrorCode'; };
+
+export  class RTMPClientConnection {
+
+ static readonly ErrorCode_NoError: RTMPClientConnection_ErrorCode;
+
+ static readonly ErrorCode_Generic: RTMPClientConnection_ErrorCode;
+
+ static readonly ErrorCode_FailedToResolveURL: RTMPClientConnection_ErrorCode;
+
+ static readonly ErrorCode_GetSockOptError: RTMPClientConnection_ErrorCode;
+
+ static readonly ErrorCode_FailedToConnectSocket: RTMPClientConnection_ErrorCode;
+
+ static readonly ErrorCode_ConnectCommandFailed: RTMPClientConnection_ErrorCode;
+
+ static readonly ErrorCode_FailedToParseData: RTMPClientConnection_ErrorCode;
+
+ static readonly ErrorCode_PeerClosed: RTMPClientConnection_ErrorCode;
+
+ static readonly ErrorCode_ReadError: RTMPClientConnection_ErrorCode;
+
+ static readonly ErrorCode_PollError: RTMPClientConnection_ErrorCode;
+}
+
 export  class RTMPClientConnectionImpl extends RTMPMediaStreamListener {
 
   constructor(object: any);
 
-  Connect(server: string, port: number, app: string): number;
+  Connect(server: string, port: number, app: string): any;
 
   CreateStream(object: any): void;
 
