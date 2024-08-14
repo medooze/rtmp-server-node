@@ -1,4 +1,7 @@
 %{
+
+#include <OpenSSL.h>
+
 class RTMPServerModule
 {
 public:

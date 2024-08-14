@@ -78,6 +78,7 @@
 							"<(medooze_media_server_src)/src/rtmp/rtmpserver.cpp",
 							"<(medooze_media_server_src)/src/rtmp/amf.cpp",
 							"<(medooze_media_server_src)/src/rtmp/rtmpclientconnection.cpp",
+							"<(medooze_media_server_src)/src/rtmp/rtmpsclientconnection.cpp",
 							"<(medooze_media_server_src)/src/rtmp/rtmpmessage.cpp",
 							"<(medooze_media_server_src)/src/rtmp/rtmpserver.cpp",
 							"<(medooze_media_server_src)/src/rtmp/rtmpconnection.cpp",
