@@ -3556,7 +3556,8 @@ private:
 #include "rtmp/rtmpsclientconnection.h"
 
 class RTMPClientConnectionImpl :
-	public RTMPClientConnection::Listener
+	public RTMPClientConnection::Listener,
+	public RTMPMediaStreamListener
 {
 public:	
 	RTMPClientConnectionImpl(bool secure, v8::Local<v8::Object> object) :
@@ -3597,7 +3598,14 @@ public:
 	{
 		return connection->GetOutBytes();
 	}
+	
+	void Stop()
+	{
+		connection->Disconnect();
+	}
 
+	//  RTMPClientConnection::Listener overrides
+	
 	void onConnected(RTMPClientConnection* conn) override
 	{
 		Log("-RTMPClientConnectionImpl::onConnected()\n");
@@ -3652,10 +3660,48 @@ public:
 		});
 	}
 
-	void Stop()
+	// RTMPMediaStream::Listener overrides
+	
+	void onAttached(RTMPMediaStream* stream) override
 	{
-		connection->Disconnect();
+		connection->onAttached(stream);
 	}
+	
+	void onMediaFrame(DWORD id, RTMPMediaFrame* frame) override
+	{
+		connection->onMediaFrame(id, frame);
+	}
+	
+	void onMetaData(DWORD id, RTMPMetaData* meta) override
+	{
+		connection->onMetaData(id, meta);
+	}
+	
+	void onCommand(DWORD id, const wchar_t* name, AMFData* obj) override
+	{
+		connection->onCommand(id, name, obj);
+	}
+	
+	void onStreamBegin(DWORD id) override
+	{
+		connection->onStreamBegin(id);
+	}
+	
+	void onStreamEnd(DWORD id) override
+	{
+		connection->onStreamEnd(id);
+	}
+	
+	void onStreamReset(DWORD id) override
+	{
+		connection->onStreamReset(id);
+	}
+	
+	void onDetached(RTMPMediaStream* stream) override
+	{
+		connection->onDetached(stream);
+	}
+
 private:
 	void SendCommand(DWORD streamId, const wchar_t* name, AMFData* params, AMFData* extra, v8::Local<v8::Object> promise)
 	{
