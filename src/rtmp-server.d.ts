@@ -465,7 +465,7 @@ export  class RTMPClientConnection {
 
 export  class RTMPClientConnectionImpl extends RTMPMediaStreamListener {
 
-  constructor(object: any);
+  constructor(secure: boolean, object: any);
 
   Connect(server: string, port: number, app: string): any;
 
@@ -480,6 +480,8 @@ export  class RTMPClientConnectionImpl extends RTMPMediaStreamListener {
   GetOutBytes(): number;
 
   Stop(): void;
+
+  GetTimeService(): TimeService;
 }
 
 

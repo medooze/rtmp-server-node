@@ -3604,6 +3604,11 @@ public:
 		connection->Disconnect();
 	}
 
+	TimeService& GetTimeService()
+	{
+		return *connection;
+	}
+	
 	//  RTMPClientConnection::Listener overrides
 	
 	void onConnected(RTMPClientConnection* conn) override
@@ -10514,6 +10519,34 @@ fail:
 }
 
 
+static SwigV8ReturnValue _wrap_RTMPClientConnectionImpl_GetTimeService(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIGV8_VALUE jsresult;
+  RTMPClientConnectionImpl *arg1 = (RTMPClientConnectionImpl *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  TimeService *result = 0 ;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_RTMPClientConnectionImpl_GetTimeService.");
+  
+  res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_RTMPClientConnectionImpl, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "RTMPClientConnectionImpl_GetTimeService" "', argument " "1"" of type '" "RTMPClientConnectionImpl *""'"); 
+  }
+  arg1 = reinterpret_cast< RTMPClientConnectionImpl * >(argp1);
+  result = (TimeService *) &(arg1)->GetTimeService();
+  jsresult = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_TimeService, 0 |  0 );
+  
+  
+  SWIGV8_RETURN(jsresult);
+  
+  goto fail;
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
+}
+
+
 static void _wrap_delete_RTMPClientConnectionImpl(const v8::WeakCallbackInfo<SWIGV8_Proxy> &data) {
   SWIGV8_Proxy *proxy = data.GetParameter();
   
@@ -11421,6 +11454,7 @@ SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "DeleteStream"
 SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "GetInBytes", _wrap_RTMPClientConnectionImpl_GetInBytes);
 SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "GetOutBytes", _wrap_RTMPClientConnectionImpl_GetOutBytes);
 SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "Stop", _wrap_RTMPClientConnectionImpl_Stop);
+SWIGV8_AddMemberFunction(_exports_RTMPClientConnectionImpl_class, "GetTimeService", _wrap_RTMPClientConnectionImpl_GetTimeService);
 
 
   /* setup inheritances */

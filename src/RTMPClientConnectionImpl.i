@@ -52,6 +52,11 @@ public:
 		connection->Disconnect();
 	}
 
+	TimeService& GetTimeService()
+	{
+		return *connection;
+	}
+	
 	//  RTMPClientConnection::Listener overrides
 	
 	void onConnected(RTMPClientConnection* conn) override
@@ -220,4 +225,5 @@ public:
 	QWORD GetInBytes() const;
 	QWORD GetOutBytes() const;
 	void Stop();
+	TimeService& GetTimeService();
 };
