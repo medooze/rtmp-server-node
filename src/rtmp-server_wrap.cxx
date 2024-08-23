@@ -2084,6 +2084,9 @@ RTPReceiverShared* RTPReceiverShared_from_proxy(const v8::Local<v8::Value> input
 
 
 
+
+#include <OpenSSL.h>
+
 class RTMPServerModule
 {
 public:
@@ -2134,6 +2137,9 @@ public:
 	static void Initialize()
 	{
 		Log("-RTMPServerModule::Initialize\n");
+		
+		OpenSSL::ClassInit();
+		
 		//Init async handler
 		uv_async_init(uv_default_loop(), &async, async_cb_handler);
 	}
@@ -3547,14 +3553,15 @@ private:
 
 
 #include "rtmp/rtmpclientconnection.h"
+#include "rtmp/rtmpsclientconnection.h"
 
 class RTMPClientConnectionImpl :
-	public RTMPClientConnection,
-	public RTMPClientConnection::Listener
+	public RTMPClientConnection::Listener,
+	public RTMPMediaStreamListener
 {
 public:	
-	RTMPClientConnectionImpl(v8::Local<v8::Object> object) :
-		RTMPClientConnection(L"")
+	RTMPClientConnectionImpl(bool secure, v8::Local<v8::Object> object) :
+		connection(secure ? new RTMPSClientConnection(L"") : new RTMPClientConnection(L""))
 	{
 		//Store event callback object
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
@@ -3562,7 +3569,7 @@ public:
 	
 	RTMPClientConnection::ErrorCode Connect(const char* server,int port, const char* app)
 	{
-		return RTMPClientConnection::Connect(server, port, app, this);
+		return connection->Connect(server, port, app, this);
 	}
 
 	void CreateStream(v8::Local<v8::Object> promise)
@@ -3579,10 +3586,26 @@ public:
 	{
 		UTF8Parser parser;
 		parser.SetString(*Nan::Utf8String(url));
-		RTMPClientConnection::SendCommand(id, L"publish", nullptr, new AMFString(parser.GetWChar()));
+		connection->SendCommand(id, L"publish", nullptr, new AMFString(parser.GetWChar()));
 	}
 
+	QWORD GetInBytes() const
+	{
+		return connection->GetInBytes();
+	}
+	
+	QWORD GetOutBytes() const
+	{
+		return connection->GetOutBytes();
+	}
+	
+	void Stop()
+	{
+		connection->Disconnect();
+	}
 
+	//  RTMPClientConnection::Listener overrides
+	
 	void onConnected(RTMPClientConnection* conn) override
 	{
 		Log("-RTMPClientConnectionImpl::onConnected()\n");
@@ -3595,7 +3618,7 @@ public:
 		});
 	}
 
-	void onDisconnected(RTMPClientConnection* conn, ErrorCode code) override
+	void onDisconnected(RTMPClientConnection* conn, RTMPClientConnection::ErrorCode code) override
 	{
 		Log("-RTMPClientConnectionImpl::onDisconnected()\n");
 
@@ -3637,14 +3660,52 @@ public:
 		});
 	}
 
-	void Stop()
+	// RTMPMediaStream::Listener overrides
+	
+	void onAttached(RTMPMediaStream* stream) override
 	{
-		Disconnect();
+		connection->onAttached(stream);
 	}
+	
+	void onMediaFrame(DWORD id, RTMPMediaFrame* frame) override
+	{
+		connection->onMediaFrame(id, frame);
+	}
+	
+	void onMetaData(DWORD id, RTMPMetaData* meta) override
+	{
+		connection->onMetaData(id, meta);
+	}
+	
+	void onCommand(DWORD id, const wchar_t* name, AMFData* obj) override
+	{
+		connection->onCommand(id, name, obj);
+	}
+	
+	void onStreamBegin(DWORD id) override
+	{
+		connection->onStreamBegin(id);
+	}
+	
+	void onStreamEnd(DWORD id) override
+	{
+		connection->onStreamEnd(id);
+	}
+	
+	void onStreamReset(DWORD id) override
+	{
+		connection->onStreamReset(id);
+	}
+	
+	void onDetached(RTMPMediaStream* stream) override
+	{
+		connection->onDetached(stream);
+	}
+
 private:
 	void SendCommand(DWORD streamId, const wchar_t* name, AMFData* params, AMFData* extra, v8::Local<v8::Object> promise)
 	{
-		RTMPClientConnection::SendCommand(streamId, name, params, extra, [=, persistent=std::make_shared<Persistent<v8::Object>>(promise) ](bool isError,AMFData* params, const std::vector<AMFData*>& extra){
+		connection->SendCommand(streamId, name, params, extra, [=, persistent=std::make_shared<Persistent<v8::Object>>(promise) ](bool isError,AMFData* params, const std::vector<AMFData*>& extra){
 
 			std::vector<std::shared_ptr<AMFData>> result;
 			result.emplace_back(params->Clone());
@@ -3671,7 +3732,9 @@ private:
 		});
 	}
 private:
-	std::shared_ptr<Persistent<v8::Object>> persistent;	
+	std::shared_ptr<Persistent<v8::Object>> persistent;
+	
+	std::unique_ptr<RTMPClientConnection> connection;
 };
 
 
@@ -10171,14 +10234,23 @@ static SwigV8ReturnValue _wrap_new_RTMPClientConnectionImpl(const SwigV8Argument
   SWIGV8_HANDLESCOPE();
   
   SWIGV8_OBJECT self = args.Holder();
-  v8::Local< v8::Object > arg1 ;
+  bool arg1 ;
+  v8::Local< v8::Object > arg2 ;
+  bool val1 ;
+  int ecode1 = 0 ;
   RTMPClientConnectionImpl *result;
   if(self->InternalFieldCount() < 1) SWIG_exception_fail(SWIG_ERROR, "Illegal call of constructor _wrap_new_RTMPClientConnectionImpl.");
-  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_RTMPClientConnectionImpl.");
+  if(args.Length() != 2) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_RTMPClientConnectionImpl.");
+  ecode1 = SWIG_AsVal_bool(args[0], &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_RTMPClientConnectionImpl" "', argument " "1"" of type '" "bool""'");
+  } 
+  arg1 = static_cast< bool >(val1);
   {
-    arg1 = v8::Local<v8::Object>::Cast(args[0]);
+    arg2 = v8::Local<v8::Object>::Cast(args[1]);
   }
-  result = (RTMPClientConnectionImpl *)new RTMPClientConnectionImpl(arg1);
+  result = (RTMPClientConnectionImpl *)new RTMPClientConnectionImpl(arg1,arg2);
+  
   
   
   

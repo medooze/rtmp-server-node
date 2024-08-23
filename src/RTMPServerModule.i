@@ -1,4 +1,7 @@
 %{
+
+#include <OpenSSL.h>
+
 class RTMPServerModule
 {
 public:
@@ -49,6 +52,9 @@ public:
 	static void Initialize()
 	{
 		Log("-RTMPServerModule::Initialize\n");
+		
+		OpenSSL::ClassInit();
+		
 		//Init async handler
 		uv_async_init(uv_default_loop(), &async, async_cb_handler);
 	}
