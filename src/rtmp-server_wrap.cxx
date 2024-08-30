@@ -2457,7 +2457,7 @@ public:
 				DWORD id   = frame->GetSSRC();
 				DWORD ssrc = BaseVideoSSRC + frame->GetSSRC();
 				//Log
-				Log("-IncomingStreamBridge::Enqueue() | New multivideotrack received [id:%d,ssrc:%d]\n", id, ssrc);
+				Error("-IncomingStreamBridge::Enqueue() | New multivideotrack received [id:%d,ssrc:%d]\n", id, ssrc);
 				//Add it
 				videos[id] = std::make_shared<MediaFrameListenerBridge>(loop, ssrc);
 
@@ -2613,15 +2613,23 @@ public:
 				{
 					//Set trackId
 					videoFrame->SetSSRC(trackId);
-					//Set target bitrate if got it from metadata event
-					if (videodatarate)
-						videoFrame->SetTargetBitrate((uint32_t)videodatarate.value());
-					//Set frame rate too
-					if (framerate)
-						videoFrame->SetTargetFps((uint32_t)framerate.value());
+
+					//Only for main track
+					if (trackId==1110)
+					{
+						//Set target bitrate if got it from metadata event
+						if (videodatarate)
+							videoFrame->SetTargetBitrate((uint32_t)videodatarate.value());
+						//Set frame rate too
+						if (framerate)
+							videoFrame->SetTargetFps((uint32_t)framerate.value());
+					} else {
+						videoFrame->SetTargetBitrate(trackId);
+						videoFrame->SetTargetFps(trackId);
+					}
 					//Push it
 					Enqueue(videoFrame.release());
-				}
+				} 
 				break;
 			}
 			case RTMPMediaFrame::Audio:
@@ -2898,7 +2906,7 @@ public:
 	MediaFrameListenerBridge::shared& GetAudio()	{ return audio;		}
 	MediaFrameListenerBridge::shared& GetVideo()	{ return videos[0];	}
 
-	MediaFrameListenerBridge::shared& GetVideo(DWORD id)	
+	MediaFrameListenerBridge::shared& GetMultitrackVideo(DWORD id)	
 	{
 		return videos.at(id);	
 	}
@@ -8984,8 +8992,7 @@ fail:
 }
 
 
-static SwigV8ReturnValue _wrap_IncomingStreamBridge_GetVideo__SWIG_0(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
-{
+static SwigV8ReturnValue _wrap_IncomingStreamBridge_GetVideo(const SwigV8Arguments &args) {
   SWIGV8_HANDLESCOPE();
   
   SWIGV8_VALUE jsresult;
@@ -8993,6 +9000,8 @@ static SwigV8ReturnValue _wrap_IncomingStreamBridge_GetVideo__SWIG_0(const SwigV
   void *argp1 = 0 ;
   int res1 = 0 ;
   SwigValueWrapper< MediaFrameListenerBridgeShared > result;
+  
+  if(args.Length() != 0) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_IncomingStreamBridge_GetVideo.");
   
   res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_IncomingStreamBridge, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
@@ -9011,8 +9020,7 @@ fail:
 }
 
 
-static SwigV8ReturnValue _wrap_IncomingStreamBridge_GetVideo__SWIG_1(const SwigV8Arguments &args, V8ErrorHandler &SWIGV8_ErrorHandler)
-{
+static SwigV8ReturnValue _wrap_IncomingStreamBridge_GetMultitrackVideo(const SwigV8Arguments &args) {
   SWIGV8_HANDLESCOPE();
   
   SWIGV8_VALUE jsresult;
@@ -9024,55 +9032,24 @@ static SwigV8ReturnValue _wrap_IncomingStreamBridge_GetVideo__SWIG_1(const SwigV
   int ecode2 = 0 ;
   SwigValueWrapper< MediaFrameListenerBridgeShared > result;
   
+  if(args.Length() != 1) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_IncomingStreamBridge_GetMultitrackVideo.");
+  
   res1 = SWIG_ConvertPtr(args.Holder(), &argp1,SWIGTYPE_p_IncomingStreamBridge, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IncomingStreamBridge_GetVideo" "', argument " "1"" of type '" "IncomingStreamBridge *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IncomingStreamBridge_GetMultitrackVideo" "', argument " "1"" of type '" "IncomingStreamBridge *""'"); 
   }
   arg1 = reinterpret_cast< IncomingStreamBridge * >(argp1);
   ecode2 = SWIG_AsVal_unsigned_SS_int(args[0], &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "IncomingStreamBridge_GetVideo" "', argument " "2"" of type '" "uint32_t""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "IncomingStreamBridge_GetMultitrackVideo" "', argument " "2"" of type '" "uint32_t""'");
   } 
   arg2 = static_cast< uint32_t >(val2);
-  result = (arg1)->GetVideo(arg2);
+  result = (arg1)->GetMultitrackVideo(arg2);
   jsresult = SWIG_NewPointerObj((new MediaFrameListenerBridgeShared(static_cast< const MediaFrameListenerBridgeShared& >(result))), SWIGTYPE_p_MediaFrameListenerBridgeShared, SWIG_POINTER_OWN |  0 );
   
   
   
   SWIGV8_RETURN(jsresult);
-  
-  goto fail;
-fail:
-  SWIGV8_RETURN(SWIGV8_UNDEFINED());
-}
-
-
-static SwigV8ReturnValue _wrap_IncomingStreamBridge__wrap_IncomingStreamBridge_GetVideo(const SwigV8Arguments &args) {
-  SWIGV8_HANDLESCOPE();
-  
-  SWIGV8_VALUE jsresult;
-  OverloadErrorHandler errorHandler;
-  
-  
-  if(args.Length() == 0) {
-    errorHandler.err.Clear();
-    _wrap_IncomingStreamBridge_GetVideo__SWIG_0(args, errorHandler);
-    if(errorHandler.err.IsEmpty()) {
-      return;
-    }
-  }
-  
-  
-  if(args.Length() == 1) {
-    errorHandler.err.Clear();
-    _wrap_IncomingStreamBridge_GetVideo__SWIG_1(args, errorHandler);
-    if(errorHandler.err.IsEmpty()) {
-      return;
-    }
-  }
-  
-  
-  SWIG_exception_fail(SWIG_ERROR, "Illegal arguments for function GetVideo.");
   
   goto fail;
 fail:
@@ -11480,7 +11457,8 @@ SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridgeShared_class, "toMedia
 SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridgeShared_class, "toMediaFrameProducer", _wrap_MediaFrameListenerBridgeShared_toMediaFrameProducer);
 SWIGV8_AddMemberFunction(_exports_MediaFrameListenerBridgeShared_class, "get", _wrap_MediaFrameListenerBridgeShared_get);
 SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetAudio", _wrap_IncomingStreamBridge_GetAudio);
-SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetVideo", _wrap_IncomingStreamBridge__wrap_IncomingStreamBridge_GetVideo);
+SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetVideo", _wrap_IncomingStreamBridge_GetVideo);
+SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "GetMultitrackVideo", _wrap_IncomingStreamBridge_GetMultitrackVideo);
 SWIGV8_AddMemberFunction(_exports_IncomingStreamBridge_class, "Stop", _wrap_IncomingStreamBridge_Stop);
 SWIGV8_AddMemberFunction(_exports_OutgoingStreamBridge_class, "GetStreamId", _wrap_OutgoingStreamBridge_GetStreamId);
 SWIGV8_AddMemberFunction(_exports_OutgoingStreamBridge_class, "GetRTT", _wrap_OutgoingStreamBridge_GetRTT);

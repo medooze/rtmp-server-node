@@ -142,7 +142,7 @@ public:
 				DWORD id   = frame->GetSSRC();
 				DWORD ssrc = BaseVideoSSRC + frame->GetSSRC();
 				//Log
-				Log("-IncomingStreamBridge::Enqueue() | New multivideotrack received [id:%d,ssrc:%d]\n", id, ssrc);
+				Error("-IncomingStreamBridge::Enqueue() | New multivideotrack received [id:%d,ssrc:%d]\n", id, ssrc);
 				//Add it
 				videos[id] = std::make_shared<MediaFrameListenerBridge>(loop, ssrc);
 
@@ -298,15 +298,23 @@ public:
 				{
 					//Set trackId
 					videoFrame->SetSSRC(trackId);
-					//Set target bitrate if got it from metadata event
-					if (videodatarate)
-						videoFrame->SetTargetBitrate((uint32_t)videodatarate.value());
-					//Set frame rate too
-					if (framerate)
-						videoFrame->SetTargetFps((uint32_t)framerate.value());
+
+					//Only for main track
+					if (trackId==0)
+					{
+						//Set target bitrate if got it from metadata event
+						if (videodatarate)
+							videoFrame->SetTargetBitrate((uint32_t)videodatarate.value());
+						//Set frame rate too
+						if (framerate)
+							videoFrame->SetTargetFps((uint32_t)framerate.value());
+					} else {
+						videoFrame->SetTargetBitrate(trackId);
+						videoFrame->SetTargetFps(trackId);
+					}
 					//Push it
 					Enqueue(videoFrame.release());
-				}
+				} 
 				break;
 			}
 			case RTMPMediaFrame::Audio:
@@ -583,7 +591,7 @@ public:
 	MediaFrameListenerBridge::shared& GetAudio()	{ return audio;		}
 	MediaFrameListenerBridge::shared& GetVideo()	{ return videos[0];	}
 
-	MediaFrameListenerBridge::shared& GetVideo(DWORD id)	
+	MediaFrameListenerBridge::shared& GetMultitrackVideo(DWORD id)	
 	{
 		return videos.at(id);	
 	}
@@ -624,6 +632,6 @@ public:
 	IncomingStreamBridge(v8::Local<v8::Object> object, int maxLateOffset = 200, int maxBufferingTime = 400);
 	MediaFrameListenerBridgeShared GetAudio();
 	MediaFrameListenerBridgeShared GetVideo();
-	MediaFrameListenerBridgeShared GetVideo(DWORD id);
+	MediaFrameListenerBridgeShared GetMultitrackVideo(DWORD id);
 	void Stop();
 };
