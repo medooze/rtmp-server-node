@@ -2325,7 +2325,9 @@ private:
 public:
 	IncomingStreamBridge(v8::Local<v8::Object> object, int maxLateOffset = 200, int maxBufferingTime = 400) :
 		audio(new MediaFrameListenerBridge(loop, 1, false, true)),
-		video(new MediaFrameListenerBridge(loop, 2, false, true)),
+		videos({
+			{0, std::make_shared<MediaFrameListenerBridge>(loop, BaseVideoSSRC, false, true)}
+		}),
 		mutex(true),
 		maxLateOffset(maxLateOffset),
 		maxBufferingTime(maxBufferingTime)
@@ -2457,7 +2459,7 @@ public:
 				//Log
 				Error("-IncomingStreamBridge::Enqueue() | New multivideotrack received [id:%d,ssrc:%d]\n", id, ssrc);
 				//Add it
-				videos[id] = std::make_shared<MediaFrameListenerBridge>(loop, ssrc);
+				videos[id] = std::make_shared<MediaFrameListenerBridge>(loop, ssrc, false, true);
 
 				//Fire event on main node thread
 				RTMPServerModule::Async([=,cloned=persistent](){
@@ -2613,7 +2615,7 @@ public:
 					videoFrame->SetSSRC(trackId);
 
 					//Only for main track
-					if (trackId==1110)
+					if (trackId==0)
 					{
 						//Set target bitrate if got it from metadata event
 						if (videodatarate)
