@@ -5,10 +5,14 @@ class IncomingStreamBridge :
 	public RTMPMediaStream::Listener,
 	public RTPReceiver
 {
+private:
+	static constexpr size_t BaseVideoSSRC = 2;
 public:
 	IncomingStreamBridge(v8::Local<v8::Object> object, int maxLateOffset = 200, int maxBufferingTime = 400) :
 		audio(new MediaFrameListenerBridge(loop, 1, false, true)),
-		video(new MediaFrameListenerBridge(loop, 2, false, true)),
+		videos({
+			{0, std::make_shared<MediaFrameListenerBridge>(loop, BaseVideoSSRC, false, true)}
+		}),
 		mutex(true),
 		maxLateOffset(maxLateOffset),
 		maxBufferingTime(maxBufferingTime)
@@ -43,8 +47,8 @@ public:
 					//Dispatch audio
 					audio->onMediaFrame(*frame);
 				else
-					//Dispatch video
-					video->onMediaFrame(*frame);
+					//Dispatch video to correct dispatcher
+					videos.at(frame->GetSSRC())->onMediaFrame(*frame);
 			}
 			//No hurry
 			hurryUp = false;
@@ -67,7 +71,8 @@ public:
 		
 		//Reset audio and video streasm
 		audio->Reset();
-		video->Reset();
+		for (auto& [id,video] : videos)
+			video->Reset();
 		
 		//Check if attached to another stream
 		if (attached)
@@ -101,7 +106,8 @@ public:
 
 		//Stop audio and video
 		audio->Stop();
-		video->Stop();
+		for (auto& [id,video] : videos)
+			video->Stop();
 
 		//We are stopped
 		stopped = true;
@@ -129,6 +135,29 @@ public:
 		
 		//Run on thread
 		loop.Async([=](...) {
+			//Check if it is the first time we see the video track
+			if (frame->GetType() == MediaFrame::Video && videos.find(frame->GetSSRC())==videos.end())
+			{
+				//Get outbound ssrc
+				DWORD id   = frame->GetSSRC();
+				DWORD ssrc = BaseVideoSSRC + frame->GetSSRC();
+				//Log
+				Error("-IncomingStreamBridge::Enqueue() | New multivideotrack received [id:%d,ssrc:%d]\n", id, ssrc);
+				//Add it
+				videos[id] = std::make_shared<MediaFrameListenerBridge>(loop, ssrc, false, true);
+
+				//Fire event on main node thread
+				RTMPServerModule::Async([=,cloned=persistent](){
+					Nan::HandleScope scope;
+					int i = 0;
+					v8::Local<v8::Value> argv[1];
+					//Create local args
+					argv[i++] = Nan::New<v8::Number>(id);
+					//Call object method with arguments
+					MakeCallback(cloned, "onmultivideotrack", i, argv);
+				});
+			}
+
 			//Convert timestamp 
 			uint64_t timestamp = frame->GetTimeStamp()*1000/frame->GetClockRate();
 
@@ -241,102 +270,103 @@ public:
 		{
 			case RTMPMediaFrame::Video:
 			{
-				//Create rtp packets
-				std::unique_ptr<VideoFrame> videoFrame;
-				
-				auto vframe = static_cast<RTMPVideoFrame*>(frame);
-				auto codec = GetRtmpFrameVideoCodec(*vframe);
-
-				switch(codec)
+				//Get frame
+				auto rtmpVideoFrame = static_cast<RTMPVideoFrame*>(frame);
+				//Get track id
+				auto trackId = rtmpVideoFrame->GetTrackId();
+				//Get video codec from rtmp codec
+				auto codec = GetRtmpFrameVideoCodec(*rtmpVideoFrame);
+				//Get or create ptr for depaketizer
+				auto& videoPacketizer = videoPacketizers[trackId];
+				//Check if we have one already for same codec
+				if (!videoPacketizer || videoPacketizer->GetCodec()!=codec)
 				{
-					case VideoCodec::H265:
-						videoFrame = hevcPacketizer.AddFrame(vframe);
-						break;
-					case VideoCodec::H264:
-					 	videoFrame= avcPacketizer.AddFrame(vframe);
-						break;
-					case VideoCodec::AV1:
-						videoFrame= av1Packetizer.AddFrame(vframe);
-						break;
-					default:
+					Debug("-IncomingStreamBridge::onMediaFrame() | Creating new video packetizer [trackId:%d,codec:%d]\n",trackId,codec);
+					//Create a new one
+					videoPacketizer = std::move(CreateRTMPVideoPacketizer(codec));
+					//Check codec is valid
+					if (!videoPacketizer)
 						// Not supported yet
-						Warning("-IncomingStreamBridge::onMediaFrame() | Video codec not supported, dropping frame codec:%d\n", codec);
-						return;
+						return (void)Warning("-IncomingStreamBridge::onMediaFrame() | Video codec not supported, dropping frame codec:%d\n", codec);
 				}
-				
+
+				//Create rtp packets
+				std::unique_ptr<VideoFrame> videoFrame = videoPacketizer->AddFrame(rtmpVideoFrame);
+
 				//IF got one
 				if (videoFrame)
 				{
-					//Set target bitrate if got it from metadata event
-					if (videodatarate)
-						videoFrame->SetTargetBitrate((uint32_t)videodatarate.value());
-					//Set frame rate too
-					if (framerate)
-						videoFrame->SetTargetFps((uint32_t)framerate.value());
+					//Set trackId
+					videoFrame->SetSSRC(trackId);
+
+					//Only for main track
+					if (trackId==0)
+					{
+						//Set target bitrate if got it from metadata event
+						if (videodatarate)
+							videoFrame->SetTargetBitrate((uint32_t)videodatarate.value());
+						//Set frame rate too
+						if (framerate)
+							videoFrame->SetTargetFps((uint32_t)framerate.value());
+					} else {
+						videoFrame->SetTargetBitrate(trackId);
+						videoFrame->SetTargetFps(trackId);
+					}
 					//Push it
 					Enqueue(videoFrame.release());
-				}
+				} 
 				break;
 			}
 			case RTMPMediaFrame::Audio:
 			{
-				//Create rtp packets
-				std::unique_ptr<AudioFrame> audioFrame;
-				
-				auto aframe = static_cast<RTMPAudioFrame*>(frame);
-				auto codec = aframe->GetAudioCodec();
-
-				switch(codec)
+				//Get frame
+				auto rtmpAudioFrame = static_cast<RTMPAudioFrame*>(frame);
+				auto codec = GetRtmpFrameAudioCodec(*rtmpAudioFrame);
+				//Check if we have one already for same codec
+				if (!audioPacketizer || audioPacketizer->GetCodec()!=codec)
 				{
-					case RTMPAudioFrame::AAC:
-						//Check if it is the aac config
-						if (aframe->GetAACPacketType()==RTMPAudioFrame::AACSequenceHeader)
-						{
-							//Create condig
-							char aux[3];
-							std::string config;
-					
-							//Encode config
-							for (size_t i=0; i<frame->GetMediaSize();++i)
-							{
-								//Convert to hex
-								snprintf(aux, 3, "%.2x", frame->GetMediaData()[i]);
-								//Append
-								config += aux;
-							}
-					
-							//Run function on main node thread
-							RTMPServerModule::Async([=,cloned=persistent](){
-								Nan::HandleScope scope;
-								int i = 0;
-								v8::Local<v8::Value> argv[1];
-								//Create local args
-								argv[i++] = Nan::New<v8::String>(config).ToLocalChecked();
-								//Call object method with arguments
-								MakeCallback(cloned, "onaacconfig", i, argv);
-							});
-						}
-
-						//Create rtp packets
-						audioFrame = aacPacketizer.AddFrame(aframe);
-						break;
-					case RTMPAudioFrame::G711A:
-						//Create rtp packets
-						audioFrame = g711aPacketizer.AddFrame(aframe);
-						break;
-					case RTMPAudioFrame::G711U:
-						//Create rtp packets
-						audioFrame = g711uPacketizer.AddFrame(aframe);
-						break;
-					default:
+					Log("-IncomingStreamBridge::onMediaFrame() | Creating new audio packetizer [codec:%d]\n",codec);
+					//Create a new one
+					audioPacketizer = std::move(CreateRTMPAudioPacketizer(codec));
+					//Check codec is valid
+					if (!audioPacketizer)
 						// Not supported yet
-						Warning("-IncomingStreamBridge::onMediaFrame() | Audio codec not supported, dropping frame codec:%d\n", codec);
-						return;
+						return (void)Warning("-IncomingStreamBridge::onMediaFrame() | Audio codec not supported, dropping frame codec:%d\n", codec);
 				}
+				//Create rtp packet
+				std::unique_ptr<AudioFrame> audioFrame = audioPacketizer->AddFrame(rtmpAudioFrame);
 				//IF got one
 				if (audioFrame)
 					//Push it
 					Enqueue(audioFrame.release());
+
+				//TODO: deprecate
+				if (codec == AudioCodec::AAC)
+				{
+					//Create condig
+					char aux[3];
+					std::string config;
+					
+					//Encode config
+					for (size_t i=0; i<frame->GetMediaSize();++i)
+					{
+						//Convert to hex
+						snprintf(aux, 3, "%.2x", frame->GetMediaData()[i]);
+						//Append
+						config += aux;
+					}
+					
+					//Run function on main node thread
+					RTMPServerModule::Async([=,cloned=persistent](){
+						Nan::HandleScope scope;
+						int i = 0;
+						v8::Local<v8::Value> argv[1];
+						//Create local args
+						argv[i++] = Nan::New<v8::String>(config).ToLocalChecked();
+						//Call object method with arguments
+						MakeCallback(cloned, "onaacconfig", i, argv);
+					});
+				}
 				break;
 			}
 		}
@@ -558,21 +588,23 @@ public:
 		return 1;
 	}
 	
-	MediaFrameListenerBridge::shared& GetAudio()	{ return audio; }
-	MediaFrameListenerBridge::shared& GetVideo()	{ return video; }
+	MediaFrameListenerBridge::shared& GetAudio()	{ return audio;		}
+	MediaFrameListenerBridge::shared& GetVideo()	{ return videos[0];	}
+
+	MediaFrameListenerBridge::shared& GetMultitrackVideo(DWORD id)	
+	{
+		return videos.at(id);	
+	}
 	
 private:
 	EventLoop loop;
-	RTMPAVCPacketizer avcPacketizer;
-	RTMPHEVCPacketizer hevcPacketizer;
-	
-	RTMPAv1Packetizer av1Packetizer;
-	
-	RTMPAACPacketizer aacPacketizer;
-	RTMPG711APacketizer g711aPacketizer;
-	RTMPG711UPacketizer g711uPacketizer;
+
+	std::unique_ptr<RTMPAudioPacketizer> audioPacketizer;
+	std::map<uint8_t,std::unique_ptr<RTMPVideoPacketizer>> videoPacketizers;
+
 	MediaFrameListenerBridge::shared audio;
-	MediaFrameListenerBridge::shared video;
+	std::map<uint8_t,MediaFrameListenerBridge::shared> videos;
+
 	Mutex mutex;
 	RTMPMediaStream *attached = nullptr;
 	std::shared_ptr<Persistent<v8::Object>> persistent;	
@@ -600,5 +632,6 @@ public:
 	IncomingStreamBridge(v8::Local<v8::Object> object, int maxLateOffset = 200, int maxBufferingTime = 400);
 	MediaFrameListenerBridgeShared GetAudio();
 	MediaFrameListenerBridgeShared GetVideo();
+	MediaFrameListenerBridgeShared GetMultitrackVideo(DWORD id);
 	void Stop();
 };
