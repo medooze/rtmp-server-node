@@ -3,15 +3,21 @@
 
 class IncomingStreamBridge : 
 	public RTMPMediaStream::Listener,
-	public RTPReceiver
+	public RTPReceiver//,
+	//public TimeServiceWrapper<IncomingStreamBridge>
+	// Cant derive from this as the loop is constructed afterwards. Need to derive from loop first then theis if we want to do this. Also TS wont exist outside the this object so safe to NOT use this pattern
 {
 private:
 	static constexpr size_t BaseVideoSSRC = 2;
+
+// @todo owns the loop so ok
+// Because derives from TimeServiceWrapper we want to enforce creation using TimeServiceWrapper::Create() as a factory
 public:
+
 	IncomingStreamBridge(v8::Local<v8::Object> object, int maxLateOffset = 200, int maxBufferingTime = 400) :
-		audio(new MediaFrameListenerBridge(loop, 1, false, true)),
+		audio(MediaFrameListenerBridge::Create(loop, 1, false, true)),
 		videos({
-			{0, std::make_shared<MediaFrameListenerBridge>(loop, BaseVideoSSRC, false, true)}
+			{0, MediaFrameListenerBridge::Create(loop, BaseVideoSSRC, false, true)}
 		}),
 		mutex(true),
 		maxLateOffset(maxLateOffset),
@@ -23,7 +29,7 @@ public:
 		loop.Start(-1);
 		
 		//Create dispatch timer
-		dispatch = loop.CreateTimer([this](std::chrono::milliseconds now){
+		dispatch = loop.CreateTimerUnsafe([this](std::chrono::milliseconds now){
 			
 			//Iterate over the enqueued packets
 			for(auto it = queue.begin(); it!=queue.end(); it = queue.erase(it))
@@ -55,7 +61,7 @@ public:
 		});
 		
 	}
-		
+
 	virtual ~IncomingStreamBridge()
 	{
 		Log("IncomingStreamBridge::~IncomingStreamBridge()\n");
@@ -134,7 +140,7 @@ public:
 		frame->SetTime(now);
 		
 		//Run on thread
-		loop.Async([=](...) {
+		loop.AsyncUnsafe([=](...) {
 			//Check if it is the first time we see the video track
 			if (frame->GetType() == MediaFrame::Video && videos.find(frame->GetSSRC())==videos.end())
 			{
@@ -144,7 +150,7 @@ public:
 				//Log
 				Error("-IncomingStreamBridge::Enqueue() | New multivideotrack received [id:%d,ssrc:%d]\n", id, ssrc);
 				//Add it
-				videos[id] = std::make_shared<MediaFrameListenerBridge>(loop, ssrc, false, true);
+				videos[id] = MediaFrameListenerBridge::Create(loop, ssrc, false, true);
 
 				//Fire event on main node thread
 				RTMPServerModule::Async([=,cloned=persistent](){

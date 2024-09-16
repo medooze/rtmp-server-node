@@ -2296,7 +2296,7 @@ MediaFrameListenerBridgeShared* MediaFrameListenerBridgeShared_from_proxy(const 
 
 
 SWIGINTERN MediaFrameListenerBridgeShared *new_MediaFrameListenerBridgeShared(TimeService &timeService,int ssrc){
-		return new std::shared_ptr<MediaFrameListenerBridge>(new MediaFrameListenerBridge(timeService, ssrc));
+		return new std::shared_ptr<MediaFrameListenerBridge>(MediaFrameListenerBridge::Create(timeService, ssrc));
 	}
 SWIGINTERN RTPIncomingMediaStreamShared MediaFrameListenerBridgeShared_toRTPIncomingMediaStream__SWIG(MediaFrameListenerBridgeShared *self){
 	return std::static_pointer_cast<RTPIncomingMediaStream>(*self);
@@ -2318,15 +2318,21 @@ using RTMPMediaStreamListener =  RTMPMediaStream::Listener;
 
 class IncomingStreamBridge : 
 	public RTMPMediaStream::Listener,
-	public RTPReceiver
+	public RTPReceiver//,
+	//public TimeServiceWrapper<IncomingStreamBridge>
+	// Cant derive from this as the loop is constructed afterwards. Need to derive from loop first then theis if we want to do this. Also TS wont exist outside the this object so safe to NOT use this pattern
 {
 private:
 	static constexpr size_t BaseVideoSSRC = 2;
+
+// @todo owns the loop so ok
+// Because derives from TimeServiceWrapper we want to enforce creation using TimeServiceWrapper::Create() as a factory
 public:
+
 	IncomingStreamBridge(v8::Local<v8::Object> object, int maxLateOffset = 200, int maxBufferingTime = 400) :
-		audio(new MediaFrameListenerBridge(loop, 1, false, true)),
+		audio(MediaFrameListenerBridge::Create(loop, 1, false, true)),
 		videos({
-			{0, std::make_shared<MediaFrameListenerBridge>(loop, BaseVideoSSRC, false, true)}
+			{0, MediaFrameListenerBridge::Create(loop, BaseVideoSSRC, false, true)}
 		}),
 		mutex(true),
 		maxLateOffset(maxLateOffset),
@@ -2338,7 +2344,7 @@ public:
 		loop.Start(-1);
 		
 		//Create dispatch timer
-		dispatch = loop.CreateTimer([this](std::chrono::milliseconds now){
+		dispatch = loop.CreateTimerUnsafe([this](std::chrono::milliseconds now){
 			
 			//Iterate over the enqueued packets
 			for(auto it = queue.begin(); it!=queue.end(); it = queue.erase(it))
@@ -2370,7 +2376,7 @@ public:
 		});
 		
 	}
-		
+
 	virtual ~IncomingStreamBridge()
 	{
 		Log("IncomingStreamBridge::~IncomingStreamBridge()\n");
@@ -2449,7 +2455,7 @@ public:
 		frame->SetTime(now);
 		
 		//Run on thread
-		loop.Async([=](...) {
+		loop.AsyncUnsafe([=](...) {
 			//Check if it is the first time we see the video track
 			if (frame->GetType() == MediaFrame::Video && videos.find(frame->GetSSRC())==videos.end())
 			{
@@ -2459,7 +2465,7 @@ public:
 				//Log
 				Error("-IncomingStreamBridge::Enqueue() | New multivideotrack received [id:%d,ssrc:%d]\n", id, ssrc);
 				//Add it
-				videos[id] = std::make_shared<MediaFrameListenerBridge>(loop, ssrc, false, true);
+				videos[id] = MediaFrameListenerBridge::Create(loop, ssrc, false, true);
 
 				//Fire event on main node thread
 				RTMPServerModule::Async([=,cloned=persistent](){
@@ -7344,47 +7350,6 @@ static void _wrap_delete_FrameDispatchCoordinatorShared(const v8::WeakCallbackIn
 }
 
 
-static SwigV8ReturnValue _wrap_new_MediaFrameListenerBridge(const SwigV8Arguments &args) {
-  SWIGV8_HANDLESCOPE();
-  
-  SWIGV8_OBJECT self = args.Holder();
-  TimeService *arg1 = 0 ;
-  int arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  MediaFrameListenerBridge *result;
-  if(self->InternalFieldCount() < 1) SWIG_exception_fail(SWIG_ERROR, "Illegal call of constructor _wrap_new_MediaFrameListenerBridge.");
-  if(args.Length() != 2) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_MediaFrameListenerBridge.");
-  res1 = SWIG_ConvertPtr(args[0], &argp1, SWIGTYPE_p_TimeService,  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_MediaFrameListenerBridge" "', argument " "1"" of type '" "TimeService &""'"); 
-  }
-  if (!argp1) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_MediaFrameListenerBridge" "', argument " "1"" of type '" "TimeService &""'"); 
-  }
-  arg1 = reinterpret_cast< TimeService * >(argp1);
-  ecode2 = SWIG_AsVal_int(args[1], &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_MediaFrameListenerBridge" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  result = (MediaFrameListenerBridge *)new MediaFrameListenerBridge(*arg1,arg2);
-  
-  
-  
-  
-  
-  SWIGV8_SetPrivateData(self, result, SWIGTYPE_p_MediaFrameListenerBridge, SWIG_POINTER_OWN);
-  SWIGV8_RETURN(self);
-  
-  goto fail;
-fail:
-  SWIGV8_RETURN(SWIGV8_UNDEFINED());
-}
-
-
 static void _wrap_MediaFrameListenerBridge_numFrames_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
   SWIGV8_HANDLESCOPE();
   
@@ -8624,6 +8589,15 @@ static void _wrap_delete_MediaFrameListenerBridge(const v8::WeakCallbackInfo<SWI
     delete arg1;
   }
   delete proxy;
+}
+
+
+static SwigV8ReturnValue _wrap_new_veto_MediaFrameListenerBridge(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIG_exception(SWIG_ERROR, "Class MediaFrameListenerBridge can not be instantiated");
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
 }
 
 
@@ -11754,7 +11728,7 @@ v8::Local<v8::Object> _exports_FrameDispatchCoordinatorShared_obj = _exports_Fra
 #endif
 /* Class: MediaFrameListenerBridge (_exports_MediaFrameListenerBridge) */
 SWIGV8_FUNCTION_TEMPLATE _exports_MediaFrameListenerBridge_class_0 = SWIGV8_CreateClassTemplate("MediaFrameListenerBridge");
-_exports_MediaFrameListenerBridge_class_0->SetCallHandler(_wrap_new_MediaFrameListenerBridge);
+_exports_MediaFrameListenerBridge_class_0->SetCallHandler(_wrap_new_veto_MediaFrameListenerBridge);
 _exports_MediaFrameListenerBridge_class_0->Inherit(_exports_MediaFrameListenerBridge_class);
 #if (SWIG_V8_VERSION < 0x0704)
 _exports_MediaFrameListenerBridge_class_0->SetHiddenPrototype(true);
