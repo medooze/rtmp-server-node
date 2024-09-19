@@ -308,9 +308,6 @@ public:
 						//Set frame rate too
 						if (framerate)
 							videoFrame->SetTargetFps((uint32_t)framerate.value());
-					} else {
-						videoFrame->SetTargetBitrate(trackId);
-						videoFrame->SetTargetFps(trackId);
 					}
 					//Push it
 					Enqueue(videoFrame.release());
