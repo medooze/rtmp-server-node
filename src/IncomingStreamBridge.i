@@ -20,7 +20,7 @@ public:
 		//Store event callback object
 		persistent = std::make_shared<Persistent<v8::Object>>(object);
 		//Start time service
-		loop.Start(-1);
+		loop.Start();
 		
 		//Create dispatch timer
 		dispatch = loop.CreateTimer([this](std::chrono::milliseconds now){
