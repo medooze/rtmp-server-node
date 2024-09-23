@@ -1536,8 +1536,8 @@ v8::Local<v8::Value> toJson(AMFData* data)
 		case AMFData::EcmaArray:
 		{
 			AMFEcmaArray* array = (AMFEcmaArray*)data;
-			auto& elements = array->GetElements();
-			val = Nan::New<v8::Array>(array->GetLength());
+			auto& elements = array->GetProperties();
+			val = Nan::New<v8::Array>(elements.size());
 			for (auto& el : elements)
 			{	
 				UTF8Parser parser(el.first);
@@ -2614,16 +2614,12 @@ public:
 					//Set trackId
 					videoFrame->SetSSRC(trackId);
 
-					//Only for main track
-					if (trackId==0)
-					{
-						//Set target bitrate if got it from metadata event
-						if (videodatarate)
-							videoFrame->SetTargetBitrate((uint32_t)videodatarate.value());
-						//Set frame rate too
-						if (framerate)
-							videoFrame->SetTargetFps((uint32_t)framerate.value());
-					}
+					//Set target bitrate if got it from metadata event
+					if (auto it = videodatarates.find(trackId); it != videodatarates.end())
+						videoFrame->SetTargetBitrate((uint32_t)it->second);
+					//Set frame rate too
+					if (auto it = framerates.find(trackId); it != framerates.end())
+						videoFrame->SetTargetFps((uint32_t)it->second);
 					//Push it
 					Enqueue(videoFrame.release());
 				} 
@@ -2752,8 +2748,7 @@ public:
 				} else if (params->CheckType(AMFData::Object)) {
 				
 					//If we don't have the video fps from the metadata event
-					if (!framerate || !*framerate)
-						//Skip
+					if (framerates.find(0)==framerates.end() || !framerates[0])
 						return;
 
 					//Get timecode info
@@ -2786,7 +2781,7 @@ public:
                                         timeinfo->tm_isdst = -1;         // Is DST on? 1 = yes, 0 = no, -1 = unknown
 
                                         //Set timing info
-                                        timingInfo.first  = mktime(timeinfo) * 1000 + 1000 * frames / *framerate;
+                                        timingInfo.first  = mktime(timeinfo) * 1000 + 1000 * frames / framerates[0];
                                         timingInfo.second = meta->GetTimestamp();
 				}
 			} else if (name.compare(L"@setDataFrame")==0) {
@@ -2799,6 +2794,7 @@ public:
 				//Get medatada params
 				std::wstring metadata = *(meta->GetParams(1));
 				AMFData* params = meta->GetParams(2);
+				
 
 				//Check metadata name and propper data type
 				if (metadata.compare(L"onMetaData")!=0)
@@ -2807,32 +2803,54 @@ public:
 					return;
 				}
 				
-				if (params->CheckType(AMFData::EcmaArray))
+				if (params->CheckType(AMFData::EcmaArray) || params->CheckType(AMFData::Object))
 				{
 
 					//Get data
-					AMFEcmaArray* data = (AMFEcmaArray*)params;
+					AMFNamedPropertiesObject* data = (AMFNamedPropertiesObject*)params;
 
 					//Get video fps if present
 					if (data->HasProperty(L"videodatarate"))
-						videodatarate = (double)data->GetProperty(L"videodatarate");
+						videodatarates[0] = (double)data->GetProperty(L"videodatarate");
 					if (data->HasProperty(L"framerate"))
-						framerate = (double)data->GetProperty(L"framerate");
-				}
-				else if (params->CheckType(AMFData::Object))
-				{
-					//Get data
-					AMFObject* data = (AMFObject*)params;
+						framerates[0] = (double)data->GetProperty(L"framerate");
 
-					//Get video fps if present
-					if (data->HasProperty(L"videodatarate"))
-						videodatarate = (double)data->GetProperty(L"videodatarate");
-					if (data->HasProperty(L"framerate"))
-						framerate = (double)data->GetProperty(L"framerate");
+					//Get the multivideo track info map
+					if (data->HasProperty(L"videoTrackIdInfoMap"))
+					{
+						AMFData* map = &data->GetProperty(L"videoTrackIdInfoMap");
+
+						if (map->CheckType(AMFData::EcmaArray) || map->CheckType(AMFData::Object))
+						{
+							//Get data
+							AMFNamedPropertiesObject* videoTrackIdInfoMap = (AMFNamedPropertiesObject*)map;
+
+							//For each trak
+							for (const auto& [key, val] : videoTrackIdInfoMap->GetProperties())
+							{
+								if (val->CheckType(AMFData::EcmaArray) || val->CheckType(AMFData::Object))
+								{
+									//Get trackId
+									int trackId = std::stoi(key);
+									//Get data
+									AMFNamedPropertiesObject* datatrack = (AMFNamedPropertiesObject*)val;
+									//Get video fps if present
+									if (datatrack->HasProperty(L"videodatarate"))
+										videodatarates[trackId] = (double)datatrack->GetProperty(L"videodatarate");
+									if (datatrack->HasProperty(L"framerate"))
+										framerates[trackId] = (double)datatrack->GetProperty(L"framerate");
+								}
+							}
+						}
+					}
+
 				} else {
 					Warning("-IncomingStreamBridge::onMetaData() Unknown @setDataFrame metatada\n"); 
 					return;
 				}
+
+				
+
 			} else if (name.compare(L"onTextData")==0) {
 				if (meta->GetParamsLength()<2)
 					return;
@@ -2930,8 +2948,8 @@ private:
 	int maxLateOffset = 200;
 	int maxBufferingTime = 400;
 	std::pair<uint64_t,uint64_t> timingInfo = {};
-	std::optional<double> videodatarate;
-	std::optional<double> framerate;
+	std::map<size_t, double> videodatarates;
+	std::map<size_t, double> framerates;
 	
 };
 
