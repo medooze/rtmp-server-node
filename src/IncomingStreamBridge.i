@@ -3,15 +3,10 @@
 
 class IncomingStreamBridge : 
 	public RTMPMediaStream::Listener,
-	public RTPReceiver//,
-	//public TimeServiceWrapper<IncomingStreamBridge>
-	// Cant derive from this as the loop is constructed afterwards. Need to derive from loop first then theis if we want to do this. Also TS wont exist outside the this object so safe to NOT use this pattern
+	public RTPReceiver
 {
 private:
 	static constexpr size_t BaseVideoSSRC = 2;
-
-// @todo owns the loop so ok
-// Because derives from TimeServiceWrapper we want to enforce creation using TimeServiceWrapper::Create() as a factory
 public:
 
 	IncomingStreamBridge(v8::Local<v8::Object> object, int maxLateOffset = 200, int maxBufferingTime = 400) :
@@ -61,7 +56,6 @@ public:
 		});
 		
 	}
-
 	virtual ~IncomingStreamBridge()
 	{
 		Log("IncomingStreamBridge::~IncomingStreamBridge()\n");
