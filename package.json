@@ -35,7 +35,7 @@
     "uuid": "^3.3.2"
   },
   "peerDependencies": {
-    "medooze-media-server-src": "^2.4.2"
+    "medooze-media-server-src": "^3.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.8.6",
