@@ -128,8 +128,8 @@ v8::Local<v8::Value> toJson(AMFData* data)
 		case AMFData::EcmaArray:
 		{
 			AMFEcmaArray* array = (AMFEcmaArray*)data;
-			auto& elements = array->GetElements();
-			val = Nan::New<v8::Array>(array->GetLength());
+			auto& elements = array->GetProperties();
+			val = Nan::New<v8::Array>(elements.size());
 			for (auto& el : elements)
 			{	
 				UTF8Parser parser(el.first);

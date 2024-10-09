@@ -1536,8 +1536,8 @@ v8::Local<v8::Value> toJson(AMFData* data)
 		case AMFData::EcmaArray:
 		{
 			AMFEcmaArray* array = (AMFEcmaArray*)data;
-			auto& elements = array->GetElements();
-			val = Nan::New<v8::Array>(array->GetLength());
+			auto& elements = array->GetProperties();
+			val = Nan::New<v8::Array>(elements.size());
 			for (auto& el : elements)
 			{	
 				UTF8Parser parser(el.first);
@@ -2296,7 +2296,7 @@ MediaFrameListenerBridgeShared* MediaFrameListenerBridgeShared_from_proxy(const 
 
 
 SWIGINTERN MediaFrameListenerBridgeShared *new_MediaFrameListenerBridgeShared(TimeService &timeService,int ssrc){
-		return new std::shared_ptr<MediaFrameListenerBridge>(new MediaFrameListenerBridge(timeService, ssrc));
+		return new std::shared_ptr<MediaFrameListenerBridge>(MediaFrameListenerBridge::Create(timeService, ssrc));
 	}
 SWIGINTERN RTPIncomingMediaStreamShared MediaFrameListenerBridgeShared_toRTPIncomingMediaStream__SWIG(MediaFrameListenerBridgeShared *self){
 	return std::static_pointer_cast<RTPIncomingMediaStream>(*self);
@@ -2323,10 +2323,11 @@ class IncomingStreamBridge :
 private:
 	static constexpr size_t BaseVideoSSRC = 2;
 public:
+
 	IncomingStreamBridge(v8::Local<v8::Object> object, int maxLateOffset = 200, int maxBufferingTime = 400) :
-		audio(new MediaFrameListenerBridge(loop, 1, false, true)),
+		audio(MediaFrameListenerBridge::Create(loop, 1, false, true)),
 		videos({
-			{0, std::make_shared<MediaFrameListenerBridge>(loop, BaseVideoSSRC, false, true)}
+			{0, MediaFrameListenerBridge::Create(loop, BaseVideoSSRC, false, true)}
 		}),
 		mutex(true),
 		maxLateOffset(maxLateOffset),
@@ -2338,7 +2339,7 @@ public:
 		loop.Start();
 		
 		//Create dispatch timer
-		dispatch = loop.CreateTimer([this](std::chrono::milliseconds now){
+		dispatch = loop.CreateTimerUnsafe([this](std::chrono::milliseconds now){
 			
 			//Iterate over the enqueued packets
 			for(auto it = queue.begin(); it!=queue.end(); it = queue.erase(it))
@@ -2370,7 +2371,6 @@ public:
 		});
 		
 	}
-		
 	virtual ~IncomingStreamBridge()
 	{
 		Log("IncomingStreamBridge::~IncomingStreamBridge()\n");
@@ -2449,7 +2449,7 @@ public:
 		frame->SetTime(now);
 		
 		//Run on thread
-		loop.Async([=](...) {
+		loop.AsyncUnsafe([=](...) {
 			//Check if it is the first time we see the video track
 			if (frame->GetType() == MediaFrame::Video && videos.find(frame->GetSSRC())==videos.end())
 			{
@@ -2459,7 +2459,7 @@ public:
 				//Log
 				Error("-IncomingStreamBridge::Enqueue() | New multivideotrack received [id:%d,ssrc:%d]\n", id, ssrc);
 				//Add it
-				videos[id] = std::make_shared<MediaFrameListenerBridge>(loop, ssrc, false, true);
+				videos[id] = MediaFrameListenerBridge::Create(loop, ssrc, false, true);
 
 				//Fire event on main node thread
 				RTMPServerModule::Async([=,cloned=persistent](){
@@ -2614,19 +2614,12 @@ public:
 					//Set trackId
 					videoFrame->SetSSRC(trackId);
 
-					//Only for main track
-					if (trackId==0)
-					{
-						//Set target bitrate if got it from metadata event
-						if (videodatarate)
-							videoFrame->SetTargetBitrate((uint32_t)videodatarate.value());
-						//Set frame rate too
-						if (framerate)
-							videoFrame->SetTargetFps((uint32_t)framerate.value());
-					} else {
-						videoFrame->SetTargetBitrate(trackId);
-						videoFrame->SetTargetFps(trackId);
-					}
+					//Set target bitrate if got it from metadata event
+					if (auto it = videodatarates.find(trackId); it != videodatarates.end())
+						videoFrame->SetTargetBitrate((uint32_t)it->second);
+					//Set frame rate too
+					if (auto it = framerates.find(trackId); it != framerates.end())
+						videoFrame->SetTargetFps((uint32_t)it->second);
 					//Push it
 					Enqueue(videoFrame.release());
 				} 
@@ -2755,8 +2748,7 @@ public:
 				} else if (params->CheckType(AMFData::Object)) {
 				
 					//If we don't have the video fps from the metadata event
-					if (!framerate || !*framerate)
-						//Skip
+					if (framerates.find(0)==framerates.end() || !framerates[0])
 						return;
 
 					//Get timecode info
@@ -2789,7 +2781,7 @@ public:
                                         timeinfo->tm_isdst = -1;         // Is DST on? 1 = yes, 0 = no, -1 = unknown
 
                                         //Set timing info
-                                        timingInfo.first  = mktime(timeinfo) * 1000 + 1000 * frames / *framerate;
+                                        timingInfo.first  = mktime(timeinfo) * 1000 + 1000 * frames / framerates[0];
                                         timingInfo.second = meta->GetTimestamp();
 				}
 			} else if (name.compare(L"@setDataFrame")==0) {
@@ -2802,6 +2794,7 @@ public:
 				//Get medatada params
 				std::wstring metadata = *(meta->GetParams(1));
 				AMFData* params = meta->GetParams(2);
+				
 
 				//Check metadata name and propper data type
 				if (metadata.compare(L"onMetaData")!=0)
@@ -2810,32 +2803,54 @@ public:
 					return;
 				}
 				
-				if (params->CheckType(AMFData::EcmaArray))
+				if (params->CheckType(AMFData::EcmaArray) || params->CheckType(AMFData::Object))
 				{
 
 					//Get data
-					AMFEcmaArray* data = (AMFEcmaArray*)params;
+					AMFNamedPropertiesObject* data = (AMFNamedPropertiesObject*)params;
 
 					//Get video fps if present
 					if (data->HasProperty(L"videodatarate"))
-						videodatarate = (double)data->GetProperty(L"videodatarate");
+						videodatarates[0] = (double)data->GetProperty(L"videodatarate");
 					if (data->HasProperty(L"framerate"))
-						framerate = (double)data->GetProperty(L"framerate");
-				}
-				else if (params->CheckType(AMFData::Object))
-				{
-					//Get data
-					AMFObject* data = (AMFObject*)params;
+						framerates[0] = (double)data->GetProperty(L"framerate");
 
-					//Get video fps if present
-					if (data->HasProperty(L"videodatarate"))
-						videodatarate = (double)data->GetProperty(L"videodatarate");
-					if (data->HasProperty(L"framerate"))
-						framerate = (double)data->GetProperty(L"framerate");
+					//Get the multivideo track info map
+					if (data->HasProperty(L"videoTrackIdInfoMap"))
+					{
+						AMFData* map = &data->GetProperty(L"videoTrackIdInfoMap");
+
+						if (map->CheckType(AMFData::EcmaArray) || map->CheckType(AMFData::Object))
+						{
+							//Get data
+							AMFNamedPropertiesObject* videoTrackIdInfoMap = (AMFNamedPropertiesObject*)map;
+
+							//For each trak
+							for (const auto& [key, val] : videoTrackIdInfoMap->GetProperties())
+							{
+								if (val->CheckType(AMFData::EcmaArray) || val->CheckType(AMFData::Object))
+								{
+									//Get trackId
+									int trackId = std::stoi(key);
+									//Get data
+									AMFNamedPropertiesObject* datatrack = (AMFNamedPropertiesObject*)val;
+									//Get video fps if present
+									if (datatrack->HasProperty(L"videodatarate"))
+										videodatarates[trackId] = (double)datatrack->GetProperty(L"videodatarate");
+									if (datatrack->HasProperty(L"framerate"))
+										framerates[trackId] = (double)datatrack->GetProperty(L"framerate");
+								}
+							}
+						}
+					}
+
 				} else {
 					Warning("-IncomingStreamBridge::onMetaData() Unknown @setDataFrame metatada\n"); 
 					return;
 				}
+
+				
+
 			} else if (name.compare(L"onTextData")==0) {
 				if (meta->GetParamsLength()<2)
 					return;
@@ -2933,8 +2948,8 @@ private:
 	int maxLateOffset = 200;
 	int maxBufferingTime = 400;
 	std::pair<uint64_t,uint64_t> timingInfo = {};
-	std::optional<double> videodatarate;
-	std::optional<double> framerate;
+	std::map<size_t, double> videodatarates;
+	std::map<size_t, double> framerates;
 	
 };
 
@@ -7329,47 +7344,6 @@ static void _wrap_delete_FrameDispatchCoordinatorShared(const v8::WeakCallbackIn
 }
 
 
-static SwigV8ReturnValue _wrap_new_MediaFrameListenerBridge(const SwigV8Arguments &args) {
-  SWIGV8_HANDLESCOPE();
-  
-  SWIGV8_OBJECT self = args.Holder();
-  TimeService *arg1 = 0 ;
-  int arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  MediaFrameListenerBridge *result;
-  if(self->InternalFieldCount() < 1) SWIG_exception_fail(SWIG_ERROR, "Illegal call of constructor _wrap_new_MediaFrameListenerBridge.");
-  if(args.Length() != 2) SWIG_exception_fail(SWIG_ERROR, "Illegal number of arguments for _wrap_new_MediaFrameListenerBridge.");
-  res1 = SWIG_ConvertPtr(args[0], &argp1, SWIGTYPE_p_TimeService,  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_MediaFrameListenerBridge" "', argument " "1"" of type '" "TimeService &""'"); 
-  }
-  if (!argp1) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_MediaFrameListenerBridge" "', argument " "1"" of type '" "TimeService &""'"); 
-  }
-  arg1 = reinterpret_cast< TimeService * >(argp1);
-  ecode2 = SWIG_AsVal_int(args[1], &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "new_MediaFrameListenerBridge" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  result = (MediaFrameListenerBridge *)new MediaFrameListenerBridge(*arg1,arg2);
-  
-  
-  
-  
-  
-  SWIGV8_SetPrivateData(self, result, SWIGTYPE_p_MediaFrameListenerBridge, SWIG_POINTER_OWN);
-  SWIGV8_RETURN(self);
-  
-  goto fail;
-fail:
-  SWIGV8_RETURN(SWIGV8_UNDEFINED());
-}
-
-
 static void _wrap_MediaFrameListenerBridge_numFrames_set(v8::Local<v8::Name> property, v8::Local<v8::Value> value, const SwigV8PropertyCallbackInfoVoid &info) {
   SWIGV8_HANDLESCOPE();
   
@@ -8609,6 +8583,15 @@ static void _wrap_delete_MediaFrameListenerBridge(const v8::WeakCallbackInfo<SWI
     delete arg1;
   }
   delete proxy;
+}
+
+
+static SwigV8ReturnValue _wrap_new_veto_MediaFrameListenerBridge(const SwigV8Arguments &args) {
+  SWIGV8_HANDLESCOPE();
+  
+  SWIG_exception(SWIG_ERROR, "Class MediaFrameListenerBridge can not be instantiated");
+fail:
+  SWIGV8_RETURN(SWIGV8_UNDEFINED());
 }
 
 
@@ -11739,7 +11722,7 @@ v8::Local<v8::Object> _exports_FrameDispatchCoordinatorShared_obj = _exports_Fra
 #endif
 /* Class: MediaFrameListenerBridge (_exports_MediaFrameListenerBridge) */
 SWIGV8_FUNCTION_TEMPLATE _exports_MediaFrameListenerBridge_class_0 = SWIGV8_CreateClassTemplate("MediaFrameListenerBridge");
-_exports_MediaFrameListenerBridge_class_0->SetCallHandler(_wrap_new_MediaFrameListenerBridge);
+_exports_MediaFrameListenerBridge_class_0->SetCallHandler(_wrap_new_veto_MediaFrameListenerBridge);
 _exports_MediaFrameListenerBridge_class_0->Inherit(_exports_MediaFrameListenerBridge_class);
 #if (SWIG_V8_VERSION < 0x0704)
 _exports_MediaFrameListenerBridge_class_0->SetHiddenPrototype(true);

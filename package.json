@@ -1,6 +1,6 @@
 {
   "name": "medooze-rtmp-server",
-  "version": "1.28.0",
+  "version": "1.29.0",
   "description": "RTMP Server by Medooze",
   "main": "index.js",
   "scripts": {
@@ -35,7 +35,7 @@
     "uuid": "^3.3.2"
   },
   "peerDependencies": {
-    "medooze-media-server-src": "^2.0.3"
+    "medooze-media-server-src": "^3.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.8.6",
