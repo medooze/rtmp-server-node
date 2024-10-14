@@ -126,6 +126,8 @@ tap.test("Server", async function (suite)
 		
 		//Wait 1 seconds
 		await sleep(1000);
+		
+		test.end();
 	});
 	
 	await suite.test("invalidurl", async function (test)
@@ -136,6 +138,8 @@ tap.test("Server", async function (suite)
 		//Connect
 		let errorCode = connection.connect("invalid.url", 1937, "test");
 		test.equal(errorCode, RTMPServer.NetConnectionErrorCode.FailedToResolveURL);
+		
+		test.end();
 	});
 	
 	await suite.test("peerclosed", async function (test)
