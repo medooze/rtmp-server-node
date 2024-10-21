@@ -41,13 +41,14 @@ tap.test("Server", async function (suite)
 {
 	await suite.test("publish+unpublish", async function (test)
 	{
-		test.plan(5);
+		test.plan(8);
 
 		let incomingStream,outgoingStream;
 		//Create server and app
 		const app = RTMPServer.createApplication();
 		const rtmp = RTMPServer.createServer();
 
+		const serverConnected = promise();
 		app.on("connect", (client) =>
 		{
 			//Add publish listener
@@ -67,6 +68,7 @@ tap.test("Server", async function (suite)
 						test.ok(incomingStream, "Got incoming stream");
 						//Started
 						stream.sendStatus(transId, RTMPServer.NetStream.Publish.Start);
+						serverConnected.resolve();
 					}
 				})
 			});
@@ -92,32 +94,35 @@ tap.test("Server", async function (suite)
 
 			outgoingStream.on("cmd", (stream, name, cmd)=>{
 				//Got publishing command
-				test.same(cmd[1].code, RTMPServer.NetStream.Publish.Start.code)
+				test.same(cmd[1].code, RTMPServer.NetStream.Publish.Start.code, "Client got publishing cmd")
 				//Attach streams
 				outgoingStream.attachTo(incomingStream);
+				connected.resolve();
 			});
-
-			connected.resolve();
 		});
 
 		connection.on("disconnected",(conn, errorCode)=>{
 			test.fail("Expected stopped not disconnected event");
 		});
 
+		const stopped = promise();
 		connection.on("stopped",(conn)=>{
-			test.pass();
+			test.pass("client connection stopped");
+			stopped.resolve();
 		});
 
 
 		//Connect
 		connection.connect("127.0.0.1", 1936, "test");
 		await connected;
+		await serverConnected;
 
 		//Check we have stats
-		test.ok(connection.getStats());
+		test.ok(connection.getStats(), "Client connection got stats");
 
 		//Stop
 		connection.stop();
+		await stopped;
 
 		//Stop server
 		rtmp.stop();
