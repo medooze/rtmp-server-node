@@ -165,7 +165,7 @@ tap.test("Server", async function (suite)
 	
 	await suite.test("peerclosed", async function (test)
 	{
-		test.plan(2);
+		test.plan(3);
 		
 		//Create server and app
 		const app = RTMPServer.createApplication();
@@ -174,6 +174,7 @@ tap.test("Server", async function (suite)
 		app.on("connect", (client) =>
 		{
 			// Close the connection
+			test.pass("Server rejecting client");
 			client.reject();
 		});
 		
@@ -186,17 +187,15 @@ tap.test("Server", async function (suite)
 
 		const disconnected = promise();
 		connection.on("disconnected", (conn, errorCode)=>{
-			console.log("disconnected with error code: " + errorCode);
-			test.equal(errorCode, RTMPServer.NetConnectionErrorCode.PeerClosed);
+			test.equal(errorCode, RTMPServer.NetConnectionErrorCode.PeerClosed, "Client expects peer closed when server rejected");
 			disconnected.resolve();
 		});
 		
 		//Connect
 		let errorCode = connection.connect("127.0.0.1", 1936, "test");
-		test.equal(errorCode, RTMPServer.NetConnectionErrorCode.NoError);
+		test.equal(errorCode, RTMPServer.NetConnectionErrorCode.NoError, "Expect initial TCP connection to be successful");
 		
 		await disconnected;
-		console.log("await done");
 		
 		//Stop server
 		rtmp.stop();
