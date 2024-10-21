@@ -1,6 +1,7 @@
 const tap			= require("tap");
 const RTMPServer		= require("../index.js");
 
+RTMPServer.enableWarning(false);
 RTMPServer.enableLog(false);
 RTMPServer.enableDebug(false);
 RTMPServer.enableUltraDebug(false);
@@ -17,6 +18,20 @@ function sleep(ms)
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function promise()
+{
+	let resolve;
+	let reject;
+	const promise = new Promise((_resolve, _reject) => {
+		resolve = _resolve;
+		reject = _reject;
+	});
+	promise.resolve = resolve;
+	promise.reject = reject;
+	return promise;
+}
+
+
 process.on("uncaughtException", onExit);
 process.on("SIGINT", onExit);
 process.on("SIGTERM", onExit);
@@ -24,10 +39,9 @@ process.on("SIGQUIT", onExit);
 
 tap.test("Server", async function (suite)
 {
-
 	await suite.test("publish+unpublish", async function (test)
 	{
-		test.plan(7);
+		test.plan(5);
 
 		let incomingStream,outgoingStream;
 		//Create server and app
@@ -67,6 +81,7 @@ tap.test("Server", async function (suite)
 		//Create client connection
 		const connection = RTMPServer.createClientConnection();
 
+		const connected = promise();
 		connection.on("connected",async ()=>{
 
 			test.pass("client connected");
@@ -82,27 +97,27 @@ tap.test("Server", async function (suite)
 				outgoingStream.attachTo(incomingStream);
 			});
 
-			
+			connected.resolve();
 		});
+
+		connection.on("disconnected",(conn, errorCode)=>{
+			test.fail("Expected stopped not disconnected event");
+		});
+
+		connection.on("stopped",(conn)=>{
+			test.pass();
+		});
+
 
 		//Connect
 		connection.connect("127.0.0.1", 1936, "test");
-
-		//Wait 1 seconds
-		await sleep(1000);
+		await connected;
 
 		//Check we have stats
 		test.ok(connection.getStats());
 
-		connection.on("disconnected",(conn, errorCode)=>{
-			test.equal(errorCode, RTMPServer.NetConnectionErrorCode.NoError);
-		});
-
 		//Stop
 		connection.stop();
-
-		//Wait 1 seconds
-		await sleep(1000);
 
 		//Stop server
 		rtmp.stop();
@@ -116,16 +131,17 @@ tap.test("Server", async function (suite)
 		//Create client connection
 		const connection = RTMPServer.createClientConnection();
 
+		const disconnected = promise();
 		connection.on("disconnected", (conn, errorCode)=>{
-			test.equal(errorCode, RTMPServer.NetConnectionErrorCode.GetSockOptError);
+			test.equal(errorCode, RTMPServer.NetConnectionErrorCode.PollError);
+			disconnected.resolve();
 		});
 
 		//Connect. Note the connect wouldn't fail immediately.
-		let errorCode = connection.connect("127.0.0.1", 1937, "test");
+		let errorCode = connection.connect("127.0.0.1", 193734, "test");
 		test.equal(errorCode, RTMPServer.NetConnectionErrorCode.NoError);
 		
-		//Wait 1 seconds
-		await sleep(1000);
+		await disconnected;
 		
 		test.end();
 	});
@@ -163,23 +179,26 @@ tap.test("Server", async function (suite)
 		//Create client connection
 		const connection = RTMPServer.createClientConnection();
 
+		const disconnected = promise();
+		connection.on("disconnected", (conn, errorCode)=>{
+			console.log("disconnected with error code: " + errorCode);
+			test.equal(errorCode, RTMPServer.NetConnectionErrorCode.PeerClosed);
+			disconnected.resolve();
+		});
+		
 		//Connect
 		let errorCode = connection.connect("127.0.0.1", 1936, "test");
 		test.equal(errorCode, RTMPServer.NetConnectionErrorCode.NoError);
 		
-		connection.on("disconnected", (conn, errorCode)=>{
-			test.equal(errorCode, RTMPServer.NetConnectionErrorCode.PeerClosed);
-		});
-		
-		//Wait 1 seconds
-		await sleep(1000);
+		await disconnected;
+		console.log("await done");
 		
 		//Stop server
 		rtmp.stop();
 		
 		test.end();
 	});
-	
+
 	suite.end();
 
 }).then(() =>
