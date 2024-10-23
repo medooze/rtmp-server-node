@@ -28,6 +28,7 @@ function ffmpeg(args)
 }
 
 
+RTMPServer.enableWarning(false);
 RTMPServer.enableLog(false);
 RTMPServer.enableDebug(false);
 RTMPServer.enableUltraDebug(false);
@@ -42,6 +43,19 @@ const onExit = (e) =>
 function sleep(ms)
 {
 	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function promise()
+{
+	let resolve;
+	let reject;
+	const promise = new Promise((_resolve, _reject) => {
+		resolve = _resolve;
+		reject = _reject;
+	});
+	promise.resolve = resolve;
+	promise.reject = reject;
+	return promise;
 }
 
 function ffmpeg(args)
@@ -86,7 +100,7 @@ function args(stream, token)
 tap.test("Server", async function (suite)
 {
 
-	await suite.test("publish+unpublish", async function (test)
+	await suite.test("start+stop", async function (test)
 	{
 		//Create server and app
 		const app = RTMPServer.createApplication();
@@ -110,6 +124,7 @@ tap.test("Server", async function (suite)
 		const app = RTMPServer.createApplication();
 		const rtmp = RTMPServer.createServer();
 
+		let connected = promise();
 		app.on("connect", (client) =>
 		{
 			//Add publish listener
@@ -119,6 +134,7 @@ tap.test("Server", async function (suite)
 				const incomingStream = stream.createIncomingStreamBridge();
 				//Send to server
 				test.ok(incomingStream);
+				connected.resolve();
 			});
 			//Accept client connection by default
 			client.accept();
@@ -130,11 +146,8 @@ tap.test("Server", async function (suite)
 
 		//Start publishing rtmp
 		const pub = ffmpeg(args("nane","token"));
-
 		test.ok(pub);
-
-		//Wait 5 seconds
-		await sleep(1000);
+		await connected;
 
 		//Stop
 		await pub.stop();
@@ -159,7 +172,7 @@ tap.test("Server", async function (suite)
 			//Reject
 			client.reject();
 			//Worked
-			test.pass("RTMPconnection rejected sucessfully")
+			test.pass("RTMPconnection rejected sucessfully");
 		});
 
 		//Start rtmp server
@@ -173,10 +186,7 @@ tap.test("Server", async function (suite)
 		test.ok(pub);
 
 		//Should be rejected
-		pub.catch((e)=>test.pass("ffmpeg disconnected"));
-
-		//Wait 5 seconds
-		await sleep(1000);
+		await pub.catch((e)=>test.pass("ffmpeg disconnected"));
 
 		//Stop server
 		rtmp.stop();
@@ -193,6 +203,7 @@ tap.test("Server", async function (suite)
 		const app = RTMPServer.createApplication();
 		const rtmp = RTMPServer.createServer();
 
+		let connected = promise();
 		app.on("connect", (client) =>
 		{
 			//Add publish listener
@@ -202,6 +213,7 @@ tap.test("Server", async function (suite)
 				const incomingStream = stream.createIncomingStreamBridge(100,200);
 				//Send to server
 				test.ok(incomingStream);
+				connected.resolve();
 			});
 			//Accept client connection by default
 			client.accept();
@@ -215,9 +227,7 @@ tap.test("Server", async function (suite)
 		const pub = ffmpeg(args("nane","token"));
 
 		test.ok(pub);
-
-		//Wait 5 seconds
-		await sleep(1000);
+		await connected;
 
 		//Stop
 		await pub.stop();
@@ -237,6 +247,7 @@ tap.test("Server", async function (suite)
 		const app = RTMPServer.createApplication();
 		const rtmp = RTMPServer.createServer();
 
+		let connected = promise();
 		app.on("connect", (client) =>
 		{
 			//Add publish listener
@@ -250,6 +261,7 @@ tap.test("Server", async function (suite)
 				incomingStreamTrack.setTargetBitrateHint(1000);
 				//No error
 				test.pass();
+				connected.resolve();
 			});
 			//Accept client connection by default
 			client.accept();
@@ -263,9 +275,7 @@ tap.test("Server", async function (suite)
 		const pub = ffmpeg(args("nane","token"));
 
 		test.ok(pub);
-
-		//Wait 5 seconds
-		await sleep(1000);
+		await connected;
 
 		//Stop
 		await pub.stop();
@@ -285,6 +295,7 @@ tap.test("Server", async function (suite)
 		const app = RTMPServer.createApplication();
 		const rtmp = RTMPServer.createServer();
 
+		let connected = promise();
 		app.on("connect", (client) =>
 		{
 			//Add publish listener
@@ -301,6 +312,7 @@ tap.test("Server", async function (suite)
 				//Rtt should be the same
 				test.same(rtt,stats.audio[""].rtt,"rtt is the same for audio");
 				test.same(rtt,stats.video[""].rtt,"rtt is the same dor video");
+				connected.resolve();
 			});
 			//Accept client connection by default
 			client.accept();
@@ -314,9 +326,7 @@ tap.test("Server", async function (suite)
 		const pub = ffmpeg(args("nane","token"));
 
 		test.ok(pub);
-
-		//Wait 5 seconds
-		await sleep(1000);
+		await connected;
 
 		//Stop
 		await pub.stop();
@@ -336,6 +346,7 @@ tap.test("Server", async function (suite)
 		const app = RTMPServer.createApplication();
 		const rtmp = RTMPServer.createServer();
 
+		let connected = promise();
 		app.on("connect", (client) =>
 		{
 			//Add publish listener
@@ -352,6 +363,7 @@ tap.test("Server", async function (suite)
 				//Rtt should be the same
 				test.same(rtt,stats.audio[""].rtt,"rtt is the same for audio");
 				test.same(rtt,stats.video[""].rtt,"rtt is the same dor video");
+				connected.resolve();
 			});
 			//Accept client connection by default
 			client.accept();
@@ -365,9 +377,7 @@ tap.test("Server", async function (suite)
 		const pub = ffmpeg(args("nane","token"));
 
 		test.ok(pub);
-
-		//Wait 5 seconds
-		await sleep(1000);
+		await connected;
 
 		//Stop
 		await pub.stop();
